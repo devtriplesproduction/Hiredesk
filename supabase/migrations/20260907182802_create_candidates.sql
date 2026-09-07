@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS public.candidates (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  "roleId" TEXT NOT NULL,
+  "roleName" TEXT NOT NULL,
+  score JSONB NOT NULL,
+  status TEXT NOT NULL DEFAULT 'new',
+  city TEXT NOT NULL,
+  gender TEXT NOT NULL,
+  age INTEGER NOT NULL,
+  exp TEXT NOT NULL,
+  education TEXT NOT NULL,
+  skills TEXT[] NOT NULL DEFAULT '{}',
+  "resumeFile" TEXT NOT NULL,
+  "resumeUrl" TEXT,
+  "resumeText" TEXT,
+  "appliedAt" TEXT NOT NULL,
+  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  note TEXT NOT NULL DEFAULT ''
+);

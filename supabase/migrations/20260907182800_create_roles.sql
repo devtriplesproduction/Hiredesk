@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS public.roles (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  keywords TEXT[] NOT NULL DEFAULT '{}',
+  count INTEGER NOT NULL DEFAULT 0,
+  "isActive" BOOLEAN NOT NULL DEFAULT true
+);
