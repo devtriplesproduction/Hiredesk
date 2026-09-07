@@ -4,6 +4,7 @@ import { useStore } from "@/lib/store";
 import { CITIES, GENDERS, EXP_LEVELS } from "@/lib/data";
 import type { SortKey } from "@/types";
 import { clsx } from "clsx";
+import { Btn } from "@/components/ui";
 
 const AGE_RANGES = [{ label:"18–24",value:"18-24" },{ label:"25–30",value:"25-30" },{ label:"31–40",value:"31-40" },{ label:"40+",value:"40+" }];
 
@@ -90,10 +91,10 @@ export default function FiltersBar() {
       </select>
 
       {hasActive && (
-        <button onClick={clearFilters}
+        <Btn onClick={clearFilters}
           className="text-sm font-medium px-3.5 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text-3)] hover:text-[var(--text)] hover:border-[var(--border-2)] transition-colors col-span-2 sm:col-span-1 w-full lg:w-auto text-center justify-center">
           ✕ Clear
-        </button>
+        </Btn>
       )}
     </div>
   );

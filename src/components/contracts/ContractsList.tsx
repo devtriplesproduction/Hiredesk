@@ -116,17 +116,17 @@ export default function ContractsList() {
                 </div>
 
                 <div className="flex gap-2 w-full sm:w-auto flex-shrink-0 mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-white/[0.03] sm:border-t-0 justify-end">
-                  <button
+                  <Btn
                     onClick={() => { setPreselectedCandidateId(""); setGenerating(c); }}
                     className="text-sm font-semibold px-4 py-2 rounded-xl transition-all flex-1 sm:flex-none text-center"
                     style={{ background: "white", color: "black" }}>
                     Generate
-                  </button>
-                  <button onClick={() => setEditing(c)}
+                  </Btn>
+                  <Btn onClick={() => setEditing(c)}
                     className="text-sm font-medium px-4 py-2 rounded-xl transition-all flex-1 sm:flex-none text-center"
                     style={{ background: "var(--glass-2)", border: "1px solid var(--border-2)", color: "var(--text)" }}>
                     Edit Template
-                  </button>
+                  </Btn>
                 </div>
               </div>
             );

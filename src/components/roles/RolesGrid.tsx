@@ -80,13 +80,13 @@ export default function RolesGrid() {
         })}
 
         {/* Add role card */}
-        <button
+        <Btn
           onClick={() => setShowAdd(true)}
           className="p-4 sm:p-5 rounded-xl border-2 border-dashed border-[var(--border)] text-[var(--text-3)] hover:border-[var(--border-2)] hover:text-[var(--text-2)] transition-all duration-200 flex flex-col items-center justify-center gap-2 min-h-[120px] active:scale-[0.98]"
         >
           <div className="text-3xl opacity-40">+</div>
           <div className="font-mono text-[10px] uppercase tracking-widest">Add Role</div>
-        </button>
+        </Btn>
       </div>
 
       {/* Add Role Modal */}

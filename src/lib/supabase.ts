@@ -26,13 +26,42 @@ export async function getDBCandidates(): Promise<Candidate[]> {
   return (data || []) as Candidate[];
 }
 
+/**
+ * Recursively removes unsupported Postgres null characters (\u0000) from string properties
+ * in candidates or patches to prevent the 'unsupported Unicode escape sequence' database error.
+ */
+export function cleanNullBytes<T>(obj: T): T {
+  if (obj === null || obj === undefined) return obj;
+  
+  if (typeof obj === "string") {
+    return obj.replace(/\u0000/g, "") as unknown as T;
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(cleanNullBytes) as unknown as T;
+  }
+  
+  if (typeof obj === "object") {
+    const cleaned: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        cleaned[key] = cleanNullBytes((obj as any)[key]);
+      }
+    }
+    return cleaned as T;
+  }
+  
+  return obj;
+}
+
 export async function insertDBCandidate(c: Candidate): Promise<void> {
-  const { error } = await supabase.from("candidates").insert(c);
+  const cleaned = cleanNullBytes(c);
+  const { error } = await supabase.from("candidates").insert(cleaned);
   if (error) {
     // If it's a missing column error (Postgres code 42703), retry without extraction fields
     if (error.code === "42703" || error.message?.includes("column")) {
       console.warn("[Supabase Sync] Database is missing name extraction columns. Retrying candidate insert without them...");
-      const { extractionSource, extractionConfidence, extractionMetadata, ...sanitized } = c as any;
+      const { extractionSource, extractionConfidence, extractionMetadata, ...sanitized } = cleaned as any;
       const { error: retryError } = await supabase.from("candidates").insert(sanitized);
       if (retryError) throw retryError;
     } else {
@@ -43,11 +72,12 @@ export async function insertDBCandidate(c: Candidate): Promise<void> {
 }
 
 export async function insertDBCandidates(candidates: Candidate[]): Promise<void> {
-  const { error } = await supabase.from("candidates").insert(candidates);
+  const cleaned = candidates.map(c => cleanNullBytes(c));
+  const { error } = await supabase.from("candidates").insert(cleaned);
   if (error) {
     if (error.code === "42703" || error.message?.includes("column")) {
       console.warn("[Supabase Sync] Database is missing name extraction columns. Retrying bulk insert without them...");
-      const sanitizedCandidates = candidates.map(c => {
+      const sanitizedCandidates = cleaned.map(c => {
         const { extractionSource, extractionConfidence, extractionMetadata, ...rest } = c as any;
         return rest;
       });
@@ -61,11 +91,12 @@ export async function insertDBCandidates(candidates: Candidate[]): Promise<void>
 }
 
 export async function updateDBCandidate(id: string, patch: Partial<Candidate>): Promise<void> {
-  const { error } = await supabase.from("candidates").update(patch).eq("id", id);
+  const cleaned = cleanNullBytes(patch);
+  const { error } = await supabase.from("candidates").update(cleaned).eq("id", id);
   if (error) {
     if (error.code === "42703" || error.message?.includes("column")) {
       console.warn("[Supabase Sync] Database is missing name extraction columns. Retrying candidate update without them...");
-      const { extractionSource, extractionConfidence, extractionMetadata, ...sanitizedPatch } = patch as any;
+      const { extractionSource, extractionConfidence, extractionMetadata, ...sanitizedPatch } = cleaned as any;
       const { error: retryError } = await supabase.from("candidates").update(sanitizedPatch).eq("id", id);
       if (retryError) throw retryError;
     } else {
@@ -91,23 +122,68 @@ export async function deleteDBCandidates(ids: string[]): Promise<void> {
   }
 }
 
-export async function uploadResumeFile(file: File, candidateId: string): Promise<string> {
-  const fileExt = file.name.split(".").pop();
-  const filePath = `${candidateId}/${Date.now()}.${fileExt}`;
+/**
+ * Clean and normalize file name to prevent space-encoding, duplicate extension,
+ * and special character issues.
+ */
+export function sanitizeFilename(name: string): string {
+  // Extract basename
+  let clean = name.split(/[/\\]/).pop() || name;
   
-  const { error } = await supabase.storage
+  // Separate name and extension
+  const parts = clean.split(".");
+  let ext = parts.pop()?.toLowerCase() || "pdf";
+  let base = parts.join(".");
+  
+  // Strip duplicate extensions like .pdf.pdf
+  while (base.toLowerCase().endsWith(".pdf")) {
+    base = base.slice(0, -4);
+  }
+  
+  // Normalize characters: keep letters, numbers, hyphens, and underscores. Convert spaces to underscores.
+  base = base
+    .replace(/\s+/g, "_")
+    .replace(/[^a-zA-Z0-9\-_]/g, "")
+    .replace(/_+/g, "_")
+    .trim();
+    
+  if (!base) base = "resume_" + Date.now();
+  
+  return `${base}.${ext}`;
+}
+
+export async function uploadResumeFile(file: File, candidateId: string): Promise<string> {
+  const sanitizedName = sanitizeFilename(file.name);
+  const fileExt = sanitizedName.split(".").pop() || "pdf";
+  const fileTimestamp = Date.now();
+  const filePath = `${candidateId}/${fileTimestamp}.${fileExt}`;
+  
+  console.log(`[Supabase Storage] Preparing upload:`, {
+    rawName: file.name,
+    sanitizedName,
+    sizeBytes: file.size,
+    mimeType: file.type,
+    storagePath: filePath
+  });
+
+  const { data: uploadData, error } = await supabase.storage
     .from("resumes")
     .upload(filePath, file, {
+      contentType: "application/pdf",
       cacheControl: "3600",
       upsert: false
     });
 
   if (error) {
-    console.error("Supabase storage upload error details:", error);
+    console.error("[Supabase Storage] Upload error details:", error);
     throw error;
   }
 
+  console.log("[Supabase Storage] Upload succeeded. Response:", uploadData);
+
   const { data } = supabase.storage.from("resumes").getPublicUrl(filePath);
+  
+  console.log(`[Supabase Storage] Generated Public URL: "${data.publicUrl}"`);
   return data.publicUrl;
 }
 

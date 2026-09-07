@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { Btn } from "@/components/ui";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -185,14 +186,14 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   className="w-full rounded-xl text-sm pl-4 pr-12 py-3.5 outline-none transition-all placeholder:text-zinc-700 bg-zinc-950/40 border border-white/5 text-white focus:border-white/20 focus:bg-zinc-900/40"
                 />
-                <button
+                <Btn
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors p-1"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+                </Btn>
               </div>
             </div>
 
@@ -258,7 +259,7 @@ BEGIN
   END IF;
 END $$;`}
                         </pre>
-                        <button
+                        <Btn
                           type="button"
                           onClick={() => {
                             navigator.clipboard.writeText(`CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -299,7 +300,7 @@ END $$;`);
                           className="absolute right-2 top-2 px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[8px] text-zinc-300 font-bold uppercase transition-colors"
                         >
                           Copy
-                        </button>
+                        </Btn>
                       </div>
                     </div>
 
@@ -316,7 +317,7 @@ END $$;`);
 
             {/* Submit Button */}
             <div className="anim-stagger-btn">
-              <button
+              <Btn
                 type="submit"
                 disabled={loading}
                 className="w-full bg-white hover:bg-zinc-200 text-black font-bold text-sm py-3.5 rounded-xl transition-all duration-300 mt-2 disabled:opacity-60 flex items-center justify-center gap-2 shadow-xl active:scale-[0.98]"
@@ -326,7 +327,7 @@ END $$;`);
                 ) : (
                   "Authorize session →"
                 )}
-              </button>
+              </Btn>
             </div>
           </form>
         </div>

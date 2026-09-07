@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Btn } from "@/components/ui";
 
 export default function ErrorBoundary({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
@@ -21,18 +22,18 @@ export default function ErrorBoundary({ error, reset }: { error: Error & { diges
         {error.message || "An unexpected error occurred while loading this page."}
       </p>
       <div className="flex gap-4">
-        <button
+        <Btn
           onClick={() => window.location.reload()}
           className="bg-white text-black px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-zinc-200 transition-colors"
         >
           Hard Reload
-        </button>
-        <button
+        </Btn>
+        <Btn
           onClick={() => reset()}
           className="bg-zinc-900 border border-white/10 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-zinc-800 transition-colors"
         >
           Try Again
-        </button>
+        </Btn>
       </div>
     </div>
   );

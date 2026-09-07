@@ -3,6 +3,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { clsx } from "clsx";
 import { useStore } from "@/lib/store";
 import { Menu } from "lucide-react";
+import { Btn } from "@/components/ui";
 
 const NAV = [
   { label: "Dashboard", href: "/" },
@@ -27,13 +28,13 @@ export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
       style={{ background: "rgba(10,10,10,0.95)", borderBottom: "1px solid var(--border)", backdropFilter: "blur(20px)" }}>
       <div className="flex items-center gap-3">
         {/* Mobile menu trigger */}
-        <button
+        <Btn
           onClick={onMenuClick}
           className="flex lg:hidden w-10 h-10 rounded-xl items-center justify-center text-[var(--text-2)] hover:text-white hover:bg-[var(--glass-2)] transition-colors border border-[var(--border)]"
           aria-label="Toggle navigation menu"
         >
           <Menu size={20} />
-        </button>
+        </Btn>
 
         <div className="w-9 h-9 sm:w-9 sm:h-9 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 border border-[var(--border)]">
           <img src="/logo.png" alt="HireDesk Logo" className="w-full h-full object-cover" />
@@ -46,7 +47,7 @@ export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
 
       <nav className="hidden lg:flex gap-0.5">
         {NAV.map(n => (
-          <button key={n.href} onClick={() => router.push(n.href)}
+          <Btn key={n.href} onClick={() => router.push(n.href)}
             className={clsx(
               "text-sm font-medium px-4 py-2 rounded-lg transition-all duration-150 border",
               pathname === n.href
@@ -54,7 +55,7 @@ export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
                 : "text-[var(--text-2)] bg-transparent border-transparent hover:text-white hover:bg-[var(--glass-2)]"
             )}>
             {n.label}
-          </button>
+          </Btn>
         ))}
       </nav>
 
@@ -63,10 +64,10 @@ export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
           <span className="font-mono">{candidates.length}</span>
           <span className="hidden xs:inline ml-1 text-[var(--text-3)] font-medium">candidates</span>
         </div>
-        <button onClick={handleLogout}
+        <Btn onClick={handleLogout}
           className="hidden sm:block text-xs sm:text-sm text-[var(--text-3)] hover:text-[var(--text)] px-3 py-1.5 sm:px-4 sm:py-2 border border-[var(--border)] rounded-xl transition-colors font-medium">
           Sign Out
-        </button>
+        </Btn>
       </div>
     </header>
   );

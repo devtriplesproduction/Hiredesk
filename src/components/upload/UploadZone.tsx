@@ -213,8 +213,8 @@ export default function UploadZone() {
                       {item.status === "done" ? "Done" : item.status === "parsing" ? "Parsing…" : item.status === "error" ? "Error" : "Queued"}
                     </span>
 
-                    <button onClick={() => remove(i)}
-                      className="text-[var(--text-3)] hover:text-[var(--text)] transition-colors text-sm flex-shrink-0">✕</button>
+                    <Btn onClick={() => remove(i)}
+                      className="text-[var(--text-3)] hover:text-[var(--text)] transition-colors text-sm flex-shrink-0">✕</Btn>
                   </div>
                 ))}
               </div>

@@ -3,6 +3,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { clsx } from "clsx";
 import { X } from "lucide-react";
+import { Btn } from "@/components/ui";
 
 const NAV = [
   { label: "Dashboard", href: "/" },
@@ -54,18 +55,18 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
         {/* Mobile Header with close button */}
         <div className="flex items-center justify-between px-2.5 py-2 lg:hidden mb-2 border-b border-[var(--border)]">
           <div className="text-xs font-extrabold tracking-tight uppercase text-[var(--text-3)]">Navigation</div>
-          <button 
+          <Btn 
             onClick={onClose} 
             className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-white hover:bg-[var(--glass-2)] border border-[var(--border)]"
           >
             <X size={15} />
-          </button>
+          </Btn>
         </div>
 
         {/* Mobile Navigation Links */}
         <div className="flex flex-col gap-0.5 lg:hidden mb-2 pb-2 border-b border-[var(--border)]">
           {NAV.map(n => (
-            <button key={n.href} onClick={() => { router.push(n.href); onClose?.(); }}
+            <Btn key={n.href} onClick={() => { router.push(n.href); onClose?.(); }}
               className={clsx(
                 "flex items-center gap-2.5 px-2.5 py-2 rounded-xl w-full text-left transition-all duration-150 border",
                 pathname === n.href
@@ -73,12 +74,12 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
                   : "text-[var(--text-2)] bg-transparent border-transparent hover:text-white hover:bg-[var(--glass-2)]"
               )}>
               <span className="text-xs font-semibold">{n.label}</span>
-            </button>
+            </Btn>
           ))}
-          <button onClick={handleLogout}
+          <Btn onClick={handleLogout}
             className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl w-full text-left transition-all duration-150 border border-transparent text-[var(--red)] hover:bg-red-500/10 hover:border-red-500/20 mt-1">
             <span className="text-xs font-bold uppercase tracking-wider">Sign Out</span>
-          </button>
+          </Btn>
         </div>
 
         <SLabel>All Roles</SLabel>
@@ -108,7 +109,7 @@ function SItem({ label, badge, onClick, small, accent }: {
   label: string; badge?: number; onClick: () => void; small?: boolean; accent?: string;
 }) {
   return (
-    <button onClick={onClick} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl w-full text-left transition-all duration-150 border border-transparent hover:bg-[var(--glass-2)] hover:border-[var(--border)]">
+    <Btn onClick={onClick} className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl w-full text-left transition-all duration-150 border border-transparent hover:bg-[var(--glass-2)] hover:border-[var(--border)]">
       <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-left"
         style={{ fontSize: small ? "12px" : "13px", fontWeight: 500, color: accent ?? "var(--text-2)" }}>
         {label}
@@ -119,7 +120,7 @@ function SItem({ label, badge, onClick, small, accent }: {
           {badge}
         </span>
       )}
-    </button>
+    </Btn>
   );
 }
 

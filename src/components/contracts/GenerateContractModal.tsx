@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@/lib/store";
 import type { Contract } from "@/types";
+import { Btn } from "@/components/ui";
 
 interface Props {
   contract: Contract;
@@ -93,9 +94,9 @@ export default function GenerateContractModal({ contract, preselectedCandidateId
             <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-1">Generate Contract</div>
             <div className="text-lg font-bold tracking-tight">{contract.name}</div>
           </div>
-          <button onClick={onClose}
+          <Btn onClick={onClose}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-white transition-colors"
-            style={{ background: "var(--glass-2)", border: "1px solid var(--border)" }}>✕</button>
+            style={{ background: "var(--glass-2)", border: "1px solid var(--border)" }}>✕</Btn>
         </div>
 
         <div className="p-6 flex flex-col gap-4">
@@ -188,18 +189,18 @@ export default function GenerateContractModal({ contract, preselectedCandidateId
 
         {/* Footer */}
         <div className="flex gap-3 p-6 pt-0">
-          <button onClick={onClose}
+          <Btn onClick={onClose}
             className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all"
             style={{ background: "var(--glass-2)", border: "1px solid var(--border-2)", color: "var(--text-2)" }}>
             Cancel
-          </button>
-          <button
+          </Btn>
+          <Btn
             onClick={generateAndPreview}
             disabled={!form.candidateName.trim() || !form.role.trim() || !form.startDate}
             className="flex-1 py-3 rounded-xl text-sm font-semibold bg-white text-black hover:bg-white/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Generate & Edit →
-          </button>
+          </Btn>
         </div>
       </div>
     </div>

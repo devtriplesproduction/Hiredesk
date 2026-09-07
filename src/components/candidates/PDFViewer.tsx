@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import * as pdfjs from "pdfjs-dist";
 import { clsx } from "clsx";
+import { Btn } from "@/components/ui";
 
 // Configure PDFJS Worker using the unpkg CDN
 const PDFJS_VERSION = pdfjs.version || "4.4.168";
@@ -232,24 +233,24 @@ export default function PDFViewer({ url, filename }: PDFViewerProps) {
         <div className="flex items-center gap-1 text-[11px] font-semibold text-zinc-400">
           <span>Renderer:</span>
           <div className="flex p-0.5 rounded-lg bg-black border border-white/5">
-            <button
+            <Btn
               onClick={() => forceFallback("native")}
               className={clsx("px-2 py-1 rounded transition-all", engine === "native" ? "bg-white/10 text-white font-bold" : "hover:text-white")}
             >
               Native
-            </button>
-            <button
+            </Btn>
+            <Btn
               onClick={() => forceFallback("canvas")}
               className={clsx("px-2 py-1 rounded transition-all", engine === "canvas" ? "bg-white/10 text-white font-bold" : "hover:text-white")}
             >
               Canvas
-            </button>
-            <button
+            </Btn>
+            <Btn
               onClick={() => forceFallback("iframe")}
               className={clsx("px-2 py-1 rounded transition-all", engine === "iframe" ? "bg-white/10 text-white font-bold" : "hover:text-white")}
             >
               Iframe
-            </button>
+            </Btn>
           </div>
         </div>
 
@@ -258,48 +259,48 @@ export default function PDFViewer({ url, filename }: PDFViewerProps) {
           <div className="flex items-center gap-4 flex-wrap">
             {/* Pagination */}
             <div className="flex items-center gap-2">
-              <button
+              <Btn
                 onClick={handlePrevPage}
                 disabled={currentPage <= 1}
                 className="w-7 h-7 rounded-lg border border-white/5 bg-black hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent flex items-center justify-center text-sm transition-all"
               >
                 ◀
-              </button>
+              </Btn>
               <span className="text-xs font-semibold font-mono text-zinc-300 select-none">
                 Page {currentPage} of {numPages}
               </span>
-              <button
+              <Btn
                 onClick={handleNextPage}
                 disabled={currentPage >= numPages}
                 className="w-7 h-7 rounded-lg border border-white/5 bg-black hover:bg-white/5 disabled:opacity-30 disabled:hover:bg-transparent flex items-center justify-center text-sm transition-all"
               >
                 ▶
-              </button>
+              </Btn>
             </div>
 
             {/* Zoom controls */}
             <div className="flex items-center gap-1.5 border-l border-white/10 pl-4">
-              <button
+              <Btn
                 onClick={zoomOut}
                 className="w-7 h-7 rounded-lg border border-white/5 bg-black hover:bg-white/5 flex items-center justify-center text-xs transition-all"
                 title="Zoom Out"
               >
                 ➖
-              </button>
-              <button
+              </Btn>
+              <Btn
                 onClick={resetZoom}
                 className="text-xs font-mono px-2 py-1 rounded border border-white/5 bg-black hover:bg-white/5 transition-all text-zinc-300"
                 title="Reset Zoom"
               >
                 {Math.round(scale * 100)}%
-              </button>
-              <button
+              </Btn>
+              <Btn
                 onClick={zoomIn}
                 className="w-7 h-7 rounded-lg border border-white/5 bg-black hover:bg-white/5 flex items-center justify-center text-xs transition-all"
                 title="Zoom In"
               >
                 ➕
-              </button>
+              </Btn>
             </div>
           </div>
         )}
@@ -407,12 +408,12 @@ export default function PDFViewer({ url, filename }: PDFViewerProps) {
         <div className="px-4 pb-4 border-t border-white/5 pt-3">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] text-zinc-400">Diagnostic details gathered in real-time</span>
-            <button
+            <Btn
               onClick={() => setLogs([])}
               className="text-[10px] hover:text-white text-zinc-500 font-semibold px-2 py-0.5 rounded border border-white/5"
             >
               Clear Logs
-            </button>
+            </Btn>
           </div>
           <div className="max-h-[160px] overflow-y-auto font-mono text-[10px] text-zinc-300 leading-relaxed flex flex-col gap-1 pr-1 bg-black/40 rounded-lg p-2.5 border border-white/5">
             {logs.length > 0 ? (

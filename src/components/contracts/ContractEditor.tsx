@@ -4,6 +4,7 @@ import { useStore } from "@/lib/store";
 import { uploadBrandAsset, getBrandAssetUrl, deleteBrandAsset } from "@/lib/supabase";
 import type { Contract } from "@/types";
 import { compressImage } from "@/lib/utils/image";
+import { Btn } from "@/components/ui";
 
 interface Props { contract: Contract; onBack: () => void; }
 
@@ -127,9 +128,9 @@ export default function ContractEditor({ contract, onBack }: Props) {
     <div className="flex flex-col gap-5">
       {/* Back + title */}
       <div className="flex items-center justify-between gap-3">
-        <button onClick={onBack} className="flex items-center gap-2 text-sm text-[var(--text-3)] hover:text-white transition-colors font-medium flex-shrink-0">
+        <Btn onClick={onBack} className="flex items-center gap-2 text-sm text-[var(--text-3)] hover:text-white transition-colors font-medium flex-shrink-0">
           ← Back
-        </button>
+        </Btn>
         <div className="text-sm sm:text-base font-bold tracking-tight leading-tight truncate">{contract.name}</div>
       </div>
 
@@ -144,14 +145,14 @@ export default function ContractEditor({ contract, onBack }: Props) {
               {logoUrl
                 ? <div className="relative rounded-xl overflow-hidden" style={{ border: "1px solid var(--border-2)" }}>
                     <img src={logoUrl} alt="Logo" className="w-full h-14 object-contain p-2 bg-white" />
-                    <button onClick={() => clearImage("tsp_logo", setLogoUrl)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded bg-black/70 text-white text-xs flex items-center justify-center">✕</button>
+                    <Btn onClick={() => clearImage("tsp_logo", setLogoUrl)}
+                      className="absolute top-1 right-1 w-5 h-5 rounded bg-black/70 text-white text-xs flex items-center justify-center">✕</Btn>
                   </div>
-                : <button onClick={() => logoRef.current?.click()}
+                : <Btn onClick={() => logoRef.current?.click()}
                     className="w-full py-2.5 rounded-xl text-sm text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors text-center border-2 border-dashed"
                     style={{ borderColor: "var(--border-2)" }}>
                     + Logo
-                  </button>
+                  </Btn>
               }
               <input ref={logoRef} type="file" accept="image/*" className="hidden"
                 onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0], "tsp_logo", setLogoUrl)} />
@@ -163,14 +164,14 @@ export default function ContractEditor({ contract, onBack }: Props) {
               {signUrl
                 ? <div className="relative rounded-xl overflow-hidden" style={{ border: "1px solid var(--border-2)" }}>
                     <img src={signUrl} alt="Sign" className="w-full h-12 object-contain p-2 bg-white" />
-                    <button onClick={() => clearImage("tsp_sign", setSignUrl)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded bg-black/70 text-white text-xs flex items-center justify-center">✕</button>
+                    <Btn onClick={() => clearImage("tsp_sign", setSignUrl)}
+                      className="absolute top-1 right-1 w-5 h-5 rounded bg-black/70 text-white text-xs flex items-center justify-center">✕</Btn>
                   </div>
-                : <button onClick={() => signRef.current?.click()}
+                : <Btn onClick={() => signRef.current?.click()}
                     className="w-full py-2.5 rounded-xl text-sm text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors text-center border-2 border-dashed"
                     style={{ borderColor: "var(--border-2)" }}>
                     + Signature
-                  </button>
+                  </Btn>
               }
               <input ref={signRef} type="file" accept="image/*" className="hidden"
                 onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0], "tsp_sign", setSignUrl)} />
@@ -181,9 +182,9 @@ export default function ContractEditor({ contract, onBack }: Props) {
               <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-2">Format</div>
               <div className="flex gap-2">
                 {[["B","bold"],["I","italic"],["U","underline"]].map(([l,c]) => (
-                  <button key={c} onClick={() => fmt(c)}
+                  <Btn key={c} onClick={() => fmt(c)}
                     className="w-9 h-9 rounded-lg text-sm font-bold text-[var(--text-2)] hover:text-white transition-colors"
-                    style={{ background: "var(--glass-2)", border: "1px solid var(--border)" }}>{l}</button>
+                    style={{ background: "var(--glass-2)", border: "1px solid var(--border)" }}>{l}</Btn>
                 ))}
               </div>
             </div>
@@ -193,25 +194,25 @@ export default function ContractEditor({ contract, onBack }: Props) {
               <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-2">Insert Field</div>
               <div className="flex lg:flex-col gap-1 flex-wrap">
                 {FIELDS.map(f => (
-                  <button key={f} onClick={() => insertField(f)}
+                  <Btn key={f} onClick={() => insertField(f)}
                     className="text-left text-xs px-2.5 py-1.5 rounded-lg text-[var(--text-3)] hover:text-[var(--text-2)] hover:bg-[var(--glass-2)] transition-colors font-mono border border-transparent hover:border-[var(--border)]">
                     {f}
-                  </button>
+                  </Btn>
                 ))}
               </div>
             </div>
 
             {/* Action buttons */}
             <div className="min-w-[160px] lg:min-w-0 flex-shrink-0 lg:flex-auto flex lg:flex-col gap-2">
-              <button onClick={handlePrint}
+              <Btn onClick={handlePrint}
                 className="flex-1 lg:flex-none py-2.5 rounded-xl text-sm font-semibold bg-white text-black hover:bg-white/90 transition-all whitespace-nowrap px-3">
                 🖨 Print / PDF
-              </button>
-              <button onClick={syncBody}
+              </Btn>
+              <Btn onClick={syncBody}
                 className="flex-1 lg:flex-none py-2 rounded-xl text-sm font-medium text-[var(--text-2)] hover:text-white transition-colors px-3"
                 style={{ background: "var(--glass-2)", border: "1px solid var(--border)" }}>
                 💾 Save
-              </button>
+              </Btn>
             </div>
           </div>
         </div>

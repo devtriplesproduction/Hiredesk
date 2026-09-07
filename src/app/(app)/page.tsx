@@ -31,7 +31,7 @@ export default function DashboardPage() {
   }, [candidates]);
 
   function goFiltered(status: string) {
-    setFilters({ status });
+    setFilters({ search: "", roleId: "all", status, city: "", gender: "all", ageRange: "all", exp: "all", sort: "newest" });
     router.push("/candidates");
   }
 
@@ -63,11 +63,11 @@ export default function DashboardPage() {
         {(["new", "review", "approved", "rejected"] as const).map(s => {
           const cnt = candidates.filter(c => c.status === s).length;
           return (
-            <button key={s} onClick={() => goFiltered(s)}
+            <Btn key={s} onClick={() => goFiltered(s)}
               className="glass p-4 text-left hover:bg-[var(--glass-2)] hover:border-[var(--border-2)] transition-all duration-200 rounded-xl active:scale-95">
               <div className="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">{cnt}</div>
               <StatusBadge status={s} />
-            </button>
+            </Btn>
           );
         })}
       </div>

@@ -1,12 +1,13 @@
 "use client";
 import { useStore } from "@/lib/store";
-import { ScoreBadge, StatusBadge, SkillTag } from "@/components/ui";
+import { Btn,  ScoreBadge, StatusBadge, SkillTag } from "@/components/ui";
 import type { Candidate } from "@/types";
 import { clsx } from "clsx";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import PDFViewer from "@/components/candidates/PDFViewer";
 import WhatsAppModal from "@/components/candidates/WhatsAppModal";
+import EmailModal from "@/components/candidates/EmailModal";
 
 interface Props { candidate: Candidate; onClose: () => void; }
 
@@ -36,6 +37,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
   const [activeTab, setActiveTab] = useState<"profile" | "score" | "resume">("profile");
   const [resumeMode, setResumeMode] = useState<"pdf" | "text">(c.resumeUrl ? "pdf" : "text");
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
+  const [isEmailOpen, setIsEmailOpen] = useState(false);
 
   // Inline Editing States
   const [isEditing, setIsEditing] = useState(false);
@@ -139,38 +141,38 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
           <div className="flex items-center gap-2 self-end sm:self-start">
             {isEditing ? (
-              <button
+              <Btn
                 onClick={handleSave}
                 className="text-xs font-semibold px-4 py-2 rounded-lg transition-all text-black bg-white hover:bg-zinc-200 active:scale-95 shadow-lg"
               >
                 💾 Save
-              </button>
+              </Btn>
             ) : !isLowConfidence && (
-              <button
+              <Btn
                 onClick={() => setIsEditing(true)}
                 className="text-xs font-semibold px-4 py-2 rounded-lg transition-all text-white bg-[var(--glass-2)] hover:bg-[var(--glass-3)] border border-[var(--border)] active:scale-95"
               >
                 ✍️ Edit Profile
-              </button>
+              </Btn>
             )}
 
-            <button onClick={onClose}
+            <Btn onClick={onClose}
               className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-white transition-colors"
               style={{ background: "var(--glass-2)", border: "1px solid var(--border)" }}>
               ✕
-            </button>
+            </Btn>
           </div>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-1 overflow-x-auto no-scrollbar px-5 sm:px-6 pt-4 pb-1">
           {(["profile", "score", "resume"] as const).map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)}
+            <Btn key={tab} onClick={() => setActiveTab(tab)}
               className={clsx("text-sm font-medium px-4 py-2 rounded-lg transition-all capitalize border flex-shrink-0",
                 activeTab === tab
                   ? "text-white border-[var(--border-2)] bg-[var(--glass-3)]"
                   : "text-[var(--text-3)] border-transparent hover:text-[var(--text-2)]"
-              )}>{tab}</button>
+              )}>{tab}</Btn>
           ))}
         </div>
 
@@ -236,7 +238,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                           <div className="flex items-center justify-between gap-2">
                             <div className="text-sm font-bold text-white truncate" title={String(val)}>{display}</div>
                             {key === "phone" && (
-                              <button
+                              <Btn
                                 onClick={() => {
                                   if (c.phone) {
                                     setIsWhatsAppOpen(true);
@@ -256,7 +258,30 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.705 1.459h.008c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
                                 </svg>
-                              </button>
+                              </Btn>
+                            )}
+                            {key === "email" && (
+                              <Btn
+                                onClick={() => {
+                                  if (c.email) {
+                                    setIsEmailOpen(true);
+                                  } else {
+                                    alert("Email address is unavailable.");
+                                  }
+                                }}
+                                disabled={!c.email}
+                                className={clsx(
+                                  "p-1.5 rounded-lg transition-all border flex-shrink-0",
+                                  c.email
+                                    ? "border-blue-500/20 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/40 active:scale-95 cursor-pointer"
+                                    : "border-zinc-800 bg-zinc-900/20 text-zinc-600 cursor-not-allowed opacity-40"
+                                )}
+                                title={c.email ? "Send Email to candidate" : "Email unavailable"}
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                              </Btn>
                             )}
                           </div>
                         )}
@@ -279,9 +304,19 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
               {/* Resume file */}
               <div>
                 <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-2">Resume File</div>
-                <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-medium"
+                <div className="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium"
                   style={{ background: "var(--glass)", border: "1px solid var(--border)" }}>
-                  <span>📄</span> {c.resumeFile || "Not uploaded"}
+                  <div className="flex items-center gap-2.5">
+                    <span>📄</span> {c.resumeFile || "Not uploaded"}
+                  </div>
+                  {(c.resumeUrl || c.resumeText) && (
+                    <Btn 
+                      onClick={() => setActiveTab("resume")}
+                      className="text-xs font-bold px-3 py-1.5 rounded-lg bg-[var(--glass-3)] text-white hover:bg-white/20 transition-all"
+                    >
+                      View
+                    </Btn>
+                  )}
                 </div>
               </div>
 
@@ -474,7 +509,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                   </div>
                   {c.resumeText && (
                     <div className="flex p-0.5 rounded-lg border border-[var(--border)] bg-[#0c0c0c] text-xs font-semibold select-none">
-                      <button
+                      <Btn
                         onClick={() => setResumeMode("pdf")}
                         className={clsx(
                           "px-3 py-1 rounded-md transition-all duration-150",
@@ -484,8 +519,8 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                         )}
                       >
                         📄 PDF View
-                      </button>
-                      <button
+                      </Btn>
+                      <Btn
                         onClick={() => setResumeMode("text")}
                         className={clsx(
                           "px-3 py-1 rounded-md transition-all duration-150",
@@ -495,7 +530,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                         )}
                       >
                         📝 Text View
-                      </button>
+                      </Btn>
                     </div>
                   )}
                 </div>
@@ -544,23 +579,42 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
             <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-2.5">Update Status</div>
             <div className="flex gap-2 flex-wrap">
               {STATUSES.map(s => (
-                <button key={s} onClick={() => updateCandidate(c.id, { status: s })}
+                <Btn key={s} onClick={() => updateCandidate(c.id, { status: s })}
                   className={clsx("text-xs font-semibold uppercase tracking-wider px-4 py-2 rounded-lg border transition-all",
                     c.status === s ? `status-${s}` : "text-[var(--text-3)] border-[var(--border)] hover:text-[var(--text-2)] hover:border-[var(--border-2)]"
-                  )}>{s}</button>
+                  )}>{s}</Btn>
               ))}
             </div>
           </div>
 
           {/* Actions */}
           <div className="flex gap-2 mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-            <button onClick={() => { onClose(); router.push(`/contracts?candidateId=${c.id}`); }}
+            <Btn onClick={() => { onClose(); router.push(`/contracts?candidateId=${c.id}`); }}
               className="flex-1 text-sm font-semibold py-2.5 rounded-xl transition-all"
               style={{ background: "var(--glass-2)", border: "1px solid var(--border-2)", color: "var(--text)" }}>
               📄 Generate Contract
-            </button>
+            </Btn>
             
-            <button
+            <Btn
+              onClick={() => {
+                if (c.email) {
+                  setIsEmailOpen(true);
+                } else {
+                  alert("Email address is unavailable for this candidate.");
+                }
+              }}
+              disabled={!c.email}
+              className="flex-1 text-sm font-semibold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 select-none disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98]"
+              style={{ background: "var(--glass-2)", border: "1px solid var(--border-2)", color: "var(--text)" }}
+              title={c.email ? "Send Email to candidate" : "Email unavailable"}
+            >
+              <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} style={{ flexShrink: 0 }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              {c.email ? "Email" : "No Email"}
+            </Btn>
+
+            <Btn
               onClick={() => {
                 if (c.phone) {
                   setIsWhatsAppOpen(true);
@@ -577,13 +631,13 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.705 1.459h.008c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
               </svg>
               {c.phone ? "WhatsApp" : "No Phone"}
-            </button>
+            </Btn>
 
-            <button onClick={handleDelete}
+            <Btn onClick={handleDelete}
               className="text-sm font-semibold px-5 py-2.5 rounded-xl transition-all"
               style={{ background: "rgba(255,68,68,0.08)", border: "1px solid rgba(255,68,68,0.2)", color: "var(--red)" }}>
               Delete
-            </button>
+            </Btn>
           </div>
         </div>
       </div>
@@ -593,6 +647,14 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
         <WhatsAppModal
           candidate={c}
           onClose={() => setIsWhatsAppOpen(false)}
+        />
+      )}
+
+      {/* Email Outreach Drawer Workspace */}
+      {isEmailOpen && (
+        <EmailModal
+          candidate={c}
+          onClose={() => setIsEmailOpen(false)}
         />
       )}
     </div>

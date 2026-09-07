@@ -118,7 +118,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
             Define job requirements to filter and rank candidates instantly
           </div>
         </div>
-        <button onClick={onClose} className="text-[var(--text-3)] hover:text-white transition-colors">✕</button>
+        <Btn onClick={onClose} className="text-[var(--text-3)] hover:text-white transition-colors">✕</Btn>
       </div>
 
       <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 min-h-0 md:overflow-hidden">
@@ -194,12 +194,12 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
             <div className="flex justify-between items-center">
               <label className="text-[11px] font-semibold text-[var(--text-2)]">Select Required Skills ({selectedSkills.size})</label>
               {selectedSkills.size > 0 && (
-                <button
+                <Btn
                   onClick={() => setSelectedSkills(new Set())}
                   className="text-[9px] font-mono text-[var(--text-3)] hover:text-white uppercase tracking-wider"
                 >
                   Clear Skills
-                </button>
+                </Btn>
               )}
             </div>
             <div
@@ -210,7 +210,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                 {availableSkills.map(skill => {
                   const active = selectedSkills.has(skill);
                   return (
-                    <button
+                    <Btn
                       key={skill}
                       onClick={() => toggleSkill(skill)}
                       className={clsx(
@@ -221,7 +221,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                       )}
                     >
                       {skill}
-                    </button>
+                    </Btn>
                   );
                 })}
               </div>
