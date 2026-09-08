@@ -19,10 +19,10 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
   const { candidates, roles, setFilters, exportCSV } = useStore();
   
   const counts = useMemo(() => {
-    const res = { new: 0, review: 0, approved: 0, rejected: 0 };
+    const res = { new: 0, review: 0, shortlisted: 0, interview_1: 0, interview_2: 0, approved: 0, rejected: 0, offer: 0, offer_sent: 0, offer_accepted: 0, offer_rejected: 0, onboarding_requested: 0, onboarding_review: 0, onboarding_verified: 0, onboarding_rejected: 0, hired: 0 };
     candidates.forEach(c => {
-      if (c.status === "new" || c.status === "review" || c.status === "approved" || c.status === "rejected") {
-        res[c.status]++;
+      if (c.status in res) {
+        res[c.status as keyof typeof res]++;
       }
     });
     return res;
@@ -91,7 +91,23 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
         <SLabel>Status Filter</SLabel>
         <SItem label="New"       badge={counts.new}      onClick={() => go("new")} />
         <SItem label="In Review" badge={counts.review}   onClick={() => go("review")} />
+        <SItem label="Shortlisted" badge={counts.shortlisted} onClick={() => go("shortlisted")} accent="#00e5ff" />
+        <SItem label="Interview R1" badge={counts.interview_1} onClick={() => go("interview_1")} accent="#b388ff" />
+        <SItem label="Interview R2" badge={counts.interview_2} onClick={() => go("interview_2")} accent="#ea80fc" />
         <SItem label="Approved"  badge={counts.approved} onClick={() => go("approved")} accent="var(--green)" />
+        <div className="h-px bg-[var(--border)] my-1" />
+        <SItem label="Offer Prep" badge={counts.offer} onClick={() => go("offer")} accent="#ff9100" />
+        <SItem label="Offer Sent" badge={counts.offer_sent} onClick={() => go("offer_sent")} accent="#ffab40" />
+        <SItem label="Offer Accepted" badge={counts.offer_accepted} onClick={() => go("offer_accepted")} accent="#00e676" />
+        <SItem label="Offer Rejected" badge={counts.offer_rejected} onClick={() => go("offer_rejected")} accent="#ff3d00" />
+        <div className="h-px bg-[var(--border)] my-1" />
+        <SItem label="Onboarding Req" badge={counts.onboarding_requested} onClick={() => go("onboarding_requested")} accent="#18ffff" />
+        <SItem label="Onboarding Rev" badge={counts.onboarding_review} onClick={() => go("onboarding_review")} accent="#ffeb3b" />
+        <SItem label="Onboarding Ver" badge={counts.onboarding_verified} onClick={() => go("onboarding_verified")} accent="#00c853" />
+        <SItem label="Onboarding Rej" badge={counts.onboarding_rejected} onClick={() => go("onboarding_rejected")} accent="#d50000" />
+        <div className="h-px bg-[var(--border)] my-1" />
+        <SItem label="Hired" badge={counts.hired} onClick={() => go("hired")} accent="#ffd700" />
+        <div className="h-px bg-[var(--border)] my-1" />
         <SItem label="Rejected"  badge={counts.rejected} onClick={() => go("rejected")} accent="var(--red)" />
         <div className="h-px bg-[var(--border)] my-2" />
         <SLabel>Tools</SLabel>

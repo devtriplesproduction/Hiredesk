@@ -1,6 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from "react";
-import type { Candidate, Role, Contract, Filters } from "@/types";
+import type { Candidate, Role, Contract, Filters, Interview, Offer, CandidateDocument, Employee, EmployeeBond, EmployeeResignation } from "@/types";
 import { DEFAULT_ROLES, generateSeedCandidates, getContractTemplates } from "@/lib/data";
 import { exportCandidatesToCSV } from "@/lib/utils/csv";
 
@@ -26,6 +26,22 @@ interface Store {
   toggleSelectAll: (ids: string[]) => void;
   clearSelection: () => void;
   exportCSV: () => void;
+  interviews: Interview[];
+  setInterviews: (i: Interview[]) => void;
+  addInterview: (i: Interview) => void;
+  updateInterview: (id: string, patch: Partial<Interview>) => void;
+  offers: Offer[];
+  addOffer: (o: Offer) => void;
+  updateOffer: (id: string, patch: Partial<Offer>) => void;
+  documents: CandidateDocument[];
+  updateDocument: (id: string, patch: Partial<CandidateDocument>) => void;
+  employees: Employee[];
+  addEmployee: (e: Employee) => void;
+  updateEmployee: (id: string, patch: Partial<Employee>) => void;
+  employeeBonds: EmployeeBond[];
+  updateEmployeeBond: (b: EmployeeBond) => void;
+  employeeResignations: EmployeeResignation[];
+  addEmployeeResignation: (r: EmployeeResignation) => void;
 }
 
 const DEFAULT_FILTERS: Filters = {
@@ -56,6 +72,12 @@ function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T {
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [candidates, setCandidatesRaw] = useState<Candidate[]>([]);
+  const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [documents, setDocuments] = useState<CandidateDocument[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employeeBonds, setEmployeeBonds] = useState<EmployeeBond[]>([]);
+  const [employeeResignations, setEmployeeResignations] = useState<EmployeeResignation[]>([]);
   const [roles, setRolesRaw] = useState<Role[]>(DEFAULT_ROLES);
   const [contracts, setContracts] = useState<Contract[]>(getContractTemplates);
   const [filters, setFiltersRaw] = useState<Filters>(DEFAULT_FILTERS);
@@ -65,7 +87,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   // ─── Stable, Resilient State Hydration ───────────────────
   const loadInitialData = useCallback(async () => {
     try {
-      const { getDBCandidates, getDBRoles, getDBContracts, insertDBRoles, insertDBContracts } = await import("@/lib/supabase");
+      const { getDBCandidates, getDBRoles, getDBContracts, getDBInterviews, getDBOffers, getDBCandidateDocuments, getDBEmployees, getDBEmployeeBonds, getDBEmployeeResignations, insertDBRoles, insertDBContracts } = await import("@/lib/supabase");
       
       console.log("[HireDesk Store] Starting database hydration...");
       
@@ -139,6 +161,48 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         }
       } else {
         setContracts(getContractTemplates());
+      }
+
+      try {
+        const dbInterviews = await getDBInterviews();
+        setInterviews(dbInterviews);
+      } catch (err) {
+        console.error("[HireDesk Store] Failed to load interviews:", err);
+      }
+
+      try {
+        const dbOffers = await getDBOffers();
+        setOffers(dbOffers);
+      } catch (err) {
+        console.error("[HireDesk Store] Failed to load offers:", err);
+      }
+
+      try {
+        const dbDocs = await getDBCandidateDocuments();
+        setDocuments(dbDocs);
+      } catch (err) {
+        console.error("[HireDesk Store] Failed to load candidate documents:", err);
+      }
+
+      try {
+        const dbEmps = await getDBEmployees();
+        setEmployees(dbEmps);
+      } catch (err) {
+        console.error("[HireDesk Store] Failed to load employees:", err);
+      }
+
+      try {
+        const dbBonds = await getDBEmployeeBonds();
+        setEmployeeBonds(dbBonds);
+      } catch (err) {
+        console.error("[HireDesk Store] Failed to load bonds:", err);
+      }
+
+      try {
+        const dbRes = await getDBEmployeeResignations();
+        setEmployeeResignations(dbRes);
+      } catch (err) {
+        console.error("[HireDesk Store] Failed to load resignations:", err);
       }
 
     } catch (e) {
@@ -312,6 +376,55 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     exportCandidatesToCSV(candidates);
   }, [candidates]);
 
+  const addInterview = useCallback((i: Interview) => {
+    setInterviews(prev => [...prev, i]);
+    import("@/lib/supabase").then(db => db.insertDBInterview(i)).catch(console.error);
+  }, []);
+
+  const updateInterview = useCallback((id: string, patch: Partial<Interview>) => {
+    setInterviews(prev => prev.map(i => i.id === id ? { ...i, ...patch } : i));
+    import("@/lib/supabase").then(db => db.updateDBInterview(id, patch)).catch(console.error);
+  }, []);
+
+  const addOffer = useCallback((o: Offer) => {
+    setOffers(prev => [...prev, o]);
+    import("@/lib/supabase").then(db => db.insertDBOffer(o)).catch(console.error);
+  }, []);
+
+  const updateOffer = useCallback((id: string, patch: Partial<Offer>) => {
+    setOffers(prev => prev.map(o => o.id === id ? { ...o, ...patch } : o));
+    import("@/lib/supabase").then(db => db.updateDBOffer(id, patch)).catch(console.error);
+  }, []);
+
+  const updateDocument = useCallback((id: string, patch: Partial<CandidateDocument>) => {
+    setDocuments(prev => prev.map(d => d.id === id ? { ...d, ...patch } : d));
+    import("@/lib/supabase").then(db => db.updateDBCandidateDocument(id, patch)).catch(console.error);
+  }, []);
+
+  const addEmployee = useCallback((e: Employee) => {
+    setEmployees(prev => [...prev, e]);
+  }, []);
+
+  const updateEmployee = useCallback((id: string, patch: Partial<Employee>) => {
+    setEmployees(prev => prev.map(e => e.id === id ? { ...e, ...patch } : e));
+  }, []);
+
+  const updateEmployeeBond = useCallback((b: EmployeeBond) => {
+    setEmployeeBonds(prev => {
+      const idx = prev.findIndex(x => x.employeeId === b.employeeId);
+      if (idx > -1) {
+        const next = [...prev];
+        next[idx] = b;
+        return next;
+      }
+      return [...prev, b];
+    });
+  }, []);
+
+  const addEmployeeResignation = useCallback((r: EmployeeResignation) => {
+    setEmployeeResignations(prev => [...prev, r]);
+  }, []);
+
   // ─── Stable context value (only recreated when slices change) ───────────────
   const value = useMemo<Store>(() => ({
     candidates, roles, contracts, filters, selectedIds,
@@ -319,12 +432,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     updateCandidate, deleteCandidate, deleteCandidates, deleteBelowScore,
     addRole, updateContract, setFilters, clearFilters,
     toggleSelect, toggleSelectAll, clearSelection, exportCSV,
+    interviews, setInterviews, addInterview, updateInterview, offers, addOffer, updateOffer,
+    documents, updateDocument, employees, addEmployee, updateEmployee,
+    employeeBonds, updateEmployeeBond, employeeResignations, addEmployeeResignation
   }), [
     candidates, roles, contracts, filters, selectedIds,
     setCandidates, setRoles, addCandidate, addCandidates,
     updateCandidate, deleteCandidate, deleteCandidates, deleteBelowScore,
     addRole, updateContract, setFilters, clearFilters,
     toggleSelect, toggleSelectAll, clearSelection, exportCSV,
+    interviews, setInterviews, addInterview, updateInterview, offers, addOffer, updateOffer,
+    documents, updateDocument, employees, addEmployee, updateEmployee,
+    employeeBonds, updateEmployeeBond, employeeResignations, addEmployeeResignation
   ]);
 
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;

@@ -1,5 +1,6 @@
 "use client";
 import { useStore } from "@/lib/store";
+import { getDocumentSignedUrl } from "@/lib/supabase";
 import { Btn,  ScoreBadge, StatusBadge, SkillTag } from "@/components/ui";
 import type { Candidate } from "@/types";
 import { clsx } from "clsx";
@@ -11,7 +12,7 @@ import EmailModal from "@/components/candidates/EmailModal";
 
 interface Props { candidate: Candidate; onClose: () => void; }
 
-const STATUSES: Candidate["status"][] = ["new", "review", "approved", "rejected"];
+const STATUSES: Candidate["status"][] = ["new", "review", "shortlisted", "interview_1", "interview_2", "approved", "offer", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected", "hired", "rejected"];
 
 interface InfoField {
   key: keyof Candidate;
@@ -32,12 +33,28 @@ const INFO_FIELDS: InfoField[] = [
 ];
 
 export default function CandidateDetail({ candidate: c, onClose }: Props) {
-  const { updateCandidate, deleteCandidate } = useStore();
+  const { updateCandidate, deleteCandidate, interviews, addInterview, updateInterview, offers, addOffer, updateOffer, documents, updateDocument, employees, addEmployee, updateEmployee, employeeBonds, updateEmployeeBond, employeeResignations, addEmployeeResignation, roles } = useStore();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"profile" | "score" | "resume">("profile");
   const [resumeMode, setResumeMode] = useState<"pdf" | "text">(c.resumeUrl ? "pdf" : "text");
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
   const [isEmailOpen, setIsEmailOpen] = useState(false);
+
+  const candidateOffer = offers.find(o => o.candidateId === c.id);
+  const candidateDocs = documents.filter(d => d.candidateId === c.id);
+  const candidateEmployee = employees.find(e => e.candidateId === c.id);
+  const candidateRole = roles.find(r => r.id === c.roleId);
+  const employeeBond = candidateEmployee ? employeeBonds.find(b => b.employeeId === candidateEmployee.id) : null;
+  const employeeResignation = candidateEmployee ? employeeResignations.find(r => r.employeeId === candidateEmployee.id) : null;
+
+  const candidateInterviews = interviews.filter(i => i.candidateId === c.id);
+  const r1 = candidateInterviews.find(i => i.round === 1);
+  const r2 = candidateInterviews.find(i => i.round === 2);
+  
+  const [scheduleR1, setScheduleR1] = useState("");
+  const [scheduleR2, setScheduleR2] = useState("");
+  const [r1Notes, setR1Notes] = useState("");
+  const [r2Notes, setR2Notes] = useState("");
 
   // Inline Editing States
   const [isEditing, setIsEditing] = useState(false);
@@ -57,6 +74,90 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
       note: c.note,
     });
   }, [c]);
+
+  const [convertingToEmployee, setConvertingToEmployee] = useState(false);
+
+  async function handleConvertToEmployee() {
+    if (!candidateRole) return alert("Role details missing");
+    setConvertingToEmployee(true);
+    try {
+      const res = await fetch("/api/employees", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          candidateId: c.id,
+          offerId: candidateOffer?.id || null,
+          name: c.name,
+          email: c.email,
+          phone: c.phone,
+          employmentType: candidateRole.type
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      addEmployee(data.employee);
+      updateCandidate(c.id, { status: "hired" });
+      alert("Successfully converted to Employee!");
+    } catch (err: any) {
+      alert("Failed to convert to Employee: " + err.message);
+    } finally {
+      setConvertingToEmployee(false);
+    }
+  }
+
+  // Resignation UI states
+  const [showResignationForm, setShowResignationForm] = useState(false);
+  const [resignationReason, setResignationReason] = useState("");
+  const [isBreach, setIsBreach] = useState(false);
+  const [breachReason, setBreachReason] = useState("");
+  const [processingResignation, setProcessingResignation] = useState(false);
+
+  async function handleToggleBond(current: boolean) {
+    if (!candidateEmployee) return;
+    try {
+      const res = await fetch(`/api/employees/${candidateEmployee.id}/bond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isRequired: !current })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      updateEmployeeBond(data.bond);
+      updateEmployee(candidateEmployee.id, { bondRequirement: !current ? "Required" : "Not Required" });
+    } catch (err: any) {
+      alert("Failed to update bond: " + err.message);
+    }
+  }
+
+  async function handleSubmitResignation() {
+    if (!candidateEmployee || !resignationReason) return alert("Reason is required");
+    if (isBreach && !breachReason) return alert("Breach reason is required");
+    
+    setProcessingResignation(true);
+    try {
+      const res = await fetch(`/api/employees/${candidateEmployee.id}/resign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          resignationReason,
+          isBreach,
+          breachReason: isBreach ? breachReason : null
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      
+      addEmployeeResignation(data.resignation);
+      updateEmployee(candidateEmployee.id, { status: "terminated" });
+      setShowResignationForm(false);
+    } catch (err: any) {
+      alert("Failed to process resignation: " + err.message);
+    } finally {
+      setProcessingResignation(false);
+    }
+  }
 
   // Is the name parser confidence low? (< 70)
   const isLowConfidence = c.extractionConfidence !== undefined && c.extractionConfidence < 70;
@@ -572,6 +673,314 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                 </div>
               </div>
             )
+          )}
+
+          {/* Interview Management */}
+          {(c.status === "shortlisted" || c.status === "interview_1" || c.status === "interview_2") && (
+            <div className="mt-5 pt-4 flex flex-col gap-3" style={{ borderTop: "1px solid var(--border)" }}>
+              <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest">Interview Management</div>
+              
+              {/* Round 1 */}
+              <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--glass-2)]">
+                <div className="font-bold text-sm text-[var(--text)] mb-2">Round 1</div>
+                {!r1 ? (
+                  <div className="flex gap-2">
+                    <input type="datetime-local" value={scheduleR1} onChange={e => setScheduleR1(e.target.value)}
+                      className="flex-1 bg-[var(--glass-3)] text-[var(--text)] text-xs border border-[var(--border)] rounded px-2 py-1 outline-none" />
+                    <Btn className="bg-[var(--primary)] text-black text-xs font-bold px-3 py-1 rounded"
+                      onClick={() => {
+                        if (!scheduleR1) return alert("Select a date");
+                        addInterview({
+                          id: crypto.randomUUID(), candidateId: c.id, round: 1, scheduledAt: new Date(scheduleR1).toISOString(),
+                          status: "scheduled", notes: "", decision: null, createdAt: new Date().toISOString()
+                        });
+                        updateCandidate(c.id, { status: "interview_1" });
+                      }}>Schedule R1</Btn>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <div className="text-xs text-[var(--text-2)]">Scheduled: {new Date(r1.scheduledAt!).toLocaleString()} ({r1.status})</div>
+                    {r1.status === "scheduled" && (
+                      <>
+                        <textarea placeholder="Interview Notes..." value={r1Notes} onChange={e => setR1Notes(e.target.value)}
+                          className="w-full bg-[var(--glass-3)] text-[var(--text)] text-xs border border-[var(--border)] rounded p-2 outline-none h-16" />
+                        <div className="flex gap-2 mt-1">
+                          <Btn className="bg-[var(--green)] text-black text-[10px] font-bold px-2 py-1 rounded" onClick={() => {
+                            updateInterview(r1.id, { status: "completed", decision: "select", notes: r1Notes });
+                            updateCandidate(c.id, { status: "approved" });
+                          }}>Select</Btn>
+                          <Btn className="bg-[var(--yellow)] text-black text-[10px] font-bold px-2 py-1 rounded" onClick={() => {
+                            updateInterview(r1.id, { status: "completed", decision: "round2_required", notes: r1Notes });
+                            updateCandidate(c.id, { status: "interview_1" });
+                          }}>Req Round 2</Btn>
+                          <Btn className="bg-[var(--red)] text-white text-[10px] font-bold px-2 py-1 rounded" onClick={() => {
+                            updateInterview(r1.id, { status: "completed", decision: "reject", notes: r1Notes });
+                            updateCandidate(c.id, { status: "rejected" });
+                          }}>Reject</Btn>
+                        </div>
+                      </>
+                    )}
+                    {r1.status === "completed" && (
+                      <div className="text-xs text-[var(--text-3)]">Decision: {r1.decision} | Notes: {r1.notes}</div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Round 2 */}
+              {(r1?.decision === "round2_required" || r2) && (
+                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--glass-2)]">
+                  <div className="font-bold text-sm text-[var(--text)] mb-2">Round 2</div>
+                  {!r2 ? (
+                    <div className="flex gap-2">
+                      <input type="datetime-local" value={scheduleR2} onChange={e => setScheduleR2(e.target.value)}
+                        className="flex-1 bg-[var(--glass-3)] text-[var(--text)] text-xs border border-[var(--border)] rounded px-2 py-1 outline-none" />
+                      <Btn className="bg-[var(--primary)] text-black text-xs font-bold px-3 py-1 rounded"
+                        onClick={() => {
+                          if (!scheduleR2) return alert("Select a date");
+                          addInterview({
+                            id: crypto.randomUUID(), candidateId: c.id, round: 2, scheduledAt: new Date(scheduleR2).toISOString(),
+                            status: "scheduled", notes: "", decision: null, createdAt: new Date().toISOString()
+                          });
+                          updateCandidate(c.id, { status: "interview_2" });
+                        }}>Schedule R2</Btn>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <div className="text-xs text-[var(--text-2)]">Scheduled: {new Date(r2.scheduledAt!).toLocaleString()} ({r2.status})</div>
+                      {r2.status === "scheduled" && (
+                        <>
+                          <textarea placeholder="Interview Notes..." value={r2Notes} onChange={e => setR2Notes(e.target.value)}
+                            className="w-full bg-[var(--glass-3)] text-[var(--text)] text-xs border border-[var(--border)] rounded p-2 outline-none h-16" />
+                          <div className="flex gap-2 mt-1">
+                            <Btn className="bg-[var(--green)] text-black text-[10px] font-bold px-2 py-1 rounded" onClick={() => {
+                              updateInterview(r2.id, { status: "completed", decision: "select", notes: r2Notes });
+                              updateCandidate(c.id, { status: "approved" });
+                            }}>Select</Btn>
+                            <Btn className="bg-[var(--red)] text-white text-[10px] font-bold px-2 py-1 rounded" onClick={() => {
+                              updateInterview(r2.id, { status: "completed", decision: "reject", notes: r2Notes });
+                              updateCandidate(c.id, { status: "rejected" });
+                            }}>Reject</Btn>
+                          </div>
+                        </>
+                      )}
+                      {r2.status === "completed" && (
+                        <div className="text-xs text-[var(--text-3)]">Decision: {r2.decision} | Notes: {r2.notes}</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Offer Management */}
+          {(c.status === "approved" || c.status === "offer" || c.status === "offer_sent" || c.status === "offer_accepted" || c.status === "offer_rejected") && (
+            <div className="mt-5 pt-4 flex flex-col gap-3" style={{ borderTop: "1px solid var(--border)" }}>
+              <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest">Offer Management</div>
+              
+              <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--glass-2)]">
+                {!candidateOffer ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="text-xs text-[var(--text-2)] mb-2">Ready to extend an offer? You can generate a contract first or proceed directly.</div>
+                    <Btn className="bg-[var(--primary)] text-black text-xs font-bold px-3 py-2 rounded"
+                      onClick={() => {
+                        addOffer({
+                          id: crypto.randomUUID(), candidateId: c.id, contractTemplateId: null,
+                          status: "draft", sentAt: null, respondedAt: null, createdAt: new Date().toISOString()
+                        });
+                        updateCandidate(c.id, { status: "offer" });
+                      }}>Prepare Offer</Btn>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-bold">Offer Status: <span className="uppercase text-[var(--primary)]">{candidateOffer.status}</span></div>
+                    </div>
+                    {candidateOffer.status === "draft" && (
+                      <div className="flex gap-2">
+                        <Btn className="bg-[var(--glass-3)] text-white text-[10px] font-bold px-3 py-2 rounded flex-1 border border-[var(--border)] hover:bg-[var(--glass-4)]" 
+                          onClick={() => {
+                            updateOffer(candidateOffer.id, { status: "sent", sentAt: new Date().toISOString() });
+                            updateCandidate(c.id, { status: "offer_sent" });
+                          }}>Mark as Sent</Btn>
+                      </div>
+                    )}
+                    {candidateOffer.status === "sent" && (
+                      <div className="flex gap-2">
+                        <Btn className="bg-[var(--green)] text-black text-[10px] font-bold px-3 py-2 rounded flex-1" 
+                          onClick={() => {
+                            updateOffer(candidateOffer.id, { status: "accepted", respondedAt: new Date().toISOString() });
+                            updateCandidate(c.id, { status: "offer_accepted" });
+                          }}>Accepted</Btn>
+                        <Btn className="bg-[var(--red)] text-white text-[10px] font-bold px-3 py-2 rounded flex-1" 
+                          onClick={() => {
+                            updateOffer(candidateOffer.id, { status: "rejected", respondedAt: new Date().toISOString() });
+                            updateCandidate(c.id, { status: "offer_rejected" });
+                          }}>Rejected</Btn>
+                      </div>
+                    )}
+                    {(candidateOffer.status === "accepted" || candidateOffer.status === "rejected") && (
+                      <div className="text-xs text-[var(--text-3)]">
+                        Responded at: {new Date(candidateOffer.respondedAt!).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Onboarding Management */}
+          {(c.status === "offer_accepted" || c.status.startsWith("onboarding_")) && (
+            <div className="mt-5 pt-4 flex flex-col gap-3" style={{ borderTop: "1px solid var(--border)" }}>
+              <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest">Onboarding Management</div>
+              
+              <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--glass-2)]">
+                <div className="flex justify-between items-center mb-3">
+                  <div className="text-sm font-bold">Documents</div>
+                  <Btn className="text-[10px] bg-[var(--glass-3)] px-2 py-1 rounded"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${window.location.origin}/onboarding/${c.id}`);
+                      alert("Candidate upload link copied to clipboard.");
+                    }}
+                  >Copy Upload Link</Btn>
+                </div>
+                
+                {candidateDocs.length === 0 ? (
+                  <div className="text-xs text-[var(--text-3)] italic">No documents uploaded yet.</div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {candidateDocs.map(doc => (
+                      <div key={doc.id} className="flex flex-col gap-2 p-2 bg-[var(--glass)] border border-[var(--border-2)] rounded">
+                        <div className="flex justify-between items-center">
+                          <div className="text-xs font-medium truncate" title={doc.fileName}>{doc.fileName}</div>
+                          <div className="text-[10px] uppercase text-[var(--text-3)]">{doc.type}</div>
+                        </div>
+                        <div className="flex gap-2 items-center justify-between">
+                          <div className="flex gap-1">
+                            <Btn className="text-[10px] px-2 py-0.5 rounded bg-[var(--glass-4)] hover:bg-white/20 text-white"
+                              onClick={async () => {
+                                const url = await getDocumentSignedUrl(doc.filePath);
+                                if (url) window.open(url, '_blank');
+                                else alert("Failed to open document securely.");
+                              }}>View</Btn>
+                          </div>
+                          {doc.status === "pending" ? (
+                            <div className="flex gap-1">
+                              <Btn className="text-[10px] px-2 py-0.5 rounded bg-[var(--green)] text-black font-bold"
+                                onClick={() => {
+                                  updateDocument(doc.id, { status: "verified" });
+                                  updateCandidate(c.id, { status: "onboarding_verified" });
+                                }}>Verify</Btn>
+                              <Btn className="text-[10px] px-2 py-0.5 rounded bg-[var(--red)] text-white font-bold"
+                                onClick={() => {
+                                  updateDocument(doc.id, { status: "rejected" });
+                                  updateCandidate(c.id, { status: "onboarding_rejected" });
+                                }}>Reject</Btn>
+                            </div>
+                          ) : (
+                            <div className={clsx("text-[10px] font-bold uppercase", doc.status === "verified" ? "text-[var(--green)]" : "text-[var(--red)]")}>
+                              {doc.status}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {!candidateEmployee && (c.status === "onboarding_verified" || c.status === "offer_accepted") && (
+                <Btn className="w-full py-2 rounded font-bold text-sm bg-[var(--primary)] text-black"
+                  onClick={handleConvertToEmployee}
+                  disabled={convertingToEmployee}>
+                  {convertingToEmployee ? "Converting..." : "🎉 Convert to Employee"}
+                </Btn>
+              )}
+              {candidateEmployee && (
+                <div className="p-3 rounded-lg border border-[var(--green)] bg-[var(--green)]/10">
+                  <div className="text-sm font-bold text-[var(--green)] mb-1">🎉 Hired as Employee</div>
+                  <div className="text-xs text-[var(--text-2)]">Type: {candidateEmployee.employmentType}</div>
+                  <div className="text-xs text-[var(--text-2)]">Bond Req: {candidateEmployee.bondRequirement}</div>
+                  
+                  {/* Bond Management */}
+                  <div className="mt-3 pt-3 border-t border-[var(--green)]/20">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-xs font-semibold">Bond Status</div>
+                      <Btn className="text-[10px] px-2 py-1 rounded bg-[var(--glass-3)]"
+                        onClick={() => handleToggleBond(employeeBond?.isRequired || false)}>
+                        Toggle
+                      </Btn>
+                    </div>
+                    {employeeBond?.isRequired ? (
+                      <div className="text-[10px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 p-2 rounded">
+                        <strong>Required.</strong> (Amount: {employeeBond.amount}, Duration: {employeeBond.duration})
+                      </div>
+                    ) : (
+                      <div className="text-[10px] text-[var(--text-3)]">No bond required.</div>
+                    )}
+                  </div>
+
+                  {/* Resignation Management */}
+                  <div className="mt-3 pt-3 border-t border-[var(--green)]/20">
+                    {employeeResignation ? (
+                      <div className="bg-red-500/10 border border-red-500/20 p-2 rounded">
+                        <div className="text-xs font-bold text-red-500">Resigned / Terminated</div>
+                        <div className="text-[10px] text-[var(--text-2)] mt-1">Reason: {employeeResignation.resignationReason}</div>
+                        {employeeResignation.isBreach && (
+                          <div className="text-[10px] text-red-400 font-semibold mt-1">⚠️ BREACH: {employeeResignation.breachReason}</div>
+                        )}
+                        <div className="mt-3 flex flex-col gap-2">
+                          <Btn className="w-full text-[10px] py-1 rounded bg-[var(--glass-4)] hover:bg-white/10 text-white"
+                            onClick={() => router.push(`/contracts?candidateId=${c.id}&templateId=exp_letter`)}>
+                            Generate Experience Letter
+                          </Btn>
+                          <Btn className="w-full text-[10px] py-1 rounded bg-[var(--glass-4)] hover:bg-white/10 text-white"
+                            onClick={() => router.push(`/contracts?candidateId=${c.id}&templateId=rel_letter`)}>
+                            Generate Relieving Letter
+                          </Btn>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <Btn className="w-full text-xs py-1.5 rounded border border-red-500/30 text-red-500 hover:bg-red-500/10"
+                          onClick={() => setShowResignationForm(!showResignationForm)}>
+                          Process Resignation
+                        </Btn>
+                        {showResignationForm && (
+                          <div className="mt-2 flex flex-col gap-2">
+                            <textarea
+                              value={resignationReason}
+                              onChange={e => setResignationReason(e.target.value)}
+                              placeholder="Resignation / Termination Reason..."
+                              className="w-full bg-[var(--glass-4)] border border-[var(--border)] rounded p-2 text-xs text-white"
+                            />
+                            <label className="flex items-center gap-2 text-xs">
+                              <input type="checkbox" checked={isBreach} onChange={e => setIsBreach(e.target.checked)} />
+                              Classify as Bond Breach
+                            </label>
+                            {isBreach && (
+                              <textarea
+                                value={breachReason}
+                                onChange={e => setBreachReason(e.target.value)}
+                                placeholder="Details of breach..."
+                                className="w-full bg-[var(--glass-4)] border border-red-500/50 rounded p-2 text-xs text-white"
+                              />
+                            )}
+                            <Btn className="bg-red-500 text-white font-bold py-1 rounded text-xs mt-1"
+                              onClick={handleSubmitResignation}
+                              disabled={processingResignation}>
+                              Confirm Separation
+                            </Btn>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Status row */}

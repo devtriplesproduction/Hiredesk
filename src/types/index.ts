@@ -1,5 +1,71 @@
-export type Status = "new" | "review" | "approved" | "rejected";
+export type Status = "new" | "review" | "shortlisted" | "interview_1" | "interview_2" | "approved" | "rejected" | "offer" | "offer_sent" | "offer_accepted" | "offer_rejected" | "onboarding_requested" | "onboarding_review" | "onboarding_verified" | "onboarding_rejected" | "hired";
 
+export interface Employee {
+  id: string;
+  candidateId: string;
+  offerId: string | null;
+  name: string;
+  email: string;
+  phone: string;
+  employmentType: string;
+  bondRequirement: string;
+  status: "active" | "terminated" | "on_leave";
+  createdAt: string;
+}
+
+export interface EmployeeBond {
+  id: string;
+  employeeId: string;
+  isRequired: boolean;
+  amount: string;
+  duration: string;
+  penalty: string;
+  compensationFormula: string;
+  breachConditions: string;
+  legalRules: string;
+  createdAt: string;
+}
+
+export interface EmployeeResignation {
+  id: string;
+  employeeId: string;
+  resignationReason: string;
+  isBreach: boolean;
+  breachReason: string | null;
+  createdAt: string;
+}
+
+export interface CandidateDocument {
+  id: string;
+  candidateId: string;
+  fileName: string;
+  filePath: string;
+  type: string;
+  status: "pending" | "verified" | "rejected";
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Offer {
+  id: string;
+  candidateId: string;
+  contractTemplateId: string | null;
+  status: "draft" | "sent" | "accepted" | "rejected";
+  sentAt: string | null;
+  respondedAt: string | null;
+  createdAt: string;
+}
+
+export interface Interview {
+  id: string;
+  candidateId: string;
+  round: number; // 1 or 2
+  scheduledAt: string | null;
+  status: "scheduled" | "completed" | "cancelled";
+  notes: string;
+  decision: "select" | "reject" | "round2_required" | null;
+  createdAt: string;
+}
 export interface ScoreBreakdown {
   skills: number;
   exp: number;

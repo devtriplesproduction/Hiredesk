@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import type { Candidate } from "@/types";
+import type { Candidate, Interview } from "@/types";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -315,4 +315,163 @@ export async function updateDBContract(id: string, patch: any): Promise<void> {
 export async function deleteDBContract(id: string): Promise<void> {
   const { error } = await supabase.from("contracts").delete().eq("id", id);
   if (error) throw error;
+}
+
+// ─── INTERVIEWS ─────────────────────────────────────────────────────────────
+export async function getDBInterviews(): Promise<Interview[]> {
+  const { data, error } = await supabase
+    .from("interviews")
+    .select("*")
+    .order("createdAt", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching interviews from Supabase:", error);
+    throw error;
+  }
+  return (data || []) as Interview[];
+}
+
+export async function insertDBInterview(interview: Interview): Promise<void> {
+  const cleaned = cleanNullBytes(interview);
+  const { error } = await supabase.from("interviews").insert(cleaned);
+  if (error) {
+    console.error("Error inserting interview to Supabase:", error);
+    throw error;
+  }
+}
+
+export async function updateDBInterview(id: string, patch: Partial<Interview>): Promise<void> {
+  const cleaned = cleanNullBytes(patch);
+  const { error } = await supabase.from("interviews").update(cleaned).eq("id", id);
+  if (error) {
+    console.error("Error updating interview in Supabase:", error);
+    throw error;
+  }
+}
+
+// ─── OFFERS ─────────────────────────────────────────────────────────────────
+import type { Offer } from "@/types";
+
+export async function getDBOffers(): Promise<Offer[]> {
+  const { data, error } = await supabase
+    .from("offers")
+    .select("*")
+    .order("createdAt", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching offers from Supabase:", error);
+    throw error;
+  }
+  return (data || []) as Offer[];
+}
+
+export async function insertDBOffer(offer: Offer): Promise<void> {
+  const cleaned = cleanNullBytes(offer);
+  const { error } = await supabase.from("offers").insert(cleaned);
+  if (error) {
+    console.error("Error inserting offer to Supabase:", error);
+    throw error;
+  }
+}
+
+export async function updateDBOffer(id: string, patch: Partial<Offer>): Promise<void> {
+  const cleaned = cleanNullBytes(patch);
+  const { error } = await supabase.from("offers").update(cleaned).eq("id", id);
+  if (error) {
+    console.error("Error updating offer in Supabase:", error);
+    throw error;
+  }
+}
+
+// ─── CANDIDATE DOCUMENTS ──────────────────────────────────────────────────────
+import type { CandidateDocument } from "@/types";
+
+export async function getDBCandidateDocuments(): Promise<CandidateDocument[]> {
+  const { data, error } = await supabase
+    .from("candidate_documents")
+    .select("*")
+    .order("createdAt", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching candidate documents:", error);
+    throw error;
+  }
+  return (data || []) as CandidateDocument[];
+}
+
+export async function updateDBCandidateDocument(id: string, patch: Partial<CandidateDocument>): Promise<void> {
+  const cleaned = cleanNullBytes(patch);
+  const { error } = await supabase.from("candidate_documents").update(cleaned).eq("id", id);
+  if (error) {
+    console.error("Error updating candidate document:", error);
+    throw error;
+  }
+}
+
+export async function getDocumentSignedUrl(filePath: string): Promise<string | null> {
+  const { data, error } = await supabase.storage.from("onboarding-docs").createSignedUrl(filePath, 60 * 60);
+  if (error) {
+    console.error("Error creating signed URL:", error);
+    return null;
+  }
+  return data?.signedUrl || null;
+}
+
+// ─── EMPLOYEES ──────────────────────────────────────────────────────────────
+import type { Employee, EmployeeBond, EmployeeResignation } from "@/types";
+
+export async function getDBEmployees(): Promise<Employee[]> {
+  const { data, error } = await supabase
+    .from("employees")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching employees:", error);
+    throw error;
+  }
+  
+  // Map snake_case to camelCase
+  return (data || []).map(emp => ({
+    id: emp.id,
+    candidateId: emp.candidate_id,
+    offerId: emp.offer_id,
+    name: emp.name,
+    email: emp.email,
+    phone: emp.phone,
+    employmentType: emp.employment_type,
+    bondRequirement: emp.bond_requirement,
+    status: emp.status,
+    createdAt: emp.created_at
+  })) as Employee[];
+}
+
+export async function getDBEmployeeBonds(): Promise<EmployeeBond[]> {
+  const { data, error } = await supabase.from("employee_bonds").select("*");
+  if (error) throw error;
+  return (data || []).map(b => ({
+    id: b.id,
+    employeeId: b.employee_id,
+    isRequired: b.is_required,
+    amount: b.amount,
+    duration: b.duration,
+    penalty: b.penalty,
+    compensationFormula: b.compensation_formula,
+    breachConditions: b.breach_conditions,
+    legalRules: b.legal_rules,
+    createdAt: b.created_at
+  }));
+}
+
+export async function getDBEmployeeResignations(): Promise<EmployeeResignation[]> {
+  const { data, error } = await supabase.from("employee_resignations").select("*");
+  if (error) throw error;
+  return (data || []).map(r => ({
+    id: r.id,
+    employeeId: r.employee_id,
+    resignationReason: r.resignation_reason,
+    isBreach: r.is_breach,
+    breachReason: r.breach_reason,
+    createdAt: r.created_at
+  }));
 }

@@ -1,3 +1,25 @@
+-- Verified from src/types/index.ts and src/lib/supabase.ts
+-- The candidates table has no explicit foreign keys validated in the codebase, 
+-- but 'roleId' logically links to roles.id in application logic.
+
+CREATE TABLE IF NOT EXISTS public.roles (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  keywords TEXT[] NOT NULL DEFAULT '{}',
+  count INTEGER NOT NULL DEFAULT 0,
+  "isActive" BOOLEAN NOT NULL DEFAULT true
+);
+
+CREATE TABLE IF NOT EXISTS public.contracts (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  icon TEXT NOT NULL,
+  "desc" TEXT NOT NULL,
+  type TEXT NOT NULL,
+  body TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS public.candidates (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,

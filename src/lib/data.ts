@@ -234,6 +234,28 @@ ${clause("7","Governing Law","This Agreement is governed by the laws of India, s
 ${SIG}`;
 }
 
+function expLetterTemplate() {
+  return LH("EXP") + `
+<h2 style="font-family:Arial,sans-serif;font-size:14pt;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;text-align:center;margin:0 0 24px 0;padding-bottom:10px;border-bottom:1px solid #e0e0e0">To Whomsoever It May Concern</h2>
+<p style="font-family:Arial,sans-serif;font-size:10.5pt;margin-bottom:20px;text-align:justify">This is to certify that <strong>[CANDIDATE NAME]</strong> was employed with <strong>Triple S Production</strong> as a <strong>[ROLE]</strong> from <strong>[START DATE]</strong> to <strong>[END DATE]</strong>.</p>
+<p style="font-family:Arial,sans-serif;font-size:10.5pt;margin-bottom:20px;text-align:justify">During their tenure with us, they were responsible for executing their duties efficiently and maintaining a professional code of conduct.</p>
+<p style="font-family:Arial,sans-serif;font-size:10.5pt;margin-bottom:20px;text-align:justify">We wish them the best in their future endeavors.</p>
+<br/><br/>
+${SIG}`;
+}
+
+function relLetterTemplate() {
+  return LH("REL") + `
+<h2 style="font-family:Arial,sans-serif;font-size:14pt;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;text-align:center;margin:0 0 24px 0;padding-bottom:10px;border-bottom:1px solid #e0e0e0">Relieving Letter</h2>
+<p style="font-family:Arial,sans-serif;font-size:10.5pt;margin-bottom:20px;text-align:justify">Dear <strong>[CANDIDATE NAME]</strong>,</p>
+<p style="font-family:Arial,sans-serif;font-size:10.5pt;margin-bottom:20px;text-align:justify">With reference to your resignation, we would like to inform you that it has been accepted. You are officially relieved from your duties and responsibilities as <strong>[ROLE]</strong> at Triple S Production, effective from the close of business hours on <strong>[END DATE]</strong>.</p>
+<p style="font-family:Arial,sans-serif;font-size:10.5pt;margin-bottom:20px;text-align:justify">Your contributions during your employment from <strong>[START DATE]</strong> are appreciated.</p>
+<p style="font-family:Arial,sans-serif;font-size:10.5pt;margin-bottom:20px;text-align:justify">Please note that your obligations regarding Confidentiality, Non-Disclosure, and Intellectual Property, as stated in your employment agreement, remain in effect post-employment.</p>
+<p style="font-family:Arial,sans-serif;font-size:10.5pt;margin-bottom:20px;text-align:justify">We wish you success in your future career.</p>
+<br/>
+${SIG}`;
+}
+
 export function getContractTemplates(): Contract[] {
   return [
     { id:"emp-ft",    name:"Full-Time Employment Agreement", icon:"📋", desc:"Comprehensive employment contract for permanent hires · Includes probation, compensation, IP, and termination clauses",    type:"employment", body:empTemplate() },
@@ -242,5 +264,7 @@ export function getContractTemplates(): Contract[] {
     { id:"nda",       name:"Non-Disclosure Agreement",       icon:"🔒", desc:"Mutual NDA covering confidential information obligations for all new hires and collaborators",                                  type:"nda",        body:ndasTemplate() },
     { id:"ip",        name:"IP Assignment Agreement",        icon:"©️", desc:"Intellectual property transfer and moral rights waiver for creative and technical roles",                                       type:"ip",         body:ipTemplate() },
     { id:"model",     name:"Model Release & Usage Agreement",icon:"📸", desc:"Commercial and editorial image/video usage rights for models · Includes exclusivity and payment terms",                        type:"model",      body:modelTemplate() },
+    { id:"exp_letter",name:"Experience Letter",              icon:"📜", desc:"Official certification of employment tenure and designation",                                                              type:"employment", body:expLetterTemplate() },
+    { id:"rel_letter",name:"Relieving Letter",               icon:"👋", desc:"Official acknowledgment of resignation acceptance and release from duties",                                                type:"employment", body:relLetterTemplate() },
   ];
 }

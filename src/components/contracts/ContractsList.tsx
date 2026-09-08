@@ -71,9 +71,11 @@ export default function ContractsList() {
 
   useEffect(() => {
     const candidateId = searchParams.get("candidateId");
+    const templateId = searchParams.get("templateId");
     if (candidateId && contracts.length > 0) {
       setPreselectedCandidateId(candidateId);
-      setGenerating(contracts[0]);
+      const targetTemplate = templateId ? contracts.find(c => c.id === templateId) : null;
+      setGenerating(targetTemplate || contracts[0]);
       router.replace("/contracts");
     }
   }, [contracts, searchParams, router]);

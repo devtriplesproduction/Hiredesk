@@ -104,7 +104,19 @@ input[type="range"]::-webkit-slider-thumb {
 
 .status-new { background: rgba(255,255,255,.06); color: var(--text-2); border: 1px solid var(--border); }
 .status-review { background: rgba(255,212,68,.08); color: #ffd444; border: 1px solid rgba(255,212,68,.2); }
+.status-shortlisted { background: rgba(0,229,255,.08); color: #00e5ff; border: 1px solid rgba(0,229,255,.2); }
+.status-interview_1 { background: rgba(179,136,255,.08); color: #b388ff; border: 1px solid rgba(179,136,255,.2); }
+.status-interview_2 { background: rgba(234,128,252,.08); color: #ea80fc; border: 1px solid rgba(234,128,252,.2); }
 .status-approved { background: rgba(68,255,136,.08); color: #44ff88; border: 1px solid rgba(68,255,136,.2); }
+.status-offer { background: rgba(255,145,0,.08); color: #ff9100; border: 1px solid rgba(255,145,0,.2); }
+.status-offer_sent { background: rgba(255,171,64,.08); color: #ffab40; border: 1px solid rgba(255,171,64,.2); }
+.status-offer_accepted { background: rgba(0,230,118,.08); color: #00e676; border: 1px solid rgba(0,230,118,.2); }
+.status-offer_rejected { background: rgba(255,61,0,.08); color: #ff3d00; border: 1px solid rgba(255,61,0,.2); }
+.status-onboarding_requested { background: rgba(24,255,255,.08); color: #18ffff; border: 1px solid rgba(24,255,255,.2); }
+.status-onboarding_review { background: rgba(255,235,59,.08); color: #ffeb3b; border: 1px solid rgba(255,235,59,.2); }
+.status-onboarding_verified { background: rgba(0,200,83,.08); color: #00c853; border: 1px solid rgba(0,200,83,.2); }
+.status-onboarding_rejected { background: rgba(213,0,0,.08); color: #d50000; border: 1px solid rgba(213,0,0,.2); }
+.status-hired { background: rgba(255,215,0,.08); color: #ffd700; border: 1px solid rgba(255,215,0,.2); }
 .status-rejected { background: rgba(255,68,68,.08); color: #ff4444; border: 1px solid rgba(255,68,68,.2); }
 
 /* Contract paper print styles */
