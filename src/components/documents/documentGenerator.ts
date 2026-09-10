@@ -39,10 +39,31 @@ export interface DocumentData {
   companyName?: string;
 }
 
-export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string, LOGO_WHITE: string, ICON_BLACK: string): string {
+export const DOC_GROUPS = {
+  "offer-fulltime": ["candidate", "joining", "compensation"],
+  "offer-internship": ["candidate", "joining", "compensation"],
+  "employee-agreement": ["candidate", "joining", "compensation"],
+  "background-verification": ["candidate"],
+  "handbook-ack": ["candidate"],
+  "payroll-form": ["candidate", "bank"],
+  "bond-agreement": ["candidate", "joining", "bond"],
+  "relieving-letter": ["candidate", "exit"],
+  "internship-completion": ["candidate", "exit"],
+  "experience-letter": ["candidate", "exit"],
+  "internship-certificate": ["candidate", "exit"],
+  "continuing-obligation": ["candidate"]
+};
 
+export const DOC_TITLES = {
+  "offer-fulltime": "Offer Letter (Full-Time)", "offer-internship": "Offer Letter (Internship)",
+  "employee-agreement": "Employee Agreement", "background-verification": "Background Verification Checklist",
+  "handbook-ack": "Handbook Acknowledgment", "payroll-form": "Payroll Registration Form",
+  "bond-agreement": "Service Bond Agreement", "relieving-letter": "Relieving Letter",
+  "internship-completion": "Internship Completion Letter", "experience-letter": "Experience Certificate",
+  "internship-certificate": "Internship Certificate", "continuing-obligation": "Continuing Obligation Reminder"
+};
 
-    const ICONS = {
+export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string, LOGO_WHITE: string, ICON_BLACK: string): string {    const ICONS = {
       briefcase: '<rect x="3" y="7.5" width="18" height="12.5" rx="1.6"/><path d="M8.5 7.5V5.8C8.5 4.8 9.3 4 10.3 4H13.7C14.7 4 15.5 4.8 15.5 5.8V7.5"/><line x1="3" y1="13" x2="21" y2="13"/>',
       user: '<circle cx="12" cy="8.3" r="3.6"/><path d="M4.8 20c0-3.8 3.2-6.3 7.2-6.3s7.2 2.5 7.2 6.3"/>',
       users: '<circle cx="9" cy="8" r="3.1"/><path d="M3.3 19.3c0-3.3 2.6-5.6 5.7-5.6s5.7 2.3 5.7 5.6"/><circle cx="17" cy="9" r="2.4"/><path d="M15 14.3c2.7 0.3 4.5 2.3 4.7 5"/>',
@@ -74,17 +95,17 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       "chevron-down": '<polyline points="6,9 12,15 18,9"/>',
       stamp: '<path d="M9 3.5h6c1 0 1.7 0.8 1.7 1.8V9c0 1.3-1 2.4-2.3 2.6L16 13.5h1.2c1.2 0 2.3 0.9 2.3 2.2V17H4.5v-1.3c0-1.3 1.1-2.2 2.3-2.2H8l1.6-1.9C8.3 11.4 7.3 10.3 7.3 9V5.3C7.3 4.3 8 3.5 9 3.5Z"/><line x1="4" y1="20.5" x2="20" y2="20.5"/>'
     };
-    function icon(name, size, color) {
+    function icon(name: keyof typeof ICONS, size?: number, color?: string) {
       size = size || 22; color = color || "currentColor";
       return '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '" fill="none" stroke="' + color + '" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + ICONS[name] + '</svg>';
     }
-    function badge(name, size, dark, bg, col) {
+    function badge(name: keyof typeof ICONS, size?: number, dark?: boolean, bg?: string, col?: string) {
       size = size || 40; if (dark === undefined) dark = true;
       bg = bg || (dark ? INK : "#ffffff"); col = col || (dark ? "#ffffff" : INK);
       return '<div class="badge" style="width:' + size + 'px;height:' + size + 'px;background:' + bg + ';color:' + col + ';">' + icon(name, Math.round(size * 0.48)) + '</div>';
     }
-    function ph(s) { return '<span class="ph">' + s + '</span>'; }
-    function esc(s) { return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+    function ph(s: string) { return '<span class="ph">' + s + '</span>'; }
+    function esc(s?: string) { return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
     const DEFAULTS = {
       candidateName: "[CANDIDATE NAME]", designation: "[DESIGNATION]", department: "Development", departmentOther: "[DEPARTMENT]",
@@ -101,19 +122,19 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       keyResponsibilities: ""
     };
 
-    function isPlaceholder(v) { return typeof v === "string" && v.startsWith("[") && v.endsWith("]"); }
-    function val(v) { return isPlaceholder(v) ? ph(esc(v)) : esc(v); }
+    function isPlaceholder(v: any) { return typeof v === "string" && v.startsWith("[") && v.endsWith("]"); }
+    function val(v?: string) { return isPlaceholder(v) ? ph(esc(v)) : esc(v); }
 
 // removed toggleDeptOther and getFormData
 
-    function header(pageNo, title, total) {
+    function header(pageNo: number, title?: string, total?: number) {
       title = title || "Letter of Appointment";
       total = total || 8;
       return '<div class="hd"><div class="l"><img src="' + LOGO_BLACK + '"></div>' +
         '<div class="c"><div class="t2">' + title + '</div></div>' +
         '<div class="r">Page ' + pageNo + ' of ' + total + '</div></div>';
     }
-    function footer(d) {
+    function footer(d: DocumentData) {
       return '<div class="ft"><div>Private &amp; Confidential</div>' +
         '<div class="mid">' + esc(d.hrEmail) + '</div>' +
         '<div>' + esc(d.refNo) + '</div></div>';
@@ -121,11 +142,11 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
     function contentWm() {
       return '<img src="' + ICON_BLACK + '" style="position:absolute;left:55mm;top:98.5mm;width:100mm;height:100mm;opacity:0.045;z-index:0;">';
     }
-    function page(inner, pageNo, d, title, total) {
+    function page(inner: string, pageNo: number, d: DocumentData, title?: string, total?: number) {
       return '<div class="page">' + contentWm() + header(pageNo, title, total) + '<div class="content" style="z-index:1;">' + inner + '</div>' + footer(d) + '</div>';
     }
 
-    function buildPage1(d) {
+    function build(d: DocumentData) {
       return '<div class="page cover">' +
         '<img class="wm" src="' + LOGO_WHITE + '">' +
         '<div class="innerc">' +
@@ -140,7 +161,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '</div></div>';
     }
 
-    function buildPage2(d) {
+    function build(d: DocumentData) {
       const inner =
         '<h1 class="pt">Welcome to the Team</h1>' +
         '<p class="body">Dear ' + val(d.candidateName) + ',</p>' +
@@ -165,7 +186,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 2, d);
     }
 
-    function buildPage3(d) {
+    function build(d: DocumentData) {
       const items = [
         ["compass", "First Increment", "Reviewed at 3 months, on successful confirmation of employment."],
         ["clipboard", "Performance Bonus", "Linked to annual performance appraisal and Company results."],
@@ -189,7 +210,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 3, d);
     }
 
-    function buildPage4(d) {
+    function build(d: DocumentData) {
       const items = [
         ["document-check", "Employment Agreement", "A detailed agreement covering role, term, and conditions will be signed on or before joining."],
         ["lock", "Confidentiality &amp; Data Security", "You agree to protect all confidential business, client, and technical information, and to use Company systems and data per security policy."],
@@ -213,7 +234,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 4, d);
     }
 
-    function buildPage5(d) {
+    function build(d: DocumentData) {
       const values = [
         ["badge-check", "Ownership", "We take responsibility and deliver with accountability."],
         ["party", "Creativity", "We think originally and create work with real impact."],
@@ -243,7 +264,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 5, d);
     }
 
-    function buildPage6(d) {
+    function build(d: DocumentData) {
       const steps = [
         ["pencil", "Offer Accepted", "You sign and return this letter to confirm your acceptance."],
         ["document-check", "Documents Submitted", "You share the documents required for verification, listed in Annexure C."],
@@ -264,7 +285,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 6, d);
     }
 
-    function buildPage7(d) {
+    function build(d: DocumentData) {
       const notes = [
         "All information shared by you will be kept strictly confidential by the Company.",
         "This offer is valid for acceptance until the date specified on the cover page.",
@@ -303,7 +324,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 7, d);
     }
 
-    function buildPage8(d) {
+    function build(d: DocumentData) {
       const inner =
         '<h1 class="pt">Acceptance of Offer</h1>' +
         '<div class="statement">I, ' + val(d.candidateName) + ', confirm that I have read, understood, and voluntarily accept the terms of this Letter of Appointment and its Annexures, issued by Triple S Production. I understand that a detailed Employment Agreement will be executed separately on or before my date of joining.</div>' +
@@ -320,7 +341,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
     }
 
     // ============== INTERNSHIP OFFER (8-page kit) ==============
-    function buildIntern1(d) {
+    function build(d: DocumentData) {
       return '<div class="page cover">' +
         '<img class="wm" src="' + LOGO_WHITE + '">' +
         '<div class="innerc">' +
@@ -334,7 +355,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '</div><div class="confbar"><div>Strictly Private &amp; Confidential</div><div>' + val(d.letterDate) + '</div></div></div>' +
         '</div></div>';
     }
-    function buildIntern2(d) {
+    function build(d: DocumentData) {
       const inner =
         '<h1 class="pt">Welcome to the Team</h1>' +
         '<p class="body">Dear ' + val(d.candidateName) + ',</p>' +
@@ -358,7 +379,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<div style="text-align:right;"><div class="role">Signed &amp; issued on</div><div class="name">' + val(d.letterDate) + '</div></div></div>';
       return page(inner, 2, d, "Letter of Internship");
     }
-    function buildIntern3(d) {
+    function build(d: DocumentData) {
       const stipendLabel = /unpaid/i.test(String(d.probationSalary || "")) ? "Unpaid" : ("&#8377;" + val(d.probationSalary));
       const items = [
         ["document-check", "Certificate of Completion", "Issued at the end of the internship, subject to satisfactory performance and completion of assigned work."],
@@ -379,7 +400,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<div class="paycard">' + rows + '</div>';
       return page(inner, 3, d, "Letter of Internship");
     }
-    function buildIntern4(d) {
+    function build(d: DocumentData) {
       const items = [
         ["document-check", "Internship Agreement", "A detailed agreement covering role, duration, and conditions will be signed on or before joining."],
         ["lock", "Confidentiality &amp; Data Security", "You agree to protect all confidential business, client, and technical information, and to use Company systems and data per security policy."],
@@ -402,7 +423,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<div class="banner">' + badge("scale", 32) + '<div>This page is a plain-language summary for your convenience. The binding legal terms are set out in full in the Internship Agreement and the Company policies referenced above.</div></div>';
       return page(inner, 4, d, "Letter of Internship");
     }
-    function buildIntern5(d) {
+    function build(d: DocumentData) {
       const values = [
         ["badge-check", "Ownership", "We take responsibility and deliver with accountability."],
         ["party", "Creativity", "We think originally and create work with real impact."],
@@ -431,7 +452,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<div class="quote5">' + icon("quote", 30, "#ffffff") + '<div><div class="qt">&ldquo;We don&rsquo;t just build brands &mdash; we build lasting impact.&rdquo;</div><div class="qa">&mdash; ' + val(d.proprietorName) + ', Founder</div></div></div>';
       return page(inner, 5, d, "Letter of Internship");
     }
-    function buildIntern6(d) {
+    function build(d: DocumentData) {
       const steps = [
         ["pencil", "Offer Accepted", "You sign and return this letter to confirm your acceptance."],
         ["document-check", "Documents Submitted", "You share the documents required for verification, listed in Annexure C."],
@@ -451,7 +472,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<div class="roadmap">' + rows + '</div>';
       return page(inner, 6, d, "Letter of Internship");
     }
-    function buildIntern7(d) {
+    function build(d: DocumentData) {
       const notes = [
         "All information shared by you will be kept strictly confidential by the Company.",
         "This offer is valid for acceptance until the date specified on the cover page.",
@@ -489,7 +510,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '</div>';
       return page(inner, 7, d, "Letter of Internship");
     }
-    function buildIntern8(d) {
+    function build(d: DocumentData) {
       const inner =
         '<h1 class="pt">Acceptance of Offer</h1>' +
         '<div class="statement">I, ' + val(d.candidateName) + ', confirm that I have read, understood, and voluntarily accept the terms of this Letter of Internship and its Annexures, issued by Triple S Production. I understand that a detailed Internship Agreement will be executed separately on or before my date of joining.</div>' +
@@ -539,7 +560,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       };
     }
 
-    function buildEmployeeAgreement(d) {
+    function build(d: DocumentData) {
       const city = esc((d.officeAddress || "Satara").split(",").pop().trim() || "Satara");
       const page1 =
         '<h1 class="pt">Employee Agreement</h1>' +
@@ -566,7 +587,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(page1, 1, d, "Employee Agreement", 3) + page(page2, 2, d, "Employee Agreement", 3) + page(page3, 3, d, "Employee Agreement", 3);
     }
 
-    function buildBackgroundVerification(d) {
+    function build(d: DocumentData) {
       const dp = deptProfile(d);
       const docs = [
         "Aadhar card", "PAN card", "Most recent resume",
@@ -584,7 +605,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 1, d, "Background Verification Checklist", 1);
     }
 
-    function buildHandbookAck(d) {
+    function build(d: DocumentData) {
       const items = [
         ["clock", "Working Hours &amp; Time Credit", "8 active hours/day required; hours beyond 8 accrue as credit (8 credits = 1 day of leave), redeemable as approved by the Company."],
         ["calendar", "Leave &amp; Attendance", "No official paid leave beyond the credit system. Medical leave may be paid at the Company's discretion, subject to documentation. Unapproved absence attracts disciplinary action."],
@@ -609,7 +630,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(page1, 1, d, "Handbook Acknowledgment", 2) + page(page2, 2, d, "Handbook Acknowledgment", 2);
     }
 
-    function buildPayrollForm(d) {
+    function build(d: DocumentData) {
       const inner =
         '<h1 class="pt">Payroll Registration Form</h1>' +
         '<div class="infocard2"><div class="hd2">' + icon("file", 16, "#ffffff") + ' Bank &amp; Tax Details</div><div class="rows">' +
@@ -625,7 +646,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 1, d, "Payroll Registration Form", 1);
     }
 
-    function buildBondAgreement(d) {
+    function build(d: DocumentData) {
       const city = esc((d.officeAddress || "Satara").split(",").pop().trim() || "Satara");
       const page1 =
         '<h1 class="pt">Service Bond Agreement</h1>' +
@@ -643,7 +664,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(page1, 1, d, "Service Bond Agreement", 2) + page(page2, 2, d, "Service Bond Agreement", 2);
     }
 
-    function buildRelievingLetter(d) {
+    function build(d: DocumentData) {
       const inner =
         '<h1 class="pt">Relieving Letter</h1>' +
         '<p class="body" style="margin-bottom:1mm;">To,<br>' + val(d.candidateName) + '<br>' + val(d.designation) + ', ' + val(d.department) + '</p>' +
@@ -658,7 +679,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 1, d, "Relieving Letter", 1);
     }
 
-    function buildInternshipCompletion(d) {
+    function build(d: DocumentData) {
       const dp = deptProfile(d);
       const resp = (d.keyResponsibilities && d.keyResponsibilities.trim()) ? esc(d.keyResponsibilities) : dp.responsibilities + " within the " + val(d.department) + " team";
       const inner =
@@ -674,7 +695,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 1, d, "Internship Completion Letter", 1);
     }
 
-    function buildExperienceLetter(d) {
+    function build(d: DocumentData) {
       const dp = deptProfile(d);
       const perf = (d.performanceNote && d.performanceNote.trim()) ? esc(d.performanceNote) : "was diligent, professional, and a valued member of the team";
       const resp = (d.keyResponsibilities && d.keyResponsibilities.trim()) ? esc(d.keyResponsibilities) : dp.responsibilities + " as " + val(d.designation);
@@ -690,7 +711,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 1, d, "Experience Certificate", 1);
     }
 
-    function buildInternshipCertificate(d) {
+    function build(d: DocumentData) {
       const dp = deptProfile(d);
       const perf = (d.performanceNote && d.performanceNote.trim()) ? esc(d.performanceNote) : "demonstrated strong learning ability and contributed meaningfully to assigned projects";
       const resp = (d.keyResponsibilities && d.keyResponsibilities.trim()) ? esc(d.keyResponsibilities) : "supporting the " + val(d.department) + " team with " + dp.responsibilities;
@@ -704,7 +725,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 1, d, "Certificate of Internship", 1);
     }
 
-    function buildContinuingObligation(d) {
+    function build(d: DocumentData) {
       const obligations = [
         "Confidentiality regarding client information, project material, and internal business data of the Company, without limitation of time.",
         "The restriction on using, reproducing, publishing, or showcasing any client deliverable or Company project in a personal portfolio, social media, or any third-party context, without the Company's prior written approval.",
@@ -722,29 +743,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 1, d, "Continuing Obligation Reminder", 1);
     }
 
-    const DOC_GROUPS = {
-      "offer-fulltime": ["candidate", "joining", "compensation"],
-      "offer-internship": ["candidate", "joining", "compensation"],
-      "employee-agreement": ["candidate", "joining", "compensation"],
-      "background-verification": ["candidate"],
-      "handbook-ack": ["candidate"],
-      "payroll-form": ["candidate", "bank"],
-      "bond-agreement": ["candidate", "joining", "bond"],
-      "relieving-letter": ["candidate", "exit"],
-      "internship-completion": ["candidate", "exit"],
-      "experience-letter": ["candidate", "exit"],
-      "internship-certificate": ["candidate", "exit"],
-      "continuing-obligation": ["candidate"]
-    };
     const REVIEW_FLAGGED = ["employee-agreement", "bond-agreement"];
-    const DOC_TITLES = {
-      "offer-fulltime": "Offer Letter (Full-Time)", "offer-internship": "Offer Letter (Internship)",
-      "employee-agreement": "Employee Agreement", "background-verification": "Background Verification Checklist",
-      "handbook-ack": "Handbook Acknowledgment", "payroll-form": "Payroll Registration Form",
-      "bond-agreement": "Service Bond Agreement", "relieving-letter": "Relieving Letter",
-      "internship-completion": "Internship Completion Letter", "experience-letter": "Experience Certificate",
-      "internship-certificate": "Internship Certificate", "continuing-obligation": "Continuing Obligation Reminder"
-    };
     const DOC_PAGE_COUNTS: Record<string, number> = {
       "offer-fulltime": 8, "offer-internship": 8, "employee-agreement": 3, "background-verification": 1,
       "handbook-ack": 2, "payroll-form": 1, "bond-agreement": 2, "relieving-letter": 1,

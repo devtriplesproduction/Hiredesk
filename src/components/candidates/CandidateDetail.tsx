@@ -41,6 +41,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
   const [isEmailOpen, setIsEmailOpen] = useState(false);
   const [isDocStudioOpen, setIsDocStudioOpen] = useState(false);
+  const [docStudioType, setDocStudioType] = useState<string | undefined>();
 
   const candidateOffer = offers.find(o => o.candidateId === c.id);
   const candidateDocs = documents.filter(d => d.candidateId === c.id);
@@ -813,6 +814,11 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                             updateOffer(candidateOffer.id, { status: "sent", sentAt: new Date().toISOString() });
                             updateCandidate(c.id, { status: "offer_sent" });
                           }}>Mark as Sent</Btn>
+                        <Btn className="bg-[var(--glass-3)] text-[var(--primary)] text-[10px] font-bold px-3 py-2 rounded flex-1 border border-[var(--primary)] hover:bg-[var(--glass-4)]" 
+                          onClick={() => {
+                            setDocStudioType(c.roleName?.toLowerCase().includes("intern") ? "offer-internship" : "offer-fulltime");
+                            setIsDocStudioOpen(true);
+                          }}>📄 Studio Offer</Btn>
                       </div>
                     )}
                     {candidateOffer.status === "sent" && (
@@ -848,12 +854,20 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
               <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--glass-2)]">
                 <div className="flex justify-between items-center mb-3">
                   <div className="text-sm font-bold">Documents</div>
-                  <Btn className="text-[10px] bg-[var(--glass-3)] px-2 py-1 rounded"
-                    onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/onboarding/${c.id}`);
-                      alert("Candidate upload link copied to clipboard.");
-                    }}
-                  >Copy Upload Link</Btn>
+                  <div className="flex gap-2">
+                    <Btn className="text-[10px] bg-[var(--primary)] text-black px-2 py-1 rounded font-bold"
+                      onClick={() => {
+                        setDocStudioType("employee-agreement");
+                        setIsDocStudioOpen(true);
+                      }}
+                    >📄 Generate Docs</Btn>
+                    <Btn className="text-[10px] bg-[var(--glass-3)] px-2 py-1 rounded"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/onboarding/${c.id}`);
+                        alert("Candidate upload link copied to clipboard.");
+                      }}
+                    >Copy Upload Link</Btn>
+                  </div>
                 </div>
                 
                 {candidateDocs.length === 0 ? (
@@ -942,11 +956,17 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                         )}
                         <div className="mt-3 flex flex-col gap-2">
                           <Btn className="w-full text-[10px] py-1 rounded bg-[var(--glass-4)] hover:bg-white/10 text-white"
-                            onClick={() => router.push(`/contracts?candidateId=${c.id}&templateId=exp_letter`)}>
+                            onClick={() => {
+                               setDocStudioType('experience-letter');
+                               setIsDocStudioOpen(true);
+                            }}>
                             Generate Experience Letter
                           </Btn>
                           <Btn className="w-full text-[10px] py-1 rounded bg-[var(--glass-4)] hover:bg-white/10 text-white"
-                            onClick={() => router.push(`/contracts?candidateId=${c.id}&templateId=rel_letter`)}>
+                            onClick={() => {
+                               setDocStudioType('relieving-letter');
+                               setIsDocStudioOpen(true);
+                            }}>
                             Generate Relieving Letter
                           </Btn>
                         </div>
@@ -1079,8 +1099,12 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
       {isDocStudioOpen && (
         <DocumentStudioModal
           candidate={c}
+          employee={candidateEmployee}
+          employeeBond={employeeBond || undefined}
+          employeeResignation={employeeResignation || undefined}
           onClose={() => setIsDocStudioOpen(false)}
           defaultStage={["approved", "offer", "offer_sent"].includes(c.status) ? "offer" : ["onboarding_requested", "onboarding_review", "hired"].includes(c.status) ? "onboarding" : "exit"}
+          defaultDocType={docStudioType}
         />
       )}
     </div>
