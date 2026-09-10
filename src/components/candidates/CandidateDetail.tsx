@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import PDFViewer from "@/components/candidates/PDFViewer";
 import WhatsAppModal from "@/components/candidates/WhatsAppModal";
 import EmailModal from "@/components/candidates/EmailModal";
+import { DocumentStudioModal } from "@/components/documents/DocumentStudioModal";
 
 interface Props { candidate: Candidate; onClose: () => void; }
 
@@ -39,6 +40,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
   const [resumeMode, setResumeMode] = useState<"pdf" | "text">(c.resumeUrl ? "pdf" : "text");
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
   const [isEmailOpen, setIsEmailOpen] = useState(false);
+  const [isDocStudioOpen, setIsDocStudioOpen] = useState(false);
 
   const candidateOffer = offers.find(o => o.candidateId === c.id);
   const candidateDocs = documents.filter(d => d.candidateId === c.id);
@@ -256,6 +258,13 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                 ✍️ Edit Profile
               </Btn>
             )}
+
+            <Btn
+              onClick={() => setIsDocStudioOpen(true)}
+              className="text-xs font-semibold px-4 py-2 rounded-lg transition-all text-white bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 active:scale-95"
+            >
+              📄 Document Studio
+            </Btn>
 
             <Btn onClick={onClose}
               className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-white transition-colors"
@@ -1064,6 +1073,14 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
         <EmailModal
           candidate={c}
           onClose={() => setIsEmailOpen(false)}
+        />
+      )}
+      
+      {isDocStudioOpen && (
+        <DocumentStudioModal
+          candidate={c}
+          onClose={() => setIsDocStudioOpen(false)}
+          defaultStage={["approved", "offer", "offer_sent"].includes(c.status) ? "offer" : ["onboarding_requested", "onboarding_review", "hired"].includes(c.status) ? "onboarding" : "exit"}
         />
       )}
     </div>
