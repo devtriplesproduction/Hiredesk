@@ -5,6 +5,7 @@ import { uploadBrandAsset, getBrandAssetUrl, deleteBrandAsset } from "@/lib/supa
 import type { Contract } from "@/types";
 import { compressImage } from "@/lib/utils/image";
 import { Btn } from "@/components/ui";
+import { DOCUMENT_STUDIO_CSS } from "@/lib/document-utils";
 
 interface Props { contract: Contract; onBack: () => void; }
 
@@ -112,6 +113,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
           body { margin: 0; padding: 20mm 25mm; }
           .no-print { display: none !important; }
         }
+        ${DOCUMENT_STUDIO_CSS}
       </style>
     </head><body>${finalContent}
     <script>window.onload=()=>{setTimeout(()=>{window.print();},300);}<\/script>
