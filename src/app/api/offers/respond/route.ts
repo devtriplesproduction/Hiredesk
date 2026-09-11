@@ -18,6 +18,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid decision" }, { status: 400 });
     }
 
+    if (decision === "rejected" && (!reason || reason.trim() === "")) {
+      return NextResponse.json({ error: "Rejection reason is required" }, { status: 400 });
+    }
+
+    // Fetch existing offer to verify ownership and current status
+    const { data: existingOffer, error: fetchOfferError } = await supabase
+      .from("offers")
+      .select("*")
+      .eq("id", offerId)
+      .single();
+
+    if (fetchOfferError || !existingOffer) {
+      return NextResponse.json({ error: "Offer not found" }, { status: 404 });
+    }
+
+    if (existingOffer.candidateId !== candidateId) {
+      return NextResponse.json({ error: "Unauthorized: Offer does not belong to this candidate" }, { status: 403 });
+    }
+
+    if (existingOffer.status !== "sent") {
+      return NextResponse.json({ error: "Offer cannot be modified or has already been responded to" }, { status: 400 });
+    }
+
     // Update Offer Status
     const { error: offerError } = await supabase
       .from("offers")

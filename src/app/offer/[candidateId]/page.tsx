@@ -18,25 +18,12 @@ export default function CandidateOfferPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const { data: cData, error: cErr } = await supabase
-          .from("candidates")
-          .select("*")
-          .eq("id", candidateId)
-          .single();
+        const res = await fetch(`/api/offers/${candidateId}`);
+        if (!res.ok) throw new Error("Failed to load");
         
-        if (cErr) throw cErr;
-        setCandidate(cData);
-
-        const { data: oData, error: oErr } = await supabase
-          .from("offers")
-          .select("*")
-          .eq("candidateId", candidateId)
-          .order("createdAt", { ascending: false })
-          .limit(1)
-          .single();
-
-        if (oErr && oErr.code !== "PGRST116") throw oErr;
-        setOffer(oData);
+        const data = await res.json();
+        if (data.candidate) setCandidate(data.candidate);
+        if (data.offer) setOffer(data.offer);
       } catch (err) {
         console.error("Failed to load offer data:", err);
       } finally {
