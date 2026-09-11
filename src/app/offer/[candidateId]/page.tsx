@@ -30,8 +30,8 @@ export default function CandidateOfferPage() {
         const { data: oData, error: oErr } = await supabase
           .from("offers")
           .select("*")
-          .eq("candidate_id", candidateId)
-          .order("created_at", { ascending: false })
+          .eq("candidateId", candidateId)
+          .order("createdAt", { ascending: false })
           .limit(1)
           .single();
 
@@ -111,7 +111,7 @@ export default function CandidateOfferPage() {
       <div className="max-w-lg w-full bg-[var(--glass)] border border-[var(--border)] rounded-2xl p-8 shadow-2xl animate-fade-in text-center">
         <h1 className="text-3xl font-bold mb-2">Job Offer</h1>
         <div className="text-lg text-[var(--text-2)] mb-8">
-          Congratulations {candidate.name}! Triple S Production has extended you an offer for the <strong className="text-white">{candidate.role_name}</strong> position.
+          Congratulations {candidate.name}! Triple S Production has extended you an offer for the <strong className="text-white">{candidate.roleName}</strong> position.
         </div>
 
         {offer.status === "sent" ? (

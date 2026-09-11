@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       .from("offers")
       .update({
         status: decision,
-        responded_at: new Date().toISOString()
+        respondedAt: new Date().toISOString()
       })
       .eq("id", offerId);
 
