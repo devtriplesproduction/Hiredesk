@@ -18,7 +18,7 @@ export default function CandidateOfferPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const res = await fetch(`/api/offers/${candidateId}`);
+        const res = await fetch(`/api/offers/${candidateId}?t=${Date.now()}`);
         if (!res.ok) throw new Error("Failed to load");
         
         const data = await res.json();

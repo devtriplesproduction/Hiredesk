@@ -185,17 +185,28 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
   return (
     // Backdrop
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+    <div className={clsx(
+      "fixed inset-0 z-50 flex items-center p-4 sm:p-8 animate-fade-in transition-all duration-500",
+      (isWhatsAppOpen || isEmailOpen || isDocStudioOpen) ? "justify-start pl-[5%] sm:pl-[10%]" : "justify-center"
+    )}
       style={{ background: "rgba(0,0,0,0.82)", backdropFilter: "blur(14px)" }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
 
       {/* Card */}
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl animate-scale-up"
-        style={{ background: "#0a0a0a", border: "1px solid var(--border-2)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)" }}>
+      <div className={clsx(
+        "w-[98vw] max-w-[1800px] h-[98vh] flex flex-col overflow-hidden rounded-2xl animate-scale-up transition-all duration-500 relative z-10",
+        (isWhatsAppOpen || isEmailOpen || isDocStudioOpen) ? "opacity-40 hover:opacity-100 scale-95 hover:scale-100 cursor-pointer" : ""
+      )}
+        style={{ background: "#0a0a0a", border: "1px solid var(--border-2)", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)" }}
+        onClick={() => {
+          if (isWhatsAppOpen) setIsWhatsAppOpen(false);
+          if (isEmailOpen) setIsEmailOpen(false);
+          if (isDocStudioOpen) setIsDocStudioOpen(false);
+        }}>
 
         {/* Top strip */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 sm:p-6 pb-4 gap-4" style={{ borderBottom: "1px solid var(--border)" }}>
-          <div className="flex items-center gap-4 flex-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 sm:p-8 pb-5 gap-6" style={{ borderBottom: "1px solid var(--border)", background: "linear-gradient(to bottom, rgba(255,255,255,0.03), transparent)" }}>
+          <div className="flex items-center gap-5 flex-1">
             {/* Avatar */}
             <div className={clsx(
               "w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center text-lg sm:text-xl font-bold flex-shrink-0 border transition-colors duration-300",
@@ -277,20 +288,20 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 overflow-x-auto no-scrollbar px-5 sm:px-6 pt-4 pb-1">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar px-6 sm:px-8 pt-5 pb-2 flex-shrink-0">
           {(["profile", "score", "resume"] as const).map(tab => (
             <Btn key={tab} onClick={() => setActiveTab(tab)}
-              className={clsx("text-sm font-medium px-4 py-2 rounded-lg transition-all capitalize border flex-shrink-0",
+              className={clsx("text-sm font-bold px-6 py-2.5 rounded-xl transition-all capitalize border flex-shrink-0 shadow-sm",
                 activeTab === tab
-                  ? "text-white border-[var(--border-2)] bg-[var(--glass-3)]"
-                  : "text-[var(--text-3)] border-transparent hover:text-[var(--text-2)]"
+                  ? "text-white border-zinc-700 bg-zinc-800/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]"
+                  : "text-zinc-500 border-transparent hover:text-zinc-300 hover:bg-white/5"
               )}>{tab}</Btn>
           ))}
         </div>
 
-        <div className="p-5 sm:p-6 pt-4">
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8 pt-6 custom-scrollbar">
           {activeTab === "profile" && (
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-8 max-w-5xl mx-auto">
 
               {/* Extraction Confidence Indicators */}
               {c.extractionConfidence !== undefined && (
@@ -326,18 +337,18 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
               )}
 
               {/* Info grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {INFO_FIELDS.map(({ key, label, icon, suffix = "" }) => {
                   const val = isEditing ? editState[key as keyof Candidate] : c[key as keyof Candidate];
                   const display = val ? `${val}${suffix}` : "—";
                   
                   return (
-                    <div key={key} className="flex items-start gap-3 p-3.5 rounded-xl transition-all"
-                      style={{ background: "var(--glass)", border: "1px solid var(--border)" }}>
-                      <span className="text-lg flex-shrink-0 mt-0.5">{icon}</span>
+                    <div key={key} className="flex items-start gap-4 p-5 rounded-2xl transition-all hover:bg-white/[0.02]"
+                      style={{ background: "var(--glass)", border: "1px solid var(--border)", boxShadow: "inset 0 1px 1px rgba(255,255,255,0.02)" }}>
+                      <span className="text-2xl flex-shrink-0 drop-shadow-sm">{icon}</span>
                       
                       <div className="flex-1 min-w-0">
-                        <div className="text-xs text-[var(--text-3)] font-semibold mb-1">{label}</div>
+                        <div className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-1.5">{label}</div>
                         {isEditing && key !== "appliedAt" ? (
                           <input
                             type={key === "age" ? "number" : "text"}
@@ -433,9 +444,11 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
               </div>
 
               {/* Note */}
-              <div>
-                <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-2">Admin Note</div>
-                <textarea rows={2} placeholder="Add a private note…" 
+              <div className="bg-zinc-900/40 p-6 rounded-2xl border border-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
+                <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <span>📝</span> Admin Note
+                </div>
+                <textarea rows={4} placeholder="Add a private note about this candidate…" 
                   value={isEditing ? (editState.note || "") : (c.note || "")}
                   onChange={e => {
                     if (isEditing) {
@@ -449,9 +462,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       updateCandidate(c.id, { note: e.target.value });
                     }
                   }}
-                  className="w-full rounded-xl text-sm px-4 py-3 resize-none outline-none transition-colors"
-                  style={{ background: "var(--glass)", border: "1px solid var(--border)", color: "var(--text)" }}
-                  onFocus={e => e.target.style.borderColor = "var(--border-3)"}
+                  className="w-full rounded-xl text-sm px-5 py-4 resize-none outline-none transition-all duration-300 bg-black/50 border border-white/10 text-zinc-200 focus:border-zinc-500 focus:shadow-[0_0_15px_rgba(255,255,255,0.05)] custom-scrollbar"
                 />
               </div>
 
@@ -789,7 +800,11 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                           <div className="flex gap-2 mt-1">
                             <Btn className="bg-[var(--green)] text-black text-[10px] font-bold px-2 py-1 rounded flex-1" onClick={() => {
                               updateInterview(r2.id, { status: "completed", decision: "select", notes: r2Notes });
-                              updateCandidate(c.id, { status: "approved" });
+                              updateCandidate(c.id, { status: "offer" });
+                              addOffer({
+                                id: crypto.randomUUID(), candidateId: c.id, contractTemplateId: null,
+                                status: "draft", sentAt: null, respondedAt: null, createdAt: new Date().toISOString()
+                              });
                             }}>Approve</Btn>
                             <Btn className="bg-[var(--red)] text-white text-[10px] font-bold px-2 py-1 rounded flex-1" onClick={() => {
                               const reason = prompt("Reason for rejection:");
