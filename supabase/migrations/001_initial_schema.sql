@@ -7,7 +7,7 @@ CREATE TABLE public.candidates (
   "roleId" TEXT NOT NULL,
   "roleName" TEXT NOT NULL,
   score JSONB NOT NULL,
-  status TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('new', 'review', 'shortlisted', 'interview_1', 'interview_2', 'approved', 'rejected', 'offer', 'offer_sent', 'offer_accepted', 'offer_rejected', 'onboarding_requested', 'onboarding_review', 'onboarding_verified', 'onboarding_rejected', 'hired')),
   city TEXT NOT NULL,
   gender TEXT NOT NULL,
   age INTEGER NOT NULL,
@@ -71,11 +71,11 @@ CREATE POLICY "Allow delete for authenticated users" ON public.contracts FOR DEL
 CREATE TABLE public.interviews (
   id TEXT PRIMARY KEY,
   "candidateId" TEXT NOT NULL REFERENCES public.candidates(id),
-  round INTEGER NOT NULL,
+  round INTEGER NOT NULL CHECK (round IN (1, 2)),
   "scheduledAt" TEXT,
-  status TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('scheduled', 'completed', 'cancelled')),
   notes TEXT NOT NULL,
-  decision TEXT,
+  decision TEXT CHECK (decision IN ('select', 'reject', 'round2_required')),
   "createdAt" TEXT NOT NULL
 );
 
@@ -90,7 +90,7 @@ CREATE TABLE public.offers (
   id TEXT PRIMARY KEY,
   "candidateId" TEXT NOT NULL REFERENCES public.candidates(id),
   "contractTemplateId" TEXT REFERENCES public.contracts(id),
-  status TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('draft', 'sent', 'accepted', 'rejected')),
   "sentAt" TEXT,
   "respondedAt" TEXT,
   "createdAt" TEXT NOT NULL
@@ -109,7 +109,7 @@ CREATE TABLE public.candidate_documents (
   file_name TEXT NOT NULL,
   file_path TEXT NOT NULL,
   type TEXT NOT NULL,
-  status TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('pending', 'verified', 'rejected')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
   "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
@@ -130,7 +130,7 @@ CREATE TABLE public.employees (
   phone TEXT NOT NULL,
   employment_type TEXT NOT NULL,
   bond_requirement TEXT NOT NULL,
-  status TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('active', 'terminated', 'on_leave')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -143,7 +143,7 @@ CREATE POLICY "Allow delete for authenticated users" ON public.employees FOR DEL
 -- 8. employee_bonds
 CREATE TABLE public.employee_bonds (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  employee_id UUID NOT NULL REFERENCES public.employees(id),
+  employee_id UUID NOT NULL UNIQUE REFERENCES public.employees(id),
   is_required BOOLEAN NOT NULL,
   amount TEXT NOT NULL,
   duration TEXT NOT NULL,
@@ -163,7 +163,7 @@ CREATE POLICY "Allow delete for authenticated users" ON public.employee_bonds FO
 -- 9. employee_resignations
 CREATE TABLE public.employee_resignations (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  employee_id UUID NOT NULL REFERENCES public.employees(id),
+  employee_id UUID NOT NULL UNIQUE REFERENCES public.employees(id),
   resignation_reason TEXT NOT NULL,
   is_breach BOOLEAN NOT NULL,
   breach_reason TEXT,
