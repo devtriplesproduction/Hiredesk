@@ -16,9 +16,9 @@ export async function GET(req: NextRequest, { params }: { params: { candidateId:
 
   const { data: documents, error } = await supabaseAdmin
     .from("candidate_documents")
-    .select("id, file_name, type, status, created_at")
-    .eq("candidate_id", candidateId)
-    .order("created_at", { ascending: false });
+    .select("id, fileName, type, status, createdAt")
+    .eq("candidateId", candidateId)
+    .order("createdAt", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   
@@ -56,9 +56,9 @@ export async function POST(req: NextRequest, { params }: { params: { candidateId
     const { data: docRecord, error: dbError } = await supabaseAdmin
       .from("candidate_documents")
       .insert({
-        candidate_id: candidateId,
-        file_name: file.name,
-        file_path: fileName,
+        candidateId: candidateId,
+        fileName: file.name,
+        filePath: fileName,
         type: type,
         status: "pending"
       })

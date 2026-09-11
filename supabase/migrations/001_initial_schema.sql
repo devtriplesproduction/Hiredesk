@@ -102,16 +102,16 @@ CREATE POLICY "Allow insert for authenticated users" ON public.offers FOR INSERT
 CREATE POLICY "Allow update for authenticated users" ON public.offers FOR UPDATE TO authenticated USING (true);
 CREATE POLICY "Allow delete for authenticated users" ON public.offers FOR DELETE TO authenticated USING (true);
 
--- 6. candidate_documents
+-- 6. candidate_documents (Fixed to camelCase)
 CREATE TABLE public.candidate_documents (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  candidate_id TEXT NOT NULL REFERENCES public.candidates(id),
-  file_name TEXT NOT NULL,
-  file_path TEXT NOT NULL,
+  "candidateId" TEXT NOT NULL REFERENCES public.candidates(id),
+  "fileName" TEXT NOT NULL,
+  "filePath" TEXT NOT NULL,
   type TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('pending', 'verified', 'rejected')),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+  "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 ALTER TABLE public.candidate_documents ENABLE ROW LEVEL SECURITY;
