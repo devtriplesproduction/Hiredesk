@@ -26,18 +26,53 @@ const TEMPLATES: Template[] = [
     rawText: "Hi [Candidate Name],\n\nWe are currently hiring for a [Role Name] role at Triple S Production and came across your profile/resume. If you're interested in exploring this opportunity, let us know and we can schedule an interview.\n\nBest,\nTriple S Production Team"
   },
   {
+    id: "shortlist",
+    name: "Shortlisted",
+    emoji: "✨",
+    subject: "Application Update: [Role Name]",
+    rawText: "Hi [Candidate Name],\n\nHope you're having a great day! We have reviewed your application for the [Role Name] position at Triple S Production and you have been shortlisted for the next steps.\n\nBest,\nTriple S Production Team"
+  },
+  {
     id: "interview",
     name: "Schedule Interview",
     emoji: "📅",
     subject: "Interview Invitation: [Role Name] at Triple S Production",
-    rawText: "Hi [Candidate Name],\n\nThank you for showing interest in the [Role Name] position at Triple S Production. Please let us know your availability for a call in the coming days!\n\nBest,\nTriple S Production Team"
+    rawText: "Hi [Candidate Name],\n\nWe would like to invite you for an interview for the [Role Name] position. Please let us know your availability for a call in the coming days!\n\nBest,\nTriple S Production Team"
   },
   {
-    id: "followup",
-    name: "Shortlist Follow-up",
-    emoji: "✨",
-    subject: "Application Update: [Role Name]",
-    rawText: "Hi [Candidate Name],\n\nHope you're having a great day! We recently reached out regarding the [Role Name] position at Triple S Production. We are finalizing our shortlist and would love to connect. Let us know if you're still interested.\n\nBest,\nTriple S Production Team"
+    id: "reject",
+    name: "Rejection",
+    emoji: "🚫",
+    subject: "Update on your application for [Role Name]",
+    rawText: "Hi [Candidate Name],\n\nThank you for your time during the interview process. Unfortunately, we will not be moving forward with your application for the [Role Name] position at this time. We wish you the best in your future endeavors.\n\nBest,\nTriple S Production Team"
+  },
+  {
+    id: "next-round",
+    name: "Selected for Next Round",
+    emoji: "🎯",
+    subject: "Next Steps: [Role Name] at Triple S Production",
+    rawText: "Hi [Candidate Name],\n\nCongratulations! We are pleased to inform you that you have been selected for the next round of interviews for the [Role Name] position. We will be in touch shortly to schedule it.\n\nBest,\nTriple S Production Team"
+  },
+  {
+    id: "offer",
+    name: "Offer Letter",
+    emoji: "🎉",
+    subject: "Job Offer: [Role Name] at Triple S Production",
+    rawText: "Hi [Candidate Name],\n\nWe are thrilled to offer you the [Role Name] position at Triple S Production! Please review and respond to your offer here: [Offer Link]\n\nBest,\nTriple S Production Team"
+  },
+  {
+    id: "onboarding",
+    name: "Onboarding & Documents",
+    emoji: "📂",
+    subject: "Welcome to Triple S Production! Next Steps",
+    rawText: "Hi [Candidate Name],\n\nWelcome to the team! To get started, please upload your required onboarding documents here: [Onboarding Link]\n\nBest,\nTriple S Production Team"
+  },
+  {
+    id: "doc-reject",
+    name: "Document Resubmission",
+    emoji: "⚠️",
+    subject: "Action Required: Document Resubmission",
+    rawText: "Hi [Candidate Name],\n\nThere was an issue with one or more of your uploaded documents. Please visit [Onboarding Link] to review the feedback and re-upload the required files.\n\nBest,\nTriple S Production Team"
   },
   {
     id: "custom",
@@ -66,7 +101,19 @@ export default function EmailModal({ candidate, onClose }: Props) {
 
   const [emailInput, setEmailInput] = useState(candidate.email || "");
   const [roleInput, setRoleInput] = useState(candidate.roleName || "Digital Marketing");
-  const [selectedTemplate, setSelectedTemplate] = useState("initial");
+  
+  const defaultTemplate = useMemo(() => {
+    if (candidate.status === "shortlisted") return "shortlist";
+    if (candidate.status === "interview_1" || candidate.status === "interview_2") return "interview";
+    if (candidate.status === "rejected") return "reject";
+    if (candidate.status === "approved") return "next-round";
+    if (candidate.status === "offer" || candidate.status === "offer_sent") return "offer";
+    if (candidate.status === "offer_accepted" || candidate.status === "onboarding_requested") return "onboarding";
+    if (candidate.status === "onboarding_rejected") return "doc-reject";
+    return "initial";
+  }, [candidate.status]);
+  
+  const [selectedTemplate, setSelectedTemplate] = useState(defaultTemplate);
   
   const [messageSubject, setMessageSubject] = useState("");
   const [messageBody, setMessageBody] = useState("");
@@ -93,6 +140,8 @@ export default function EmailModal({ candidate, onClose }: Props) {
           template.rawText
             .replace(/\[Candidate Name\]/g, candidate.name || "Candidate")
             .replace(/\[Role Name\]/g, roleInput || "Digital Marketing")
+            .replace(/\[Offer Link\]/g, `${window.location.origin}/offer/${candidate.id}`)
+            .replace(/\[Onboarding Link\]/g, `${window.location.origin}/onboarding/${candidate.id}`)
         );
         setMessageSubject(
           template.subject
@@ -100,7 +149,7 @@ export default function EmailModal({ candidate, onClose }: Props) {
         );
       }
     }
-  }, [selectedTemplate, candidate.name, roleInput, isManualEdit]);
+  }, [selectedTemplate, candidate.name, roleInput, isManualEdit, candidate.id]);
 
   const resetToTemplate = () => {
     setIsManualEdit(false);
@@ -110,6 +159,8 @@ export default function EmailModal({ candidate, onClose }: Props) {
         template.rawText
           .replace(/\[Candidate Name\]/g, candidate.name || "Candidate")
           .replace(/\[Role Name\]/g, roleInput || "Digital Marketing")
+          .replace(/\[Offer Link\]/g, `${window.location.origin}/offer/${candidate.id}`)
+          .replace(/\[Onboarding Link\]/g, `${window.location.origin}/onboarding/${candidate.id}`)
       );
       setMessageSubject(
         template.subject

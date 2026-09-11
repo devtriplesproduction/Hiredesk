@@ -686,7 +686,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
           )}
 
           {/* Interview Management */}
-          {(c.status === "shortlisted" || c.status === "interview_1" || c.status === "interview_2") && (
+          {["shortlisted", "interview_1", "interview_2", "approved", "rejected", "offer", "offer_sent", "offer_accepted", "offer_rejected", "hired"].includes(c.status) && (
             <div className="mt-5 pt-4 flex flex-col gap-3" style={{ borderTop: "1px solid var(--border)" }}>
               <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest">Interview Management</div>
               
@@ -694,6 +694,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
               <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--glass-2)]">
                 <div className="font-bold text-sm text-[var(--text)] mb-2">Round 1</div>
                 {!r1 ? (
+                  c.status === "shortlisted" ? (
                   <div className="flex gap-2">
                     <input type="datetime-local" value={scheduleR1} onChange={e => setScheduleR1(e.target.value)}
                       className="flex-1 bg-[var(--glass-3)] text-[var(--text)] text-xs border border-[var(--border)] rounded px-2 py-1 outline-none" />
@@ -707,25 +708,28 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                         updateCandidate(c.id, { status: "interview_1" });
                       }}>Schedule R1</Btn>
                   </div>
+                  ) : (
+                    <div className="text-xs text-[var(--text-3)]">No interview scheduled.</div>
+                  )
                 ) : (
                   <div className="flex flex-col gap-2">
                     <div className="text-xs text-[var(--text-2)]">Scheduled: {new Date(r1.scheduledAt!).toLocaleString()} ({r1.status})</div>
-                    {r1.status === "scheduled" && (
+                    {r1.status === "scheduled" && c.status === "interview_1" && (
                       <>
                         <textarea placeholder="Interview Notes..." value={r1Notes} onChange={e => setR1Notes(e.target.value)}
                           className="w-full bg-[var(--glass-3)] text-[var(--text)] text-xs border border-[var(--border)] rounded p-2 outline-none h-16" />
                         <div className="flex gap-2 mt-1">
-                          <Btn className="bg-[var(--green)] text-black text-[10px] font-bold px-2 py-1 rounded" onClick={() => {
+                          <Btn className="bg-[var(--green)] text-black text-[10px] font-bold px-2 py-1 rounded flex-1" onClick={() => {
                             updateInterview(r1.id, { status: "completed", decision: "select", notes: r1Notes });
-                            updateCandidate(c.id, { status: "approved" });
-                          }}>Select</Btn>
-                          <Btn className="bg-[var(--yellow)] text-black text-[10px] font-bold px-2 py-1 rounded" onClick={() => {
-                            updateInterview(r1.id, { status: "completed", decision: "round2_required", notes: r1Notes });
-                            updateCandidate(c.id, { status: "interview_1" });
-                          }}>Req Round 2</Btn>
-                          <Btn className="bg-[var(--red)] text-white text-[10px] font-bold px-2 py-1 rounded" onClick={() => {
-                            updateInterview(r1.id, { status: "completed", decision: "reject", notes: r1Notes });
-                            updateCandidate(c.id, { status: "rejected" });
+                            updateCandidate(c.id, { status: "interview_2" });
+                          }}>Select for Next Round</Btn>
+                          <Btn className="bg-[var(--red)] text-white text-[10px] font-bold px-2 py-1 rounded flex-1" onClick={() => {
+                            const reason = prompt("Reason for rejection:");
+                            if (reason !== null) {
+                              const note = r1Notes + (reason ? `\nRejection Reason: ${reason}` : "");
+                              updateInterview(r1.id, { status: "completed", decision: "reject", notes: note });
+                              updateCandidate(c.id, { status: "rejected", note: (c.note || "") + `\nRejected in R1: ${reason}` });
+                            }
                           }}>Reject</Btn>
                         </div>
                       </>
@@ -738,10 +742,11 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
               </div>
 
               {/* Round 2 */}
-              {(r1?.decision === "round2_required" || r2) && (
+              {(r1?.decision === "select" || r2) && (
                 <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--glass-2)]">
                   <div className="font-bold text-sm text-[var(--text)] mb-2">Round 2</div>
                   {!r2 ? (
+                    c.status === "interview_2" ? (
                     <div className="flex gap-2">
                       <input type="datetime-local" value={scheduleR2} onChange={e => setScheduleR2(e.target.value)}
                         className="flex-1 bg-[var(--glass-3)] text-[var(--text)] text-xs border border-[var(--border)] rounded px-2 py-1 outline-none" />
@@ -752,24 +757,30 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                             id: crypto.randomUUID(), candidateId: c.id, round: 2, scheduledAt: new Date(scheduleR2).toISOString(),
                             status: "scheduled", notes: "", decision: null, createdAt: new Date().toISOString()
                           });
-                          updateCandidate(c.id, { status: "interview_2" });
                         }}>Schedule R2</Btn>
                     </div>
+                    ) : (
+                      <div className="text-xs text-[var(--text-3)]">No interview scheduled.</div>
+                    )
                   ) : (
                     <div className="flex flex-col gap-2">
                       <div className="text-xs text-[var(--text-2)]">Scheduled: {new Date(r2.scheduledAt!).toLocaleString()} ({r2.status})</div>
-                      {r2.status === "scheduled" && (
+                      {r2.status === "scheduled" && c.status === "interview_2" && (
                         <>
                           <textarea placeholder="Interview Notes..." value={r2Notes} onChange={e => setR2Notes(e.target.value)}
                             className="w-full bg-[var(--glass-3)] text-[var(--text)] text-xs border border-[var(--border)] rounded p-2 outline-none h-16" />
                           <div className="flex gap-2 mt-1">
-                            <Btn className="bg-[var(--green)] text-black text-[10px] font-bold px-2 py-1 rounded" onClick={() => {
+                            <Btn className="bg-[var(--green)] text-black text-[10px] font-bold px-2 py-1 rounded flex-1" onClick={() => {
                               updateInterview(r2.id, { status: "completed", decision: "select", notes: r2Notes });
                               updateCandidate(c.id, { status: "approved" });
-                            }}>Select</Btn>
-                            <Btn className="bg-[var(--red)] text-white text-[10px] font-bold px-2 py-1 rounded" onClick={() => {
-                              updateInterview(r2.id, { status: "completed", decision: "reject", notes: r2Notes });
-                              updateCandidate(c.id, { status: "rejected" });
+                            }}>Approve</Btn>
+                            <Btn className="bg-[var(--red)] text-white text-[10px] font-bold px-2 py-1 rounded flex-1" onClick={() => {
+                              const reason = prompt("Reason for rejection:");
+                              if (reason !== null) {
+                                const note = r2Notes + (reason ? `\nRejection Reason: ${reason}` : "");
+                                updateInterview(r2.id, { status: "completed", decision: "reject", notes: note });
+                                updateCandidate(c.id, { status: "rejected", note: (c.note || "") + `\nRejected in R2: ${reason}` });
+                              }
                             }}>Reject</Btn>
                           </div>
                         </>
@@ -785,12 +796,13 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
           )}
 
           {/* Offer Management */}
-          {(c.status === "approved" || c.status === "offer" || c.status === "offer_sent" || c.status === "offer_accepted" || c.status === "offer_rejected") && (
+          {["approved", "offer", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected", "hired"].includes(c.status) && (
             <div className="mt-5 pt-4 flex flex-col gap-3" style={{ borderTop: "1px solid var(--border)" }}>
               <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest">Offer Management</div>
               
               <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--glass-2)]">
                 {!candidateOffer ? (
+                  c.status === "approved" ? (
                   <div className="flex flex-col gap-2">
                     <div className="text-xs text-[var(--text-2)] mb-2">Ready to extend an offer? You can generate a contract first or proceed directly.</div>
                     <Btn className="bg-[var(--primary)] text-black text-xs font-bold px-3 py-2 rounded"
@@ -802,12 +814,15 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                         updateCandidate(c.id, { status: "offer" });
                       }}>Prepare Offer</Btn>
                   </div>
+                  ) : (
+                    <div className="text-xs text-[var(--text-3)]">No offer prepared.</div>
+                  )
                 ) : (
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between">
                       <div className="text-sm font-bold">Offer Status: <span className="uppercase text-[var(--primary)]">{candidateOffer.status}</span></div>
                     </div>
-                    {candidateOffer.status === "draft" && (
+                    {candidateOffer.status === "draft" && c.status === "offer" && (
                       <div className="flex gap-2">
                         <Btn className="bg-[var(--glass-3)] text-white text-[10px] font-bold px-3 py-2 rounded flex-1 border border-[var(--border)] hover:bg-[var(--glass-4)]" 
                           onClick={() => {
@@ -821,18 +836,10 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                           }}>📄 Studio Offer</Btn>
                       </div>
                     )}
-                    {candidateOffer.status === "sent" && (
-                      <div className="flex gap-2">
-                        <Btn className="bg-[var(--green)] text-black text-[10px] font-bold px-3 py-2 rounded flex-1" 
-                          onClick={() => {
-                            updateOffer(candidateOffer.id, { status: "accepted", respondedAt: new Date().toISOString() });
-                            updateCandidate(c.id, { status: "offer_accepted" });
-                          }}>Accepted</Btn>
-                        <Btn className="bg-[var(--red)] text-white text-[10px] font-bold px-3 py-2 rounded flex-1" 
-                          onClick={() => {
-                            updateOffer(candidateOffer.id, { status: "rejected", respondedAt: new Date().toISOString() });
-                            updateCandidate(c.id, { status: "offer_rejected" });
-                          }}>Rejected</Btn>
+                    {candidateOffer.status === "sent" && c.status === "offer_sent" && (
+                      <div className="text-xs text-[var(--text-2)] mb-2 p-2 bg-[var(--glass-3)] rounded border border-[var(--border)]">
+                        <p>Waiting for candidate response. The candidate can review and respond via:</p>
+                        <a href={`/offer/${c.id}`} target="_blank" rel="noreferrer" className="text-[var(--primary)] underline block mt-1 font-semibold">Open Candidate Offer Page</a>
                       </div>
                     )}
                     {(candidateOffer.status === "accepted" || candidateOffer.status === "rejected") && (
@@ -894,7 +901,12 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                               <Btn className="text-[10px] px-2 py-0.5 rounded bg-[var(--green)] text-black font-bold"
                                 onClick={() => {
                                   updateDocument(doc.id, { status: "verified" });
-                                  updateCandidate(c.id, { status: "onboarding_verified" });
+                                  const allOtherVerified = candidateDocs.filter(d => d.id !== doc.id).every(d => d.status === "verified");
+                                  if (allOtherVerified) {
+                                    updateCandidate(c.id, { status: "onboarding_verified" });
+                                  } else {
+                                    updateCandidate(c.id, { status: "onboarding_review" });
+                                  }
                                 }}>Verify</Btn>
                               <Btn className="text-[10px] px-2 py-0.5 rounded bg-[var(--red)] text-white font-bold"
                                 onClick={() => {
@@ -914,10 +926,13 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                 )}
               </div>
               
-              {!candidateEmployee && (c.status === "onboarding_verified" || c.status === "offer_accepted") && (
-                <Btn className="w-full py-2 rounded font-bold text-sm bg-[var(--primary)] text-black"
-                  onClick={handleConvertToEmployee}
-                  disabled={convertingToEmployee}>
+              {!candidateEmployee && (
+                <Btn className="w-full py-2 rounded font-bold text-sm bg-[var(--primary)] text-black disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale"
+                  onClick={() => {
+                    handleConvertToEmployee();
+                    updateCandidate(c.id, { status: "hired" });
+                  }}
+                  disabled={convertingToEmployee || candidateDocs.length === 0 || !candidateDocs.every(d => d.status === "verified")}>
                   {convertingToEmployee ? "Converting..." : "🎉 Convert to Employee"}
                 </Btn>
               )}
@@ -1012,18 +1027,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
             </div>
           )}
 
-          {/* Status row */}
-          <div className="mt-5 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
-            <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-2.5">Update Status</div>
-            <div className="flex gap-2 flex-wrap">
-              {STATUSES.map(s => (
-                <Btn key={s} onClick={() => updateCandidate(c.id, { status: s })}
-                  className={clsx("text-xs font-semibold uppercase tracking-wider px-4 py-2 rounded-lg border transition-all",
-                    c.status === s ? `status-${s}` : "text-[var(--text-3)] border-[var(--border)] hover:text-[var(--text-2)] hover:border-[var(--border-2)]"
-                  )}>{s}</Btn>
-              ))}
-            </div>
-          </div>
+          {/* Status row removed to enforce strict workflow */}
 
           {/* Actions */}
           <div className="flex gap-2 mt-4 pt-4" style={{ borderTop: "1px solid var(--border)" }}>

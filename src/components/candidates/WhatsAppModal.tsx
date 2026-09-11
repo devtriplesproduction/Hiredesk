@@ -25,16 +25,46 @@ const TEMPLATES: Template[] = [
     rawText: "Hi [Candidate Name], we are currently hiring for a [Role Name] role at Triple S Production and came across your profile/resume. If you're interested in exploring this opportunity, let us know and we can schedule an interview."
   },
   {
+    id: "shortlist",
+    name: "Shortlisted",
+    emoji: "✨",
+    rawText: "Hi [Candidate Name], hope you're having a great day! We have reviewed your application for the [Role Name] position at Triple S Production and you have been shortlisted for the next steps."
+  },
+  {
     id: "interview",
     name: "Schedule Interview",
     emoji: "📅",
-    rawText: "Hi [Candidate Name], thank you for showing interest in the [Role Name] position at Triple S Production. Please let us know your availability for a call in the coming days!"
+    rawText: "Hi [Candidate Name], we would like to invite you for an interview for the [Role Name] position. Please let us know your availability for a call in the coming days!"
   },
   {
-    id: "followup",
-    name: "Shortlist Follow-up",
-    emoji: "✨",
-    rawText: "Hi [Candidate Name], hope you're having a great day! We recently reached out regarding the [Role Name] position at Triple S Production. We are finalizing our shortlist and would love to connect. Let us know if you're still interested."
+    id: "reject",
+    name: "Rejection",
+    emoji: "🚫",
+    rawText: "Hi [Candidate Name], thank you for your time during the interview process. Unfortunately, we will not be moving forward with your application for the [Role Name] position at this time. We wish you the best in your future endeavors."
+  },
+  {
+    id: "next-round",
+    name: "Selected for Next Round",
+    emoji: "🎯",
+    rawText: "Hi [Candidate Name], congratulations! We are pleased to inform you that you have been selected for the next round of interviews for the [Role Name] position. We will be in touch shortly to schedule it."
+  },
+  {
+    id: "offer",
+    name: "Offer Letter",
+    emoji: "🎉",
+    rawText: "Hi [Candidate Name], we are thrilled to offer you the [Role Name] position at Triple S Production! Please review and respond to your offer here: [Offer Link]"
+  },
+  {
+    id: "onboarding",
+    name: "Onboarding & Documents",
+    emoji: "📂",
+    rawText: "Hi [Candidate Name], welcome to the team! To get started, please upload your required onboarding documents here: [Onboarding Link]"
+  },
+  {
+    id: "doc-reject",
+    name: "Document Resubmission",
+    emoji: "⚠️",
+    rawText: "Hi [Candidate Name], there was an issue with one or more of your uploaded documents. Please visit [Onboarding Link] to review the feedback and re-upload the required files."
   },
   {
     id: "custom",
@@ -63,7 +93,19 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
   // State managers
   const [phoneInput, setPhoneInput] = useState(candidate.phone || "");
   const [roleInput, setRoleInput] = useState(candidate.roleName || "Digital Marketing");
-  const [selectedTemplate, setSelectedTemplate] = useState("initial");
+  
+  const defaultTemplate = useMemo(() => {
+    if (candidate.status === "shortlisted") return "shortlist";
+    if (candidate.status === "interview_1" || candidate.status === "interview_2") return "interview";
+    if (candidate.status === "rejected") return "reject";
+    if (candidate.status === "approved") return "next-round";
+    if (candidate.status === "offer" || candidate.status === "offer_sent") return "offer";
+    if (candidate.status === "offer_accepted" || candidate.status === "onboarding_requested") return "onboarding";
+    if (candidate.status === "onboarding_rejected") return "doc-reject";
+    return "initial";
+  }, [candidate.status]);
+
+  const [selectedTemplate, setSelectedTemplate] = useState(defaultTemplate);
   
   // Custom edited message body or prefilled template body
   const [messageBody, setMessageBody] = useState("");
@@ -94,11 +136,13 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
         // Perform replacement for dynamic preview
         text = text
           .replace(/\[Candidate Name\]/g, candidate.name || "Candidate")
-          .replace(/\[Role Name\]/g, roleInput || "Digital Marketing");
+          .replace(/\[Role Name\]/g, roleInput || "Digital Marketing")
+          .replace(/\[Offer Link\]/g, `${window.location.origin}/offer/${candidate.id}`)
+          .replace(/\[Onboarding Link\]/g, `${window.location.origin}/onboarding/${candidate.id}`);
         setMessageBody(text);
       }
     }
-  }, [selectedTemplate, candidate.name, roleInput, isManualEdit]);
+  }, [selectedTemplate, candidate.name, roleInput, isManualEdit, candidate.id]);
 
   // Recalculate message if name/role changes, but only if user hasn't heavily customized manually
   const resetToTemplate = () => {
@@ -108,7 +152,9 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
       let text = template.rawText;
       text = text
         .replace(/\[Candidate Name\]/g, candidate.name || "Candidate")
-        .replace(/\[Role Name\]/g, roleInput || "Digital Marketing");
+        .replace(/\[Role Name\]/g, roleInput || "Digital Marketing")
+        .replace(/\[Offer Link\]/g, `${window.location.origin}/offer/${candidate.id}`)
+        .replace(/\[Onboarding Link\]/g, `${window.location.origin}/onboarding/${candidate.id}`);
       setMessageBody(text);
     }
   };
