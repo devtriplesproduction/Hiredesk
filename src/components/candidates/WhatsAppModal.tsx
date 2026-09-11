@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useStore } from "@/lib/store";
 import type { Candidate } from "@/types";
 import { normalizePhoneNumber, validatePhoneNumber } from "@/lib/utils/phone";
+import { getPublicBaseUrl } from "@/lib/url";
 import { Btn, Input, Select } from "@/components/ui";
 
 interface Props {
@@ -137,8 +138,8 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
         text = text
           .replace(/\[Candidate Name\]/g, candidate.name || "Candidate")
           .replace(/\[Role Name\]/g, roleInput || "Digital Marketing")
-          .replace(/\[Offer Link\]/g, `${window.location.origin}/offer/${candidate.id}`)
-          .replace(/\[Onboarding Link\]/g, `${window.location.origin}/onboarding/${candidate.id}`);
+          .replace(/\[Offer Link\]/g, `${getPublicBaseUrl()}/offer/${candidate.id}`)
+          .replace(/\[Onboarding Link\]/g, `${getPublicBaseUrl()}/onboarding/${candidate.id}`);
         setMessageBody(text);
       }
     }
@@ -153,8 +154,8 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
       text = text
         .replace(/\[Candidate Name\]/g, candidate.name || "Candidate")
         .replace(/\[Role Name\]/g, roleInput || "Digital Marketing")
-        .replace(/\[Offer Link\]/g, `${window.location.origin}/offer/${candidate.id}`)
-        .replace(/\[Onboarding Link\]/g, `${window.location.origin}/onboarding/${candidate.id}`);
+        .replace(/\[Offer Link\]/g, `${getPublicBaseUrl()}/offer/${candidate.id}`)
+        .replace(/\[Onboarding Link\]/g, `${getPublicBaseUrl()}/onboarding/${candidate.id}`);
       setMessageBody(text);
     }
   };
@@ -213,33 +214,37 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-[#0c0c0c] border-l border-zinc-800/80 shadow-2xl flex flex-col animate-slide-in-right"
-      style={{ boxShadow: "-10px 0 30px rgba(0,0,0,0.85)" }}>
+    <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-black/70 backdrop-blur-3xl border-l border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.9)] flex flex-col animate-slide-in-right"
+      style={{ boxShadow: "-20px 0 60px rgba(0,0,0,0.9)" }}>
       
       {/* Workspace Header */}
-      <div className="p-5 border-b border-zinc-800/60 flex items-center justify-between bg-[#080808]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-            <WhatsAppIcon className="w-5.5 h-5.5" />
+      <div className="p-6 border-b border-white/10 flex items-center justify-between bg-gradient-to-b from-white/[0.08] to-transparent relative overflow-hidden">
+        <div className="absolute top-0 left-10 right-10 h-[100px] bg-emerald-500/20 blur-[60px] rounded-full pointer-events-none"></div>
+        <div className="flex items-center gap-4 relative z-10">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-900/40 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.3)] backdrop-blur-md">
+            <WhatsAppIcon className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-white leading-none">WhatsApp Outreach</h3>
-            <span className="text-xs text-zinc-500 font-semibold mt-1 block">Recipient: {candidate.name}</span>
+            <h3 className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-400 tracking-tight leading-none">WhatsApp Outreach</h3>
+            <span className="text-xs text-zinc-400 font-medium mt-1.5 block">Recipient: <span className="text-white font-bold">{candidate.name}</span></span>
           </div>
         </div>
         
         <Btn onClick={onClose}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-zinc-500 hover:text-white hover:bg-zinc-800/50 transition-all border border-zinc-800/30">
+          className="w-9 h-9 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 hover:rotate-90 transition-all duration-300 border border-transparent hover:border-white/20 relative z-10">
           ✕
         </Btn>
       </div>
 
       {/* Workspace Content */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar relative">
         
         {/* Recipient Details Card */}
-        <div className="p-4 rounded-2xl bg-zinc-950/40 border border-zinc-900 flex flex-col gap-3.5">
-          <div className="text-[10px] uppercase font-bold tracking-widest text-zinc-500">Outreach Recipient Configuration</div>
+        <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] flex flex-col gap-4 backdrop-blur-md transition-all hover:bg-white/[0.03]">
+          <div className="text-[10px] uppercase font-black tracking-[0.2em] text-emerald-500/80 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+            Configuration
+          </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* Phone Number Field */}
@@ -255,12 +260,12 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
                   type="text"
                   value={phoneInput}
                   onChange={e => setPhoneInput(e.target.value)}
-                  className={`w-full bg-black/40 border rounded-xl px-3 py-2 text-xs font-semibold outline-none transition-colors ${
-                    isPhoneValid ? "border-zinc-800 focus:border-zinc-600 text-white" : "border-rose-500/30 text-rose-300 bg-rose-500/5"
+                  className={`w-full bg-black/40 border rounded-xl px-4 py-2.5 text-xs font-semibold outline-none transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] ${
+                    isPhoneValid ? "border-white/10 focus:border-emerald-500/50 focus:shadow-[0_0_15px_rgba(16,185,129,0.15)] text-white" : "border-rose-500/40 focus:border-rose-500/60 text-rose-300 bg-rose-500/5"
                   }`}
                   placeholder="Enter Phone Number"
                 />
-                <span className="absolute right-3 top-2.5 text-xs">📞</span>
+                <span className="absolute right-3.5 top-2.5 text-sm opacity-50">📞</span>
               </div>
               
               {/* Phone Normalization Preview Indicator */}
@@ -290,10 +295,10 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
                   setRoleInput(e.target.value);
                   setIsManualEdit(false); // allow re-triggering auto-fills
                 }}
-                className="w-full bg-black/40 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-semibold text-white outline-none focus:border-zinc-600"
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-xs font-semibold text-white outline-none transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] focus:border-emerald-500/50 focus:shadow-[0_0_15px_rgba(16,185,129,0.15)]"
                 placeholder="e.g. Digital Marketing"
               />
-              <span className="text-[9px] text-zinc-500 font-semibold px-1 mt-1">Replaces [Role Name] token</span>
+              <span className="text-[9px] text-zinc-500 font-semibold px-1 mt-1 flex items-center gap-1"><span className="text-emerald-500/70">✨</span> Replaces [Role Name] token</span>
             </div>
           </div>
         </div>
@@ -301,7 +306,7 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
         {/* Template Chooser */}
         <div className="space-y-2">
           <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Message Template</label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2.5">
             {TEMPLATES.map(tmpl => {
               const active = selectedTemplate === tmpl.id;
               return (
@@ -311,14 +316,15 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
                     setSelectedTemplate(tmpl.id);
                     setIsManualEdit(false);
                   }}
-                  className={`p-3 rounded-xl border text-left transition-all duration-150 flex flex-col gap-1.5 ${
+                  className={`p-3.5 rounded-xl border text-left transition-all duration-300 flex flex-col gap-2 relative overflow-hidden group ${
                     active
-                      ? "border-emerald-500/30 bg-emerald-500/5 text-white"
-                      : "border-zinc-800/80 bg-zinc-950/20 hover:bg-zinc-900/40 text-zinc-400"
+                      ? "border-emerald-500/50 bg-emerald-500/10 text-white shadow-[0_0_20px_rgba(16,185,129,0.1)] scale-[1.02]"
+                      : "border-white/5 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 text-zinc-400"
                   }`}
                 >
-                  <span className="text-sm">{tmpl.emoji}</span>
-                  <span className="text-xs font-bold leading-tight">{tmpl.name}</span>
+                  {active && <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent pointer-events-none"></div>}
+                  <span className={`text-base drop-shadow-md transition-transform duration-300 ${active ? "scale-110" : "group-hover:scale-110"}`}>{tmpl.emoji}</span>
+                  <span className="text-xs font-bold leading-tight relative z-10">{tmpl.name}</span>
                 </Btn>
               );
             })}
@@ -340,7 +346,7 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
             )}
           </div>
           
-          <div className="relative rounded-2xl border border-zinc-800 bg-black/60 overflow-hidden flex flex-col">
+          <div className="relative rounded-2xl border border-white/10 bg-black/50 overflow-hidden flex flex-col shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] focus-within:border-emerald-500/40 focus-within:shadow-[0_0_20px_rgba(16,185,129,0.1)] transition-all duration-300">
             <textarea
               rows={6}
               value={messageBody}
@@ -349,7 +355,7 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
                 setIsManualEdit(true);
               }}
               placeholder="Type your message body here..."
-              className="w-full bg-transparent resize-none p-4 text-xs font-semibold text-zinc-200 outline-none leading-relaxed"
+              className="w-full bg-transparent resize-none p-5 text-sm font-medium text-zinc-200 outline-none leading-relaxed custom-scrollbar"
             />
             
             {/* Tokens replacement details strip */}
@@ -370,10 +376,10 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
           </div>
         </div>
 
-        {/* Info strip: always opens WhatsApp app */}
-        <div className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-zinc-950/40 border border-zinc-900 text-[11px] text-zinc-500 font-medium">
-          <WhatsAppIcon className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-          <span>Will open the <strong className="text-zinc-300">WhatsApp app</strong> directly on your device</span>
+        {/* Info strip */}
+        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-xs text-zinc-400 font-medium">
+          <WhatsAppIcon className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <span>Will open the <strong className="text-white font-bold">WhatsApp app</strong> directly on your device</span>
         </div>
 
         {/* Outreach History timeline */}
@@ -417,21 +423,21 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
       </div>
 
       {/* Action Footer */}
-      <div className="p-5 border-t border-zinc-800/60 bg-[#080808] flex items-center justify-end gap-3">
-        <Btn variant="outline" size="md" onClick={onClose}>
+      <div className="p-5 border-t border-white/5 bg-gradient-to-t from-black to-white/[0.02] flex items-center justify-end gap-3 backdrop-blur-md">
+        <Btn variant="outline" size="md" onClick={onClose} className="rounded-xl border-white/10 hover:bg-white/5 text-zinc-300 font-bold transition-all">
           Cancel
         </Btn>
         
         <Btn
           onClick={handleSend}
           disabled={!isPhoneValid}
-          className={`inline-flex items-center gap-2 font-semibold uppercase tracking-wide rounded-xl text-xs px-5 py-2.5 transition-all duration-150 select-none active:scale-95 border ${
+          className={`inline-flex items-center gap-2.5 font-bold uppercase tracking-wider rounded-xl text-xs px-6 py-3 transition-all duration-300 select-none ${
             isPhoneValid
-              ? "bg-white/8 hover:bg-white/12 text-white border-white/14 hover:border-white/22 cursor-pointer shadow-sm"
-              : "bg-zinc-900/30 text-zinc-600 border-zinc-800/40 cursor-not-allowed opacity-50"
+              ? "bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] active:scale-95 hover:-translate-y-0.5 border-none"
+              : "bg-white/5 text-zinc-600 border border-white/5 cursor-not-allowed"
           }`}
         >
-          <WhatsAppIcon className="w-4 h-4 text-emerald-400" />
+          <WhatsAppIcon className="w-4 h-4 text-white drop-shadow-md" />
           <span>Send via WhatsApp</span>
         </Btn>
       </div>

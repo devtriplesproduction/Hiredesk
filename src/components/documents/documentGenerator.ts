@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 export const INK = "#111111";
 
 export interface DocumentData {
@@ -146,7 +146,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return '<div class="page">' + contentWm() + header(pageNo, title, total) + '<div class="content" style="z-index:1;">' + inner + '</div>' + footer(d) + '</div>';
     }
 
-    function build(d: DocumentData) {
+    function buildPage1(d: DocumentData) {
       return '<div class="page cover">' +
         '<img class="wm" src="' + LOGO_WHITE + '">' +
         '<div class="innerc">' +
@@ -161,7 +161,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '</div></div>';
     }
 
-    function build(d: DocumentData) {
+    function buildPage2(d: DocumentData) {
       const inner =
         '<h1 class="pt">Welcome to the Team</h1>' +
         '<p class="body">Dear ' + val(d.candidateName) + ',</p>' +
@@ -186,7 +186,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 2, d);
     }
 
-    function build(d: DocumentData) {
+    function buildPage3(d: DocumentData) {
       const items = [
         ["compass", "First Increment", "Reviewed at 3 months, on successful confirmation of employment."],
         ["clipboard", "Performance Bonus", "Linked to annual performance appraisal and Company results."],
@@ -195,7 +195,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         ["clipboard", "Leave &amp; Credit Policy", "8 active working hours/day is the standard. Time worked beyond this is banked as credit; every 8 credits earned equals 1 day of paid leave. No other paid leaves apply. Full details in Annexure &mdash; Leave &amp; Attendance Policy."]
       ];
       const rows = items.map(function (it) {
-        return '<div class="row2f">' + badge(it[0], 32, false, "#F5F5F5") + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
+        return '<div class="row2f">' + badge(it[0] as keyof typeof ICONS, 32, false, "#F5F5F5") + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
       }).join("");
       const inner =
         '<h1 class="pt">Compensation &amp; Benefits</h1>' +
@@ -210,7 +210,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 3, d);
     }
 
-    function build(d: DocumentData) {
+    function buildPage4(d: DocumentData) {
       const items = [
         ["document-check", "Employment Agreement", "A detailed agreement covering role, term, and conditions will be signed on or before joining."],
         ["lock", "Confidentiality &amp; Data Security", "You agree to protect all confidential business, client, and technical information, and to use Company systems and data per security policy."],
@@ -224,7 +224,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         ["scale", "Intellectual Property", "All work product created during employment belongs to the Company or its clients."]
       ];
       const cards = items.map(function (it) {
-        return '<div class="lcard">' + badge(it[0], 36) + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
+        return '<div class="lcard">' + badge(it[0] as keyof typeof ICONS, 36) + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
       }).join("");
       const inner =
         '<h1 class="pt">Key Terms &amp; Conditions</h1>' +
@@ -234,7 +234,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 4, d);
     }
 
-    function build(d: DocumentData) {
+    function buildPage5(d: DocumentData) {
       const values = [
         ["badge-check", "Ownership", "We take responsibility and deliver with accountability."],
         ["party", "Creativity", "We think originally and create work with real impact."],
@@ -244,7 +244,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         ["badge-check", "Excellence", "We pursue the highest standards in our work."]
       ];
       const vcards = values.map(function (v) {
-        return '<div class="valcard5b">' + badge(v[0], 32) + '<div class="h">' + v[1] + '</div><div class="d">' + v[2] + '</div></div>';
+        return '<div class="valcard5b">' + badge(v[0] as keyof typeof ICONS, 32) + '<div class="h">' + v[1] + '</div><div class="d">' + v[2] + '</div></div>';
       }).join("");
       const inner =
         '<h1 class="pt">Our Culture</h1>' +
@@ -264,7 +264,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 5, d);
     }
 
-    function build(d: DocumentData) {
+    function buildPage6(d: DocumentData) {
       const steps = [
         ["pencil", "Offer Accepted", "You sign and return this letter to confirm your acceptance."],
         ["document-check", "Documents Submitted", "You share the documents required for verification, listed in Annexure C."],
@@ -275,7 +275,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         ["party", "Welcome Session", "A short onboarding session to introduce the team, tools, and ways of working."]
       ];
       const rows = steps.map(function (s) {
-        return '<div class="rstep"><div class="col"><div class="badge" style="width:32px;height:32px;background:' + INK + ';color:#fff;">' + icon(s[0], 15, "#ffffff") + '</div><div class="connector"></div></div>' +
+        return '<div class="rstep"><div class="col"><div class="badge" style="width:32px;height:32px;background:' + INK + ';color:#fff;">' + icon(s[0] as keyof typeof ICONS, 15, "#ffffff") + '</div><div class="connector"></div></div>' +
           '<div class="box"><div><div class="h">' + s[1] + '</div><div class="d">' + s[2] + '</div></div></div></div>';
       }).join("");
       const inner =
@@ -285,7 +285,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 6, d);
     }
 
-    function build(d: DocumentData) {
+    function buildPage7(d: DocumentData) {
       const notes = [
         "All information shared by you will be kept strictly confidential by the Company.",
         "This offer is valid for acceptance until the date specified on the cover page.",
@@ -324,7 +324,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 7, d);
     }
 
-    function build(d: DocumentData) {
+    function buildPage8(d: DocumentData) {
       const inner =
         '<h1 class="pt">Acceptance of Offer</h1>' +
         '<div class="statement">I, ' + val(d.candidateName) + ', confirm that I have read, understood, and voluntarily accept the terms of this Letter of Appointment and its Annexures, issued by Triple S Production. I understand that a detailed Employment Agreement will be executed separately on or before my date of joining.</div>' +
@@ -341,7 +341,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
     }
 
     // ============== INTERNSHIP OFFER (8-page kit) ==============
-    function build(d: DocumentData) {
+    function buildIntern1(d: DocumentData) {
       return '<div class="page cover">' +
         '<img class="wm" src="' + LOGO_WHITE + '">' +
         '<div class="innerc">' +
@@ -355,7 +355,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '</div><div class="confbar"><div>Strictly Private &amp; Confidential</div><div>' + val(d.letterDate) + '</div></div></div>' +
         '</div></div>';
     }
-    function build(d: DocumentData) {
+    function buildIntern2(d: DocumentData) {
       const inner =
         '<h1 class="pt">Welcome to the Team</h1>' +
         '<p class="body">Dear ' + val(d.candidateName) + ',</p>' +
@@ -379,7 +379,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<div style="text-align:right;"><div class="role">Signed &amp; issued on</div><div class="name">' + val(d.letterDate) + '</div></div></div>';
       return page(inner, 2, d, "Letter of Internship");
     }
-    function build(d: DocumentData) {
+    function buildIntern3(d: DocumentData) {
       const stipendLabel = /unpaid/i.test(String(d.probationSalary || "")) ? "Unpaid" : ("&#8377;" + val(d.probationSalary));
       const items = [
         ["document-check", "Certificate of Completion", "Issued at the end of the internship, subject to satisfactory performance and completion of assigned work."],
@@ -388,7 +388,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         ["clipboard", "Leave &amp; Credit Policy", "8 active working hours/day is the standard. Time worked beyond this is banked as credit; every 8 credits earned equals 1 day of paid leave. No other paid leaves apply. Full details in Annexure &mdash; Leave &amp; Attendance Policy."]
       ];
       const rows = items.map(function (it) {
-        return '<div class="row2f">' + badge(it[0], 32, false, "#F5F5F5") + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
+        return '<div class="row2f">' + badge(it[0] as keyof typeof ICONS, 32, false, "#F5F5F5") + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
       }).join("");
       const inner =
         '<h1 class="pt">Stipend &amp; Terms</h1>' +
@@ -400,7 +400,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<div class="paycard">' + rows + '</div>';
       return page(inner, 3, d, "Letter of Internship");
     }
-    function build(d: DocumentData) {
+    function buildIntern4(d: DocumentData) {
       const items = [
         ["document-check", "Internship Agreement", "A detailed agreement covering role, duration, and conditions will be signed on or before joining."],
         ["lock", "Confidentiality &amp; Data Security", "You agree to protect all confidential business, client, and technical information, and to use Company systems and data per security policy."],
@@ -414,7 +414,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         ["scale", "Intellectual Property", "All work product created during the internship belongs to the Company or its clients."]
       ];
       const cards = items.map(function (it) {
-        return '<div class="lcard">' + badge(it[0], 36) + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
+        return '<div class="lcard">' + badge(it[0] as keyof typeof ICONS, 36) + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
       }).join("");
       const inner =
         '<h1 class="pt">Key Terms &amp; Conditions</h1>' +
@@ -423,7 +423,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<div class="banner">' + badge("scale", 32) + '<div>This page is a plain-language summary for your convenience. The binding legal terms are set out in full in the Internship Agreement and the Company policies referenced above.</div></div>';
       return page(inner, 4, d, "Letter of Internship");
     }
-    function build(d: DocumentData) {
+    function buildIntern5(d: DocumentData) {
       const values = [
         ["badge-check", "Ownership", "We take responsibility and deliver with accountability."],
         ["party", "Creativity", "We think originally and create work with real impact."],
@@ -433,7 +433,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         ["badge-check", "Excellence", "We pursue the highest standards in our work."]
       ];
       const vcards = values.map(function (v) {
-        return '<div class="valcard5b">' + badge(v[0], 32) + '<div class="h">' + v[1] + '</div><div class="d">' + v[2] + '</div></div>';
+        return '<div class="valcard5b">' + badge(v[0] as keyof typeof ICONS, 32) + '<div class="h">' + v[1] + '</div><div class="d">' + v[2] + '</div></div>';
       }).join("");
       const inner =
         '<h1 class="pt">Our Culture</h1>' +
@@ -452,7 +452,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<div class="quote5">' + icon("quote", 30, "#ffffff") + '<div><div class="qt">&ldquo;We don&rsquo;t just build brands &mdash; we build lasting impact.&rdquo;</div><div class="qa">&mdash; ' + val(d.proprietorName) + ', Founder</div></div></div>';
       return page(inner, 5, d, "Letter of Internship");
     }
-    function build(d: DocumentData) {
+    function buildIntern6(d: DocumentData) {
       const steps = [
         ["pencil", "Offer Accepted", "You sign and return this letter to confirm your acceptance."],
         ["document-check", "Documents Submitted", "You share the documents required for verification, listed in Annexure C."],
@@ -463,7 +463,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         ["party", "Welcome Session", "A short onboarding session to introduce the team, tools, and ways of working."]
       ];
       const rows = steps.map(function (s) {
-        return '<div class="rstep"><div class="col"><div class="badge" style="width:32px;height:32px;background:' + INK + ';color:#fff;">' + icon(s[0], 15, "#ffffff") + '</div><div class="connector"></div></div>' +
+        return '<div class="rstep"><div class="col"><div class="badge" style="width:32px;height:32px;background:' + INK + ';color:#fff;">' + icon(s[0] as keyof typeof ICONS, 15, "#ffffff") + '</div><div class="connector"></div></div>' +
           '<div class="box"><div><div class="h">' + s[1] + '</div><div class="d">' + s[2] + '</div></div></div></div>';
       }).join("");
       const inner =
@@ -472,7 +472,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<div class="roadmap">' + rows + '</div>';
       return page(inner, 6, d, "Letter of Internship");
     }
-    function build(d: DocumentData) {
+    function buildIntern7(d: DocumentData) {
       const notes = [
         "All information shared by you will be kept strictly confidential by the Company.",
         "This offer is valid for acceptance until the date specified on the cover page.",
@@ -510,7 +510,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '</div>';
       return page(inner, 7, d, "Letter of Internship");
     }
-    function build(d: DocumentData) {
+    function buildIntern8(d: DocumentData) {
       const inner =
         '<h1 class="pt">Acceptance of Offer</h1>' +
         '<div class="statement">I, ' + val(d.candidateName) + ', confirm that I have read, understood, and voluntarily accept the terms of this Letter of Internship and its Annexures, issued by Triple S Production. I understand that a detailed Internship Agreement will be executed separately on or before my date of joining.</div>' +
@@ -527,17 +527,17 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
     }
 
     // ============== SIMPLE SINGLE-PAGE DOCUMENTS ==============
-    function sigPairBlock(companyLabel, otherLabel, otherName, d) {
+    function sigPairBlock(companyLabel: string, otherLabel: string, otherName: string | undefined, d: DocumentData) {
       return '<div class="sigwrap">' +
         '<div class="sigbox"><div class="lbl">' + companyLabel + '</div><div class="line"></div><div><div class="name">' + val(d.proprietorName) + '</div><div class="date">Founder &nbsp;&middot;&nbsp; Date: ______________</div></div></div>' +
         '<div class="sigbox"><div class="lbl">' + otherLabel + '</div><div class="line"></div><div><div class="name">' + val(otherName) + '</div><div class="date">Date: ______________</div></div></div>' +
         '</div>';
     }
-    function sigSoloBlock(label, d) {
+    function sigSoloBlock(label: string, d: DocumentData) {
       return '<div class="sigwrap"><div class="sigbox" style="max-width:280px;"><div class="lbl">' + label + '</div><div class="line"></div><div><div class="name">' + val(d.proprietorName) + '</div><div class="date">For ' + esc(d.companyName || "Triple S Production") + ' &nbsp;&middot;&nbsp; Date: ______________</div></div></div></div>';
     }
 
-    const DEPT_PROFILES = {
+    const DEPT_PROFILES: Record<string, { ipFocus: string; confFocus: string; responsibilities: string; checklistExtra: string | null }> = {
       "Development": {
         ipFocus: "source code, technical architecture, system designs, and any software or tools built during employment",
         confFocus: "source code repositories, API keys, credentials, and technical infrastructure",
@@ -551,8 +551,8 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         checklistExtra: "Design / video portfolio link"
       }
     };
-    function deptProfile(d) {
-      return DEPT_PROFILES[d.department] || {
+    function deptProfile(d: DocumentData) {
+      return (d.department && DEPT_PROFILES[d.department]) ? DEPT_PROFILES[d.department] : {
         ipFocus: "work product, deliverables, and material produced during employment",
         confFocus: "client information, project material, and internal business data",
         responsibilities: "assigned tasks and projects",
@@ -560,8 +560,8 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       };
     }
 
-    function build(d: DocumentData) {
-      const city = esc((d.officeAddress || "Satara").split(",").pop().trim() || "Satara");
+    function buildEmployeeAgreement(d: DocumentData) {
+      const city = esc(((d.officeAddress || "Satara").split(",").pop() || "").trim() || "Satara");
       const page1 =
         '<h1 class="pt">Employee Agreement</h1>' +
         '<p class="body">This Employment Agreement (&ldquo;Agreement&rdquo;) is made on ' + val(d.letterDate) + ' between <strong>Triple S Production</strong> (&ldquo;the Company&rdquo;) and <strong>' + val(d.candidateName) + '</strong> (&ldquo;the Employee&rdquo;), collectively &ldquo;the Parties&rdquo;.</p>' +
@@ -587,7 +587,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(page1, 1, d, "Employee Agreement", 3) + page(page2, 2, d, "Employee Agreement", 3) + page(page3, 3, d, "Employee Agreement", 3);
     }
 
-    function build(d: DocumentData) {
+    function buildBackgroundVerification(d: DocumentData) {
       const dp = deptProfile(d);
       const docs = [
         "Aadhar card", "PAN card", "Most recent resume",
@@ -605,7 +605,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 1, d, "Background Verification Checklist", 1);
     }
 
-    function build(d: DocumentData) {
+    function buildHandbookAck(d: DocumentData) {
       const items = [
         ["clock", "Working Hours &amp; Time Credit", "8 active hours/day required; hours beyond 8 accrue as credit (8 credits = 1 day of leave), redeemable as approved by the Company."],
         ["calendar", "Leave &amp; Attendance", "No official paid leave beyond the credit system. Medical leave may be paid at the Company's discretion, subject to documentation. Unapproved absence attracts disciplinary action."],
@@ -616,7 +616,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         ["clipboard", "Disciplinary Action &amp; Grievance", "Breach of policy may lead to disciplinary action up to termination; employees may raise workplace concerns with HR or their manager."]
       ];
       const cards = items.map(function (it) {
-        return '<div class="lcard">' + badge(it[0], 36) + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
+        return '<div class="lcard">' + badge(it[0] as keyof typeof ICONS, 36) + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
       }).join("");
       const page1 =
         '<h1 class="pt">Employee Handbook &mdash; Policy Summary</h1>' +
@@ -630,7 +630,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(page1, 1, d, "Handbook Acknowledgment", 2) + page(page2, 2, d, "Handbook Acknowledgment", 2);
     }
 
-    function build(d: DocumentData) {
+    function buildPayrollForm(d: DocumentData) {
       const inner =
         '<h1 class="pt">Payroll Registration Form</h1>' +
         '<div class="infocard2"><div class="hd2">' + icon("file", 16, "#ffffff") + ' Bank &amp; Tax Details</div><div class="rows">' +
@@ -646,8 +646,8 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 1, d, "Payroll Registration Form", 1);
     }
 
-    function build(d: DocumentData) {
-      const city = esc((d.officeAddress || "Satara").split(",").pop().trim() || "Satara");
+    function buildBondAgreement(d: DocumentData) {
+      const city = esc(((d.officeAddress || "Satara").split(",").pop() || "").trim() || "Satara");
       const page1 =
         '<h1 class="pt">Service Bond Agreement</h1>' +
         '<p class="body">This Service Bond Agreement is executed on ' + val(d.letterDate) + ' by <strong>' + val(d.candidateName) + '</strong> (&ldquo;the Employee&rdquo;), appointed as ' + val(d.designation) + ' at Triple S Production (&ldquo;the Company&rdquo;), effective from ' + val(d.dateOfJoining) + '.</p>' +
@@ -664,7 +664,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(page1, 1, d, "Service Bond Agreement", 2) + page(page2, 2, d, "Service Bond Agreement", 2);
     }
 
-    function build(d: DocumentData) {
+    function buildRelievingLetter(d: DocumentData) {
       const inner =
         '<h1 class="pt">Relieving Letter</h1>' +
         '<p class="body" style="margin-bottom:1mm;">To,<br>' + val(d.candidateName) + '<br>' + val(d.designation) + ', ' + val(d.department) + '</p>' +
@@ -679,7 +679,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 1, d, "Relieving Letter", 1);
     }
 
-    function build(d: DocumentData) {
+    function buildInternshipCompletion(d: DocumentData) {
       const dp = deptProfile(d);
       const resp = (d.keyResponsibilities && d.keyResponsibilities.trim()) ? esc(d.keyResponsibilities) : dp.responsibilities + " within the " + val(d.department) + " team";
       const inner =
@@ -695,7 +695,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 1, d, "Internship Completion Letter", 1);
     }
 
-    function build(d: DocumentData) {
+    function buildExperienceLetter(d: DocumentData) {
       const dp = deptProfile(d);
       const perf = (d.performanceNote && d.performanceNote.trim()) ? esc(d.performanceNote) : "was diligent, professional, and a valued member of the team";
       const resp = (d.keyResponsibilities && d.keyResponsibilities.trim()) ? esc(d.keyResponsibilities) : dp.responsibilities + " as " + val(d.designation);
@@ -711,7 +711,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 1, d, "Experience Certificate", 1);
     }
 
-    function build(d: DocumentData) {
+    function buildInternshipCertificate(d: DocumentData) {
       const dp = deptProfile(d);
       const perf = (d.performanceNote && d.performanceNote.trim()) ? esc(d.performanceNote) : "demonstrated strong learning ability and contributed meaningfully to assigned projects";
       const resp = (d.keyResponsibilities && d.keyResponsibilities.trim()) ? esc(d.keyResponsibilities) : "supporting the " + val(d.department) + " team with " + dp.responsibilities;
@@ -725,7 +725,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 1, d, "Certificate of Internship", 1);
     }
 
-    function build(d: DocumentData) {
+    function buildContinuingObligation(d: DocumentData) {
       const obligations = [
         "Confidentiality regarding client information, project material, and internal business data of the Company, without limitation of time.",
         "The restriction on using, reproducing, publishing, or showcasing any client deliverable or Company project in a personal portfolio, social media, or any third-party context, without the Company's prior written approval.",

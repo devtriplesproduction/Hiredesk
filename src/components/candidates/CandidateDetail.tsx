@@ -5,6 +5,7 @@ import { Btn,  ScoreBadge, StatusBadge, SkillTag } from "@/components/ui";
 import type { Candidate } from "@/types";
 import { clsx } from "clsx";
 import { useRouter } from "next/navigation";
+import { getPublicBaseUrl } from "@/lib/url";
 import { useState, useEffect } from "react";
 import PDFViewer from "@/components/candidates/PDFViewer";
 import WhatsAppModal from "@/components/candidates/WhatsAppModal";
@@ -685,14 +686,29 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
             )
           )}
 
-          {/* Interview Management */}
-          {["shortlisted", "interview_1", "interview_2", "approved", "rejected", "offer", "offer_sent", "offer_accepted", "offer_rejected", "hired"].includes(c.status) && (
+          {/* Workflow Management */}
+          {["new", "review", "shortlisted", "interview_1", "interview_2", "approved", "rejected", "offer", "offer_sent", "offer_accepted", "offer_rejected", "hired"].includes(c.status) && (
             <div className="mt-5 pt-4 flex flex-col gap-3" style={{ borderTop: "1px solid var(--border)" }}>
-              <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest">Interview Management</div>
+              <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest">Workflow Actions</div>
               
+              {/* Shortlist Action */}
+              {(c.status === "new" || c.status === "review") && (
+                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--glass-2)] flex items-center justify-between">
+                  <div>
+                    <div className="font-bold text-sm text-[var(--text)]">Shortlist Candidate</div>
+                    <div className="text-xs text-[var(--text-3)] mt-0.5">Move candidate to the shortlisted stage to begin interviews.</div>
+                  </div>
+                  <Btn className="bg-white text-black text-xs font-bold px-4 py-1.5 rounded active:scale-95 transition-transform"
+                    onClick={() => updateCandidate(c.id, { status: "shortlisted" })}>
+                    Shortlist
+                  </Btn>
+                </div>
+              )}
+
               {/* Round 1 */}
-              <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--glass-2)]">
-                <div className="font-bold text-sm text-[var(--text)] mb-2">Round 1</div>
+              {(c.status !== "new" && c.status !== "review") && (
+                <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--glass-2)]">
+                  <div className="font-bold text-sm text-[var(--text)] mb-2">Round 1</div>
                 {!r1 ? (
                   c.status === "shortlisted" ? (
                   <div className="flex gap-2">
@@ -740,6 +756,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                   </div>
                 )}
               </div>
+              )}
 
               {/* Round 2 */}
               {(r1?.decision === "select" || r2) && (
@@ -870,7 +887,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     >📄 Generate Docs</Btn>
                     <Btn className="text-[10px] bg-[var(--glass-3)] px-2 py-1 rounded"
                       onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/onboarding/${c.id}`);
+                        navigator.clipboard.writeText(`${getPublicBaseUrl()}/onboarding/${c.id}`);
                         alert("Candidate upload link copied to clipboard.");
                       }}
                     >Copy Upload Link</Btn>
