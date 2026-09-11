@@ -1,12 +1,12 @@
 -- Create offers table
 CREATE TABLE IF NOT EXISTS public.offers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    candidate_id UUID NOT NULL REFERENCES public.candidates(id) ON DELETE CASCADE,
-    contract_template_id TEXT,
+    "candidateId" TEXT NOT NULL REFERENCES public.candidates(id) ON DELETE CASCADE,
+    "contractTemplateId" TEXT,
     status TEXT NOT NULL CHECK (status IN ('draft', 'sent', 'accepted', 'rejected')),
-    sent_at TIMESTAMPTZ,
-    responded_at TIMESTAMPTZ,
-    created_at TIMESTAMPTZ DEFAULT now()
+    "sentAt" TIMESTAMPTZ,
+    "respondedAt" TIMESTAMPTZ,
+    "createdAt" TIMESTAMPTZ DEFAULT now()
 );
 
 -- Enable RLS
@@ -19,4 +19,4 @@ CREATE POLICY "Enable all access for offers"
     WITH CHECK (true);
 
 -- Index for efficient lookups by candidate
-CREATE INDEX IF NOT EXISTS idx_offers_candidate_id ON public.offers(candidate_id);
+CREATE INDEX IF NOT EXISTS idx_offers_candidate_id ON public.offers("candidateId");

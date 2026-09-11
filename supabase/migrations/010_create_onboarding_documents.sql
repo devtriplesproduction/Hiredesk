@@ -1,13 +1,13 @@
 -- Create candidate_documents table
 CREATE TABLE IF NOT EXISTS public.candidate_documents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    candidate_id UUID NOT NULL REFERENCES public.candidates(id) ON DELETE CASCADE,
-    file_name TEXT NOT NULL,
-    file_path TEXT NOT NULL,
+    "candidateId" TEXT NOT NULL REFERENCES public.candidates(id) ON DELETE CASCADE,
+    "fileName" TEXT NOT NULL,
+    "filePath" TEXT NOT NULL,
     type TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'verified', 'rejected')),
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
+    "createdAt" TIMESTAMPTZ DEFAULT now(),
+    "updatedAt" TIMESTAMPTZ DEFAULT now()
 );
 
 -- Enable RLS
@@ -22,7 +22,7 @@ CREATE POLICY "Enable all access for candidate_documents"
     WITH CHECK (true);
 
 -- Index for efficient lookups by candidate
-CREATE INDEX IF NOT EXISTS idx_candidate_documents_candidate_id ON public.candidate_documents(candidate_id);
+CREATE INDEX IF NOT EXISTS idx_candidate_documents_candidate_id ON public.candidate_documents("candidateId");
 
 -- Create secure onboarding-docs bucket
 INSERT INTO storage.buckets (id, name, public) 

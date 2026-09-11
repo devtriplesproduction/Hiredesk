@@ -40,5 +40,8 @@ CREATE TABLE IF NOT EXISTS public.candidates (
   "resumeText" TEXT,
   "appliedAt" TEXT NOT NULL,
   "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
-  note TEXT NOT NULL DEFAULT ''
+  note TEXT NOT NULL DEFAULT '',
+  "extractionSource" TEXT,
+  "extractionConfidence" NUMERIC,
+  "extractionMetadata" JSONB
 );

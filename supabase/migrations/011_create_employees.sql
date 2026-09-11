@@ -1,7 +1,7 @@
 -- Create employees table
 CREATE TABLE IF NOT EXISTS public.employees (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    candidate_id UUID NOT NULL REFERENCES public.candidates(id) ON DELETE CASCADE,
+    candidate_id TEXT NOT NULL REFERENCES public.candidates(id) ON DELETE CASCADE,
     offer_id UUID REFERENCES public.offers(id) ON DELETE SET NULL,
     name TEXT NOT NULL,
     email TEXT NOT NULL,
