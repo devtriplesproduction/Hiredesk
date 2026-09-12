@@ -41,6 +41,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Offer cannot be modified or has already been responded to" }, { status: 400 });
     }
 
+    // Enforce 24-hour expiry on respond
+    const sentAtTime = existingOffer.sentAt ? new Date(existingOffer.sentAt).getTime() : new Date(existingOffer.createdAt).getTime();
+    if (Date.now() - sentAtTime > 24 * 60 * 60 * 1000) {
+      return NextResponse.json({ error: "Offer link has expired (valid for 24 hours only)" }, { status: 403 });
+    }
+
+    // Require mobile verification
+    const { cookies } = await import("next/headers");
+    const isVerified = cookies().get(`verified_offer_${candidateId}`)?.value === "true";
+    
+    if (!isVerified) {
+      return NextResponse.json({ error: "Mobile verification required to respond to this offer" }, { status: 403 });
+    }
+
     // Update Offer Status
     const { error: offerError } = await supabase
       .from("offers")

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,22 @@ export async function GET(req: NextRequest, { params }: { params: { candidateId:
 
   if (offer.candidateId !== candidate.id) {
     return NextResponse.json({ error: "Offer does not belong to this candidate" }, { status: 403 });
+  }
+
+  // Check 24-hour expiry
+  const sentAtTime = offer.sentAt ? new Date(offer.sentAt).getTime() : new Date(offer.createdAt).getTime();
+  const isExpired = Date.now() - sentAtTime > 24 * 60 * 60 * 1000;
+
+  if (isExpired && offer.status === "sent") {
+    return NextResponse.json({ expired: true, candidate, offer: { id: offer.id, status: offer.status } });
+  }
+
+  // Check verification cookie
+  const isVerified = cookies().get(`verified_offer_${candidateId}`)?.value === "true";
+
+  if (!isVerified && offer.status === "sent") {
+    // Return flag requiring verification, omitting sensitive data
+    return NextResponse.json({ requiresVerification: true, candidate, offer: { id: offer.id, status: offer.status } });
   }
 
   return NextResponse.json({ candidate, offer });
