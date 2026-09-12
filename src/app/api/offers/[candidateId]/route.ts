@@ -3,12 +3,17 @@ import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
-// Bypass RLS for retrieving specific candidate offer info securely
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export async function GET(req: NextRequest, { params }: { params: { candidateId: string } }) {
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error("Server misconfiguration: missing Supabase URL or Service Role Key");
+    return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
+  }
+
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
   const candidateId = params.candidateId;
   if (!candidateId) return NextResponse.json({ error: "Missing candidateId" }, { status: 400 });
 
@@ -28,6 +33,7 @@ export async function GET(req: NextRequest, { params }: { params: { candidateId:
     .from("offers")
     .select("*")
     .eq("candidateId", candidateId)
+    .neq("status", "draft")
     .order("createdAt", { ascending: false })
     .limit(1)
     .single();
@@ -36,5 +42,13 @@ export async function GET(req: NextRequest, { params }: { params: { candidateId:
     return NextResponse.json({ error: offerError.message }, { status: 500 });
   }
 
-  return NextResponse.json({ candidate, offer: offer || null });
+  if (!offer) {
+    return NextResponse.json({ error: "Offer not found or not yet available" }, { status: 404 });
+  }
+
+  if (offer.candidateId !== candidate.id) {
+    return NextResponse.json({ error: "Offer does not belong to this candidate" }, { status: 403 });
+  }
+
+  return NextResponse.json({ candidate, offer });
 }

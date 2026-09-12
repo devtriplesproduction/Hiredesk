@@ -89,7 +89,7 @@ export default function CandidateOfferPage() {
     return <div className="min-h-screen flex items-center justify-center text-white bg-[#080808]">Loading offer...</div>;
   }
 
-  if (!candidate || !offer) {
+  if (!candidate || !offer || offer.status === "draft") {
     return <div className="min-h-screen flex items-center justify-center text-red-500 bg-[#080808]">Offer not found or not yet available.</div>;
   }
 
@@ -101,7 +101,7 @@ export default function CandidateOfferPage() {
           Congratulations {candidate.name}! Triple S Production has extended you an offer for the <strong className="text-white">{candidate.roleName}</strong> position.
         </div>
 
-        {(offer.status === "sent" || offer.status === "draft") ? (
+        {offer.status === "sent" ? (
           <div className="flex flex-col gap-4">
             <p className="text-sm text-[var(--text-3)] mb-4">Please review the details communicated to you and provide your response below.</p>
             <div className="flex gap-4">
