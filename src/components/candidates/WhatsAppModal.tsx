@@ -5,6 +5,7 @@ import type { Candidate } from "@/types";
 import { normalizePhoneNumber, validatePhoneNumber } from "@/lib/utils/phone";
 import { getPublicBaseUrl } from "@/lib/url";
 import { Btn, Input, Select } from "@/components/ui";
+import { DocumentPreview } from "@/components/documents/DocumentPreview";
 
 interface Props {
   candidate: Candidate;

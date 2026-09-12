@@ -45,12 +45,10 @@ export default function RolesGrid() {
             >
               <div className="flex justify-between items-start mb-2">
                 <div className="flex-1 min-w-0 mr-2">
-                  <div className="text-sm sm:text-base font-bold truncate">{r.name}</div>
+                  <div className="text-sm sm:text-base font-bold truncate text-[#E6E8EB]">{r.name}</div>
                   <div className="font-mono text-[10px] text-[var(--text-3)] mt-0.5 uppercase tracking-widest">{r.type}</div>
                 </div>
-                <span className={clsx("font-mono text-xs px-2 py-0.5 rounded-lg border flex-shrink-0",
-                  r.count > 8 ? "score-hi" : r.count > 4 ? "score-mid" : "score-lo"
-                )}>{r.count}</span>
+                <span className="font-mono text-xs px-2 py-0.5 rounded-lg border border-[#3A3A3A] bg-[#292929] text-[#A1A6AF] flex-shrink-0">{r.count}</span>
               </div>
 
               {/* Bar */}
