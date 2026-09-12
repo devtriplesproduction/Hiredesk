@@ -7,7 +7,7 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
   const [documents, setDocuments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [docType, setDocType] = useState("ID / Passport");
+  const [docType, setDocType] = useState("Aadhaar Card");
 
   useEffect(() => {
     fetchDocuments();
@@ -70,11 +70,13 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
                 value={docType} onChange={e => setDocType(e.target.value)}
                 className="w-full bg-[var(--glass-2)] border border-[var(--border)] rounded-lg p-3 text-sm outline-none"
               >
-                <option>ID / Passport</option>
-                <option>Degree / Certificate</option>
-                <option>Signed Contract</option>
-                <option>Tax Form</option>
-                <option>Other</option>
+                <option>Aadhaar Card</option>
+                <option>PAN Card</option>
+                <option>Most Recent Resume</option>
+                <option>Latest Experience Letter (if applicable)</option>
+                <option>Relieving Letter from Previous Employer (if applicable)</option>
+                <option>Most Recent Education Certificate</option>
+                <option>GitHub / Portfolio Profile Link</option>
               </select>
             </div>
             

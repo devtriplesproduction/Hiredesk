@@ -4,6 +4,7 @@ import { useStore } from "@/lib/store";
 import { getPublicBaseUrl } from "@/lib/url";
 import type { Candidate } from "@/types";
 import { Btn } from "@/components/ui";
+import { DocumentPreview } from "@/components/documents/DocumentPreview";
 
 interface Props {
   candidate: Candidate;
@@ -66,7 +67,7 @@ const TEMPLATES: Template[] = [
     name: "Onboarding & Documents",
     emoji: "📂",
     subject: "Welcome to Triple S Production! Next Steps",
-    rawText: "Hi [Candidate Name],\n\nWelcome to the team! To get started, please upload your required onboarding documents here: [Onboarding Link]\n\nBest,\nTriple S Production Team"
+    rawText: "Hi [Candidate Name],\n\nWelcome to the team! To get started, please upload your required onboarding documents here: [Onboarding Link]\n\nPlease find the Background Verification Checklist attached for your reference.\n\nBest,\nTriple S Production Team"
   },
   {
     id: "doc-reject",
@@ -206,6 +207,32 @@ export default function EmailModal({ candidate, onClose }: Props) {
     setIsSending(true);
 
     try {
+      let attachments: any[] = [];
+      if (selectedTemplate === "onboarding") {
+        const html2canvas = (await import("html2canvas")).default;
+        const { jsPDF } = await import("jspdf");
+
+        const el = document.getElementById("hidden-checklist-preview");
+        if (el) {
+          const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+          const imgData = canvas.toDataURL("image/png");
+          
+          const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+          
+          pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+          
+          // Split data URI to get just the base64 string
+          const base64Data = pdf.output('datauristring').split(",")[1];
+          attachments.push({
+            filename: "Background_Verification_Checklist.pdf",
+            content: base64Data,
+            encoding: "base64"
+          });
+        }
+      }
+
       const response = await fetch("/api/email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -213,6 +240,7 @@ export default function EmailModal({ candidate, onClose }: Props) {
           to: emailInput.trim(),
           subject: messageSubject,
           text: messageBody,
+          attachments,
         }),
       });
 
@@ -478,6 +506,26 @@ export default function EmailModal({ candidate, onClose }: Props) {
           <span>{isSending ? "Sending..." : "Send via Email"}</span>
         </Btn>
       </div>
+
+      {selectedTemplate === "onboarding" && (
+        <div style={{ position: "absolute", left: "-9999px", top: 0, opacity: 0, pointerEvents: "none" }}>
+          <div id="hidden-checklist-preview" className="w-[800px] bg-white text-black p-8">
+            <DocumentPreview
+              documentType="background-verification"
+              data={{
+                candidateName: candidate.name,
+                designation: offer?.documentData?.designation || candidate.roleName || "",
+                department: offer?.documentData?.department || "",
+                officeLocation: offer?.documentData?.officeLocation || "",
+                companyName: offer?.documentData?.companyName || "Triple S Production",
+                proprietorName: offer?.documentData?.proprietorName || "Ashabuddin",
+                letterDate: offer?.documentData?.letterDate || new Date().toISOString().split("T")[0],
+                ...offer?.documentData
+              }}
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -59,7 +59,7 @@ const TEMPLATES: Template[] = [
     id: "onboarding",
     name: "Onboarding & Documents",
     emoji: "📂",
-    rawText: "Hi [Candidate Name], welcome to the team! To get started, please upload your required onboarding documents here: [Onboarding Link]"
+    rawText: "Hi [Candidate Name], welcome to the team! To get started, please upload your required onboarding documents here: [Onboarding Link]\n\nYou can view your Background Verification Checklist here: [Checklist Link]"
   },
   {
     id: "doc-reject",
@@ -154,7 +154,8 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
           .replace(/\[Candidate Name\]/g, candidate.name || "Candidate")
           .replace(/\[Role Name\]/g, roleInput || "Digital Marketing")
           .replace(/\[Offer Link\]/g, `${getPublicBaseUrl()}/offer/${candidate.id}`)
-          .replace(/\[Onboarding Link\]/g, `${getPublicBaseUrl()}/onboarding/${candidate.id}`);
+          .replace(/\[Onboarding Link\]/g, `${getPublicBaseUrl()}/onboarding/${candidate.id}`)
+          .replace(/\[Checklist Link\]/g, `${getPublicBaseUrl()}/onboarding/${candidate.id}/checklist`);
         setMessageBody(text);
       }
     }
@@ -170,7 +171,8 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
         .replace(/\[Candidate Name\]/g, candidate.name || "Candidate")
         .replace(/\[Role Name\]/g, roleInput || "Digital Marketing")
         .replace(/\[Offer Link\]/g, `${getPublicBaseUrl()}/offer/${candidate.id}`)
-        .replace(/\[Onboarding Link\]/g, `${getPublicBaseUrl()}/onboarding/${candidate.id}`);
+        .replace(/\[Onboarding Link\]/g, `${getPublicBaseUrl()}/onboarding/${candidate.id}`)
+        .replace(/\[Checklist Link\]/g, `${getPublicBaseUrl()}/onboarding/${candidate.id}/checklist`);
       setMessageBody(text);
     }
   };

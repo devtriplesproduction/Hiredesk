@@ -109,10 +109,7 @@ export default function CandidateOfferPage() {
         throw new Error(errData.error || "Failed to submit response");
       }
       
-      alert(`Offer ${decision} successfully!`);
-      
       setOffer({ ...offer, status: decision });
-      window.location.reload();
     } catch (err: any) {
       console.error(err);
       alert(err.message);
@@ -176,6 +173,8 @@ export default function CandidateOfferPage() {
   const documentData: DocumentData = offer.documentData || {};
   const docType = "offer-fulltime"; 
 
+  const displayRole = documentData.designation || candidate.roleName;
+
   return (
     <div className="min-h-screen p-4 bg-[#080808] text-white flex flex-col items-center">
       <div className="max-w-4xl w-full flex flex-col gap-8 py-8">
@@ -184,7 +183,7 @@ export default function CandidateOfferPage() {
         <div className="bg-[var(--glass)] border border-[var(--border)] rounded-2xl p-8 shadow-2xl animate-fade-in text-center">
           <h1 className="text-3xl font-bold mb-2">Job Offer</h1>
           <div className="text-lg text-[var(--text-2)]">
-            Congratulations {candidate.name}! Triple S Production has extended you an offer for the <strong className="text-white">{candidate.roleName}</strong> position.
+            Congratulations {candidate.name}! Triple S Production has extended you an offer for the <strong className="text-white">{displayRole}</strong> position.
           </div>
 
           {offer.status === "accepted" && (
@@ -212,27 +211,27 @@ export default function CandidateOfferPage() {
         </div>
 
         {/* Offer Document Preview */}
-        <div className="w-full flex justify-center overflow-x-auto p-4 rounded-xl border border-[var(--border)] bg-black/50">
-          <div style={{ transform: "scale(0.8)", transformOrigin: "top center", marginBottom: "-10%" }}>
+        <div className="w-full flex justify-center overflow-auto p-4 md:p-8 rounded-2xl border border-white/10 bg-[#0a0a0a] shadow-inner max-h-[70vh] custom-scrollbar">
+          <div className="w-max origin-top transform scale-75 sm:scale-90 md:scale-100 transition-transform">
             <DocumentPreview documentType={docType} data={documentData} />
           </div>
         </div>
 
         {/* Actions for Pending Offer */}
         {offer.status === "sent" && (
-          <div className="bg-[var(--glass)] border border-[var(--border)] rounded-2xl p-8 shadow-2xl animate-fade-in text-center sticky bottom-4">
-            <p className="text-sm text-[var(--text-3)] mb-4">Please review the details above and provide your response below.</p>
-            <div className="flex gap-4">
+          <div className="bg-[#111111]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] sticky bottom-4 z-50 flex flex-col items-center">
+            <p className="text-sm text-gray-400 mb-4 font-medium">Please review the details above and provide your response below.</p>
+            <div className="flex w-full md:w-3/4 gap-4">
               <Btn 
                 onClick={() => handleRespond("accepted")}
                 disabled={submitting}
-                className="flex-1 py-4 rounded-xl bg-[var(--green)] text-black font-bold hover:brightness-110 disabled:opacity-50 transition-all text-lg">
+                className="flex-1 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold shadow-lg shadow-green-900/50 hover:shadow-green-500/30 hover:-translate-y-1 disabled:opacity-50 transition-all text-base tracking-wide border border-green-400/30">
                 {submitting ? "Processing..." : "Accept Offer"}
               </Btn>
               <Btn 
                 onClick={() => handleRespond("rejected")}
                 disabled={submitting}
-                className="flex-1 py-4 rounded-xl bg-[var(--red)] text-white font-bold hover:brightness-110 disabled:opacity-50 transition-all text-lg">
+                className="flex-1 py-4 rounded-xl bg-[#222222] text-gray-300 font-bold hover:bg-[#333333] hover:text-white shadow-lg shadow-black/50 hover:shadow-red-900/20 hover:-translate-y-1 disabled:opacity-50 transition-all text-base tracking-wide border border-gray-700 hover:border-red-500/50">
                 Reject Offer
               </Btn>
             </div>
