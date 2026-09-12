@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { DocumentPreview } from "./DocumentPreview";
 import { DocumentData, DOC_GROUPS } from "./documentGenerator";
-import { Candidate, Employee, EmployeeBond, EmployeeResignation } from "@/types";
+import { Candidate, Employee, EmployeeBond, EmployeeResignation, Offer } from "@/types";
+import { useStore } from "@/lib/store";
 import { format } from "date-fns";
 
 interface DocumentStudioModalProps {
   candidate: Candidate;
+  offer?: Offer;
   employee?: Employee;
   employeeBond?: EmployeeBond;
   employeeResignation?: EmployeeResignation;
@@ -72,7 +74,8 @@ const FIELD_GROUPS: Record<string, { key: keyof DocumentData, label: string }[]>
   ]
 };
 
-export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candidate, employee, employeeBond, employeeResignation, onClose, defaultStage, defaultDocType }) => {
+export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candidate, offer, employee, employeeBond, employeeResignation, onClose, defaultStage, defaultDocType }) => {
+  const { updateOffer } = useStore();
   const defaultOption = defaultDocType || DOC_OPTIONS.find(o => o.stage === defaultStage)?.value || "offer-fulltime";
   const [docType, setDocType] = useState<string>(defaultOption);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -112,7 +115,18 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
     keyResponsibilities: ""
   };
 
-  const [data, setData] = useState<DocumentData>(initialData);
+  const [data, setData] = useState<DocumentData>(() => ({
+    ...initialData,
+    ...(offer?.documentData || {})
+  }));
+
+  useEffect(() => {
+    if (!offer) return;
+    const timer = setTimeout(() => {
+      updateOffer(offer.id, { documentData: data });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [data, offer, updateOffer]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setData({

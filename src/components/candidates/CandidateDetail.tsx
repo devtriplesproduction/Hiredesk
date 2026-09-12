@@ -1135,6 +1135,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
       {isDocStudioOpen && (
         <DocumentStudioModal
           candidate={c}
+          offer={candidateOffer}
           employee={candidateEmployee}
           employeeBond={employeeBond || undefined}
           employeeResignation={employeeResignation || undefined}

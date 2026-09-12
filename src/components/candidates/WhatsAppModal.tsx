@@ -101,11 +101,12 @@ const WhatsAppIcon = ({ className = "w-5 h-5" }) => (
 );
 
 export default function WhatsAppModal({ candidate, onClose }: Props) {
-  const { updateCandidate } = useStore();
+  const { updateCandidate, offers } = useStore();
+  const offer = offers.find(o => o.candidateId === candidate.id);
 
   // State managers
   const [phoneInput, setPhoneInput] = useState(candidate.phone || "");
-  const [roleInput, setRoleInput] = useState(candidate.roleName || "Digital Marketing");
+  const [roleInput, setRoleInput] = useState(offer?.documentData?.designation || candidate.roleName || "Digital Marketing");
   
   const defaultTemplate = useMemo(() => {
     if (candidate.status === "shortlisted") return "shortlist";

@@ -54,6 +54,7 @@ export interface Offer {
   sentAt: string | null;
   respondedAt: string | null;
   createdAt: string;
+  documentData?: any;
 }
 
 export interface Interview {
