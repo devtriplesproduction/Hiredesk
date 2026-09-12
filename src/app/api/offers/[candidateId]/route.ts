@@ -55,14 +55,14 @@ export async function GET(req: NextRequest, { params }: { params: { candidateId:
   const sentAtTime = offer.sentAt ? new Date(offer.sentAt).getTime() : new Date(offer.createdAt).getTime();
   const isExpired = Date.now() - sentAtTime > 24 * 60 * 60 * 1000;
 
-  if (isExpired && offer.status === "sent") {
+  if (isExpired) {
     return NextResponse.json({ expired: true, candidate, offer: { id: offer.id, status: offer.status } });
   }
 
   // Check verification cookie
   const isVerified = cookies().get(`verified_offer_${candidateId}`)?.value === "true";
 
-  if (!isVerified && offer.status === "sent") {
+  if (!isVerified) {
     // Return flag requiring verification, omitting sensitive data
     return NextResponse.json({ requiresVerification: true, candidate, offer: { id: offer.id, status: offer.status } });
   }

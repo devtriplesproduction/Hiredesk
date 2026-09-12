@@ -35,12 +35,39 @@ export async function POST(req: NextRequest, { params }: { params: { candidateId
       return NextResponse.json({ error: "Candidate not found" }, { status: 404 });
     }
 
-    // Basic normalization for comparison (remove spaces, dashes)
-    const normalizedInput = phone.replace(/\D/g, "");
-    const normalizedDB = candidate.phone.replace(/\D/g, "");
+    // Fetch latest non-draft Offer for candidate
+    const { data: offer, error: offerError } = await supabaseAdmin
+      .from("offers")
+      .select("status, sentAt, createdAt")
+      .eq("candidateId", candidateId)
+      .neq("status", "draft")
+      .order("createdAt", { ascending: false })
+      .limit(1)
+      .single();
 
-    // Allow match if they are exact, or if one ends with the other (e.g. missing country code)
-    if (normalizedInput === normalizedDB || normalizedDB.endsWith(normalizedInput) || normalizedInput.endsWith(normalizedDB)) {
+    if (offerError || !offer) {
+      return NextResponse.json({ error: "No valid offer found" }, { status: 404 });
+    }
+
+    if (offer.status !== "sent") {
+      return NextResponse.json({ error: "Offer is no longer pending" }, { status: 400 });
+    }
+
+    const sentAtTime = offer.sentAt ? new Date(offer.sentAt).getTime() : new Date(offer.createdAt).getTime();
+    if (Date.now() - sentAtTime > 24 * 60 * 60 * 1000) {
+      return NextResponse.json({ error: "Offer link has expired" }, { status: 403 });
+    }
+
+    // Exact normalized match for phone (last 10 digits as a robust way, or exact stripping)
+    // The requirement says: "use an exact normalized mobile-number comparison. Remove the current endsWith matching. Normalize formatting/country-code consistently before comparison."
+    
+    // We will extract just the digits. If they provide country code, we compare just the last 10 digits as "normalized" (since Indian numbers are 10 digits), or we strictly remove non-digits and compare.
+    // Wait, the safest strict normalized is stripping everything except digits. But users might enter `91...` and DB has `+91...` or just `...`.
+    // Let's strip `+` and leading `0`s, or just take the last 10 digits if length >= 10.
+    const normalizedInput = phone.replace(/\D/g, "").slice(-10);
+    const normalizedDB = candidate.phone.replace(/\D/g, "").slice(-10);
+
+    if (normalizedInput.length === 10 && normalizedInput === normalizedDB) {
       // Success! Set cookie
       cookies().set(`verified_offer_${candidateId}`, "true", {
         httpOnly: true,
