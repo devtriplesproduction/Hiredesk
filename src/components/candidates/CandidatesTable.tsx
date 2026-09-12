@@ -19,12 +19,11 @@ interface RowProps {
   isSelected: boolean;
   onSelect: (id: string) => void;
   onView: (c: Candidate) => void;
-  onReject: (id: string, name: string) => void;
 }
 
-const CandidateRow = memo(function CandidateRow({ candidate: c, isSelected, onSelect, onView, onReject }: RowProps) {
+const CandidateRow = memo(function CandidateRow({ candidate: c, isSelected, onSelect, onView }: RowProps) {
   return (
-    <tr className="group hover:bg-white/[0.02] transition-colors">
+    <tr className="hover:bg-white/[0.02] transition-colors">
       <td className={tdCls}>
         <input type="checkbox" checked={isSelected} onChange={() => onSelect(c.id)} />
       </td>
@@ -45,12 +44,6 @@ const CandidateRow = memo(function CandidateRow({ candidate: c, isSelected, onSe
       <td className={tdMono}>{c.age}</td>
       <td className={tdMono}>{c.exp}</td>
       <td className={tdMono}>{c.appliedAt}</td>
-      <td className={tdCls}>
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Btn variant="ghost" size="sm" onClick={() => onView(c)}>View</Btn>
-          <Btn variant="danger" size="sm" onClick={() => onReject(c.id, c.name)}>✕</Btn>
-        </div>
-      </td>
     </tr>
   );
 });
@@ -191,7 +184,6 @@ export default function CandidatesTable() {
                     <th className={thCls}>Age</th>
                     <th className={thCls}>Exp</th>
                     <th className={thCls}>Applied</th>
-                    <th className={thCls}></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -202,7 +194,6 @@ export default function CandidatesTable() {
                       isSelected={selectedIds.has(c.id)}
                       onSelect={toggleSelect}
                       onView={handleView}
-                      onReject={handleReject}
                     />
                   ))}
                 </tbody>

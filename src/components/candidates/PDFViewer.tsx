@@ -229,28 +229,51 @@ export default function PDFViewer({ url, filename }: PDFViewerProps) {
           </span>
         </div>
 
-        {/* Engine switcher controls (highly useful for developers & edge cases) */}
-        <div className="flex items-center gap-1 text-[11px] font-semibold text-zinc-400">
-          <span>Renderer:</span>
-          <div className="flex p-0.5 rounded-lg bg-black border border-white/5">
-            <Btn
-              onClick={() => forceFallback("native")}
-              className={clsx("px-2 py-1 rounded transition-all", engine === "native" ? "bg-white/10 text-white font-bold" : "hover:text-white")}
-            >
-              Native
-            </Btn>
-            <Btn
-              onClick={() => forceFallback("canvas")}
-              className={clsx("px-2 py-1 rounded transition-all", engine === "canvas" ? "bg-white/10 text-white font-bold" : "hover:text-white")}
-            >
-              Canvas
-            </Btn>
-            <Btn
-              onClick={() => forceFallback("iframe")}
-              className={clsx("px-2 py-1 rounded transition-all", engine === "iframe" ? "bg-white/10 text-white font-bold" : "hover:text-white")}
-            >
-              Iframe
-            </Btn>
+        {/* Engine switcher controls */}
+        <div className="flex items-center gap-2.5 text-xs font-semibold text-zinc-400">
+          <span className="select-none">Renderer:</span>
+          <div className="inline-flex items-center gap-1.5 select-none">
+            {(["native", "canvas", "iframe"] as const).map((eng) => {
+              const isActive = engine === eng;
+              const label = eng.toUpperCase();
+              return (
+                <button
+                  key={eng}
+                  type="button"
+                  onClick={() => forceFallback(eng)}
+                  className="inline-flex items-center justify-center h-[40px] px-[18px] rounded-[9px] text-[12.5px] font-semibold tracking-wide uppercase transition-all duration-150 cursor-pointer active:scale-[0.98]"
+                  style={{
+                    background: isActive ? "rgba(0, 217, 255, 0.08)" : "#151515",
+                    border: isActive ? "1px solid rgba(0, 217, 255, 0.45)" : "1px solid #303030",
+                    color: isActive ? "#00D9FF" : "#9A9DA6",
+                    boxShadow: isActive ? "0 0 12px rgba(0, 217, 255, 0.10)" : "none",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (isActive) {
+                      e.currentTarget.style.background = "rgba(0, 217, 255, 0.14)";
+                      e.currentTarget.style.borderColor = "rgba(0, 217, 255, 0.55)";
+                    } else {
+                      e.currentTarget.style.background = "rgba(0, 217, 255, 0.08)";
+                      e.currentTarget.style.borderColor = "rgba(0, 217, 255, 0.30)";
+                      e.currentTarget.style.color = "#E5E7EB";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (isActive) {
+                      e.currentTarget.style.background = "rgba(0, 217, 255, 0.08)";
+                      e.currentTarget.style.borderColor = "rgba(0, 217, 255, 0.45)";
+                      e.currentTarget.style.color = "#00D9FF";
+                    } else {
+                      e.currentTarget.style.background = "#151515";
+                      e.currentTarget.style.borderColor = "#303030";
+                      e.currentTarget.style.color = "#9A9DA6";
+                    }
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
