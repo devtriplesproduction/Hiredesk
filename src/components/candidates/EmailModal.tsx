@@ -76,6 +76,20 @@ const TEMPLATES: Template[] = [
     rawText: "Hi [Candidate Name],\n\nThere was an issue with one or more of your uploaded documents. Please visit [Onboarding Link] to review the feedback and re-upload the required files.\n\nBest,\nTriple S Production Team"
   },
   {
+    id: "doc-verified",
+    name: "Documents Verified",
+    emoji: "✅",
+    subject: "Update: Documents Verified for [Role Name]",
+    rawText: "Hi [Candidate Name],\n\nGreat news! Your onboarding documents for the [Role Name] position have been successfully verified. We will be in touch with your next steps shortly.\n\nBest,\nTriple S Production Team"
+  },
+  {
+    id: "hired",
+    name: "Hired / Employee Onboarded",
+    emoji: "🤝",
+    subject: "Welcome Aboard! Next Steps at Triple S Production",
+    rawText: "Hi [Candidate Name],\n\nCongratulations! Your onboarding is complete and you are now officially an employee at Triple S Production as a [Role Name]. Welcome aboard!\n\nBest,\nTriple S Production Team"
+  },
+  {
     id: "custom",
     name: "Custom Message",
     emoji: "✍️",
@@ -111,6 +125,8 @@ export default function EmailModal({ candidate, onClose }: Props) {
     if (candidate.status === "offer" || candidate.status === "offer_sent") return "offer";
     if (candidate.status === "offer_accepted" || candidate.status === "onboarding_requested") return "onboarding";
     if (candidate.status === "onboarding_rejected") return "doc-reject";
+    if (candidate.status === "onboarding_verified") return "doc-verified";
+    if (candidate.status === "hired") return "hired";
     return "initial";
   }, [candidate.status]);
   

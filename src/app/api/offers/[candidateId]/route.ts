@@ -28,7 +28,6 @@ export async function GET(req: NextRequest, { params }: { params: { candidateId:
     .from("offers")
     .select("*")
     .eq("candidateId", candidateId)
-    .neq("status", "draft")
     .order("createdAt", { ascending: false })
     .limit(1)
     .single();

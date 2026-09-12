@@ -68,6 +68,18 @@ const TEMPLATES: Template[] = [
     rawText: "Hi [Candidate Name], there was an issue with one or more of your uploaded documents. Please visit [Onboarding Link] to review the feedback and re-upload the required files."
   },
   {
+    id: "doc-verified",
+    name: "Documents Verified",
+    emoji: "✅",
+    rawText: "Hi [Candidate Name], great news! Your onboarding documents for the [Role Name] position have been successfully verified. We will be in touch with your next steps shortly."
+  },
+  {
+    id: "hired",
+    name: "Hired / Employee Onboarded",
+    emoji: "🤝",
+    rawText: "Hi [Candidate Name], congratulations! Your onboarding is complete and you are now officially an employee at Triple S Production as a [Role Name]. Welcome aboard!"
+  },
+  {
     id: "custom",
     name: "Custom Message",
     emoji: "✍️",
@@ -103,6 +115,8 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
     if (candidate.status === "offer" || candidate.status === "offer_sent") return "offer";
     if (candidate.status === "offer_accepted" || candidate.status === "onboarding_requested") return "onboarding";
     if (candidate.status === "onboarding_rejected") return "doc-reject";
+    if (candidate.status === "onboarding_verified") return "doc-verified";
+    if (candidate.status === "hired") return "hired";
     return "initial";
   }, [candidate.status]);
 

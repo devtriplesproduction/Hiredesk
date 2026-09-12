@@ -177,7 +177,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
               <div className="space-y-2">
                 <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Document Type</label>
                 <select 
-                  className="w-full bg-white border border-gray-200 text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+                  className="w-full bg-white border border-gray-200 text-sm text-gray-900 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
                   value={docType}
                   onChange={(e) => setDocType(e.target.value)}
                 >
@@ -206,7 +206,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
                             name={field.key} 
                             value={(data as any)[field.key] || ""} 
                             onChange={handleInputChange}
-                            className="w-full bg-white border border-gray-200 text-sm rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500 outline-none"
+                            className="w-full bg-white border border-gray-200 text-sm text-gray-900 rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500 outline-none"
                           />
                         </div>
                       ))}
