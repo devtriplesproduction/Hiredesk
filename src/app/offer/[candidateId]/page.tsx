@@ -191,13 +191,48 @@ export default function CandidateOfferPage() {
               <div>
                 <span className="text-4xl block mb-2">🎉</span>
                 <h3 className="font-bold text-lg">Offer Accepted!</h3>
-                <p className="text-sm mt-2 opacity-80">Your offer letter will be provided after you join the company.</p>
+                <p className="text-sm mt-2 opacity-80">Your offer letter will be provided after you join the company. You can also download a copy now.</p>
               </div>
-              <Btn 
-                onClick={() => router.push(`/onboarding/${candidateId}`)}
-                className="mt-2 px-6 py-3 bg-[var(--green)] text-black rounded-xl font-bold hover:brightness-110">
-                Go to Onboarding
-              </Btn>
+              <div className="flex gap-4">
+                <Btn 
+                  onClick={() => router.push(`/onboarding/${candidateId}`)}
+                  className="mt-2 px-6 py-3 bg-[var(--green)] text-black rounded-xl font-bold hover:brightness-110">
+                  Go to Onboarding
+                </Btn>
+                <Btn 
+                  onClick={async () => {
+                    try {
+                      const html2canvas = (await import("html2canvas")).default;
+                      const { jsPDF } = await import("jspdf");
+
+                      const printArea = document.querySelector(".document-studio-wrapper") as HTMLElement;
+                      if (!printArea) throw new Error("Document not found");
+
+                      const pages = printArea.querySelectorAll(".page");
+                      const pdf = new jsPDF("p", "mm", "a4");
+
+                      for (let i = 0; i < pages.length; i++) {
+                        const page = pages[i] as HTMLElement;
+                        const canvas = await html2canvas(page, { scale: 2, useCORS: true });
+                        const imgData = canvas.toDataURL("image/png");
+                        
+                        const pdfWidth = pdf.internal.pageSize.getWidth();
+                        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                        
+                        if (i > 0) pdf.addPage();
+                        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+                      }
+                      
+                      pdf.save(`${candidate.name}_Offer_Letter.pdf`);
+                    } catch (e) {
+                      console.error("Download error", e);
+                      alert("Error generating PDF");
+                    }
+                  }}
+                  className="mt-2 px-6 py-3 bg-white text-black rounded-xl font-bold hover:bg-gray-200">
+                  Download Offer Letter
+                </Btn>
+              </div>
             </div>
           )}
 

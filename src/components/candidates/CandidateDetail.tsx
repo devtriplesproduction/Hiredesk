@@ -84,6 +84,8 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
       exp: c.exp,
       education: c.education,
       note: c.note,
+      roleId: c.roleId,
+      roleName: c.roleName,
     });
   }, [c]);
 
@@ -277,8 +279,24 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                 </div>
               )}
               
-              <div className="text-xs sm:text-sm text-[var(--text-3)] font-medium mt-1">
-                {c.roleName} {c.city ? `· ${c.city}` : ""}
+              <div className="text-xs sm:text-sm text-[var(--text-3)] font-medium mt-1 flex gap-2 items-center">
+                {isEditing ? (
+                  <select 
+                    value={editState.roleId || c.roleId} 
+                    onChange={e => {
+                      const role = roles.find(r => r.id === e.target.value);
+                      setEditState(prev => ({ ...prev, roleId: role?.id, roleName: role?.name }));
+                    }}
+                    className="bg-black/60 border border-white/10 rounded-lg px-2 py-1 outline-none focus:border-white/30 text-white"
+                  >
+                    {roles.map(r => (
+                      <option key={r.id} value={r.id}>{r.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <>{c.roleName}</>
+                )}
+                {c.city ? `· ${c.city}` : ""}
               </div>
               
               <div className="flex items-center gap-2 mt-2">
@@ -1402,8 +1420,19 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       </div>
                     )}
                     {(candidateOffer.status === "accepted" || candidateOffer.status === "rejected") && (
-                      <div className="text-xs text-[#777B84] mt-0.5">
-                        Responded at: {new Date(candidateOffer.respondedAt!).toLocaleString()}
+                      <div className="flex flex-col gap-2 mt-1">
+                        <div className="text-xs text-[#777B84]">
+                          Responded at: {new Date(candidateOffer.respondedAt!).toLocaleString()}
+                        </div>
+                        {candidateOffer.status === "accepted" && (
+                          <div className="flex gap-2">
+                            <Btn className="bg-[var(--glass-3)] text-white text-xs font-semibold px-4 py-2 rounded-lg border border-[var(--border)] hover:bg-[var(--glass-4)] transition-all" 
+                              onClick={() => {
+                                setDocStudioType(c.roleName?.toLowerCase().includes("intern") ? "offer-internship" : "offer-fulltime");
+                                setIsDocStudioOpen(true);
+                              }}>📄 Download / View Offer</Btn>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
