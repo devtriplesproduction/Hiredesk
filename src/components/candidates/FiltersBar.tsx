@@ -1,22 +1,31 @@
 "use client";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useStore } from "@/lib/store";
 import { CITIES, GENDERS, EXP_LEVELS } from "@/lib/data";
 import type { SortKey } from "@/types";
-import { clsx } from "clsx";
-import { Btn } from "@/components/ui";
+import { FilterSelect, FilterSearch, type FilterOption } from "./FilterSelect";
+import { ArrowDown, ArrowUp, Star, X } from "lucide-react";
 
-const AGE_RANGES = [{ label:"18–24",value:"18-24" },{ label:"25–30",value:"25-30" },{ label:"31–40",value:"31-40" },{ label:"40+",value:"40+" }];
-
-const sel = "bg-[var(--glass-2)] border border-[var(--border)] rounded-xl text-[var(--text)] text-sm px-3.5 py-2.5 transition-colors cursor-pointer appearance-none outline-none focus:border-[var(--border-3)] [&>option]:bg-[#1a1a1a]";
+const EMPLOYMENT_STATUSES = [
+  { label: "All Employment Status", value: "all" },
+  { label: "Currently Working", value: "CURRENTLY_WORKING" },
+  { label: "Student / Fresher", value: "STUDENT_FRESHER" },
+  { label: "Not Currently Working", value: "NOT_CURRENTLY_WORKING" },
+  { label: "Status Unknown", value: "UNKNOWN" },
+];
 
 export default function FiltersBar() {
   const { filters, setFilters, clearFilters, roles } = useStore();
-  const hasActive = filters.search || filters.roleId !== "all" || filters.status !== "all"
-    || filters.city || filters.gender !== "all" || filters.ageRange !== "all" || filters.exp !== "all";
+  const hasActive =
+    filters.search ||
+    filters.roleId !== "all" ||
+    filters.status !== "all" ||
+    filters.city ||
+    filters.gender !== "all" ||
+    filters.employmentStatus !== "all" ||
+    filters.exp !== "all";
 
   // ─── Local search state: debounce 200ms before pushing to global filter ─────
-  // This prevents useFilteredCandidates from re-running on every keystroke
   const [localSearch, setLocalSearch] = useState(filters.search);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -25,76 +34,142 @@ export default function FiltersBar() {
     setLocalSearch(filters.search);
   }, [filters.search]);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setLocalSearch(val);
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      setFilters({ search: val });
-    }, 200);
-  }, [setFilters]);
+  const handleSearchChange = useCallback(
+    (val: string) => {
+      setLocalSearch(val);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        setFilters({ search: val });
+      }, 200);
+    },
+    [setFilters]
+  );
+
+  // ─── Filter Options ────────────────────────────────────────────────────────
+  const roleOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "All Roles" },
+    ...roles.map(r => ({ value: r.id, label: r.name })),
+  ], [roles]);
+
+  const statusOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "All Status" },
+    { value: "new", label: "New" },
+    { value: "review", label: "In Review" },
+    { value: "approved", label: "Approved" },
+    { value: "rejected", label: "Rejected" },
+  ], []);
+
+  const genderOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "All Genders" },
+    ...GENDERS.map(g => ({ value: g, label: g })),
+  ], []);
+
+  const employmentStatusOptions: FilterOption[] = useMemo(() => EMPLOYMENT_STATUSES, []);
+
+  const expOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "All Exp." },
+    ...EXP_LEVELS.map(e => ({ value: e, label: e })),
+  ], []);
+
+  const cityOptions: FilterOption[] = useMemo(() => [
+    { value: "", label: "All Cities" },
+    ...CITIES.map(c => ({ value: c, label: c })),
+  ], []);
+
+  const sortOptions: FilterOption[] = useMemo(() => [
+    { value: "newest", label: "Newest First", icon: <ArrowDown size={13} className="text-[#8A8F98]" /> },
+    { value: "oldest", label: "Oldest First", icon: <ArrowUp size={13} className="text-[#8A8F98]" /> },
+    { value: "score-desc", label: "Score High–Low", icon: <Star size={13} className="text-[#F5C542]" /> },
+    { value: "score-asc", label: "Score Low–High", icon: <Star size={13} className="text-[#8A8F98]" /> },
+    { value: "name-az", label: "A–Z Name" },
+  ], []);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap gap-2 mb-4">
-      <input
-        className="bg-[var(--glass-2)] border border-[var(--border)] rounded-xl text-[var(--text)] text-sm px-3.5 py-2.5 w-full lg:w-44 placeholder:text-[var(--text-3)] outline-none focus:border-[var(--border-3)] transition-colors col-span-2 sm:col-span-1"
-        placeholder="Search name / email…"
+    <div className="w-full flex items-center gap-2 mb-4 overflow-x-auto lg:overflow-visible pb-1 lg:pb-0 scrollbar-none flex-nowrap min-w-0">
+      {/* 1. Search */}
+      <FilterSearch
         value={localSearch}
         onChange={handleSearchChange}
+        placeholder="Search name / email…"
+        className="flex-[1.3] min-w-[170px]"
       />
 
-      <select className={clsx(sel, "w-full lg:w-auto")} value={filters.roleId} onChange={e => setFilters({ roleId: e.target.value })}>
-        <option value="all">All Roles</option>
-        {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-      </select>
+      {/* 2. All Roles */}
+      <FilterSelect
+        options={roleOptions}
+        value={filters.roleId}
+        onChange={val => setFilters({ roleId: val })}
+        placeholder="All Roles"
+        containerClassName="flex-1 min-w-[110px]"
+      />
 
-      <select className={clsx(sel, "w-full lg:w-auto")} value={filters.status} onChange={e => setFilters({ status: e.target.value })}>
-        <option value="all">All Status</option>
-        <option value="new">New</option>
-        <option value="review">In Review</option>
-        <option value="approved">Approved</option>
-        <option value="rejected">Rejected</option>
-      </select>
+      {/* 3. All Status */}
+      <FilterSelect
+        options={statusOptions}
+        value={filters.status}
+        onChange={val => setFilters({ status: val })}
+        placeholder="All Status"
+        containerClassName="flex-1 min-w-[100px]"
+      />
 
-      <select className={clsx(sel, "w-full lg:w-auto")} value={filters.gender} onChange={e => setFilters({ gender: e.target.value })}>
-        <option value="all">All Genders</option>
-        {GENDERS.map(g => <option key={g} value={g}>{g}</option>)}
-      </select>
+      {/* 4. All Genders */}
+      <FilterSelect
+        options={genderOptions}
+        value={filters.gender}
+        onChange={val => setFilters({ gender: val })}
+        placeholder="All Genders"
+        containerClassName="flex-1 min-w-[95px]"
+      />
 
-      <select className={clsx(sel, "w-full lg:w-auto")} value={filters.ageRange} onChange={e => setFilters({ ageRange: e.target.value })}>
-        <option value="all">All Ages</option>
-        {AGE_RANGES.map(a => <option key={a.value} value={a.value}>{a.label}</option>)}
-      </select>
+      {/* 5. Employment Status */}
+      <FilterSelect
+        options={employmentStatusOptions}
+        value={filters.employmentStatus}
+        onChange={val => setFilters({ employmentStatus: val })}
+        placeholder="Employment Status"
+        containerClassName="flex-1 min-w-[145px]"
+      />
 
-      <select className={clsx(sel, "w-full lg:w-auto")} value={filters.exp} onChange={e => setFilters({ exp: e.target.value })}>
-        <option value="all">All Exp.</option>
-        {EXP_LEVELS.map(e => <option key={e} value={e}>{e}</option>)}
-      </select>
+      {/* 6. All Exp. */}
+      <FilterSelect
+        options={expOptions}
+        value={filters.exp}
+        onChange={val => setFilters({ exp: val })}
+        placeholder="All Exp."
+        containerClassName="flex-1 min-w-[88px]"
+      />
 
-      <select className={clsx(sel, "w-full lg:w-auto")} value={filters.city} onChange={e => setFilters({ city: e.target.value })}>
-        <option value="">All Cities</option>
-        {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-      </select>
+      {/* 7. All Cities */}
+      <FilterSelect
+        options={cityOptions}
+        value={filters.city}
+        onChange={val => setFilters({ city: val })}
+        placeholder="All Cities"
+        align="right"
+        containerClassName="flex-1 min-w-[92px]"
+      />
 
-      {/* Sort control */}
-      <select
-        className={clsx(sel, "w-full lg:w-auto")}
+      {/* 8. Newest First (Sort) */}
+      <FilterSelect
+        options={sortOptions}
         value={filters.sort}
-        onChange={e => setFilters({ sort: e.target.value as SortKey })}
-        title="Sort candidates"
-      >
-        <option value="newest">↓ Newest First</option>
-        <option value="oldest">↑ Oldest First</option>
-        <option value="score-desc">★ Score High–Low</option>
-        <option value="score-asc">★ Score Low–High</option>
-        <option value="name-az">A–Z Name</option>
-      </select>
+        onChange={val => setFilters({ sort: val as SortKey })}
+        placeholder="Sort by"
+        align="right"
+        containerClassName="flex-1 min-w-[125px]"
+      />
 
+      {/* Clear Active Filters button */}
       {hasActive && (
-        <Btn onClick={clearFilters}
-          className="text-sm font-medium px-3.5 py-2.5 rounded-xl border border-[var(--border)] text-[var(--text-3)] hover:text-[var(--text)] hover:border-[var(--border-2)] transition-colors col-span-2 sm:col-span-1 w-full lg:w-auto text-center justify-center">
-          ✕ Clear
-        </Btn>
+        <button
+          type="button"
+          onClick={clearFilters}
+          className="h-[40px] px-3 rounded-[9px] border border-[#303238] hover:border-[#EF4444]/40 bg-[#151719] hover:bg-[#1A1D21] text-[#8A8F98] hover:text-[#EF4444] text-[12px] font-medium transition-all duration-150 inline-flex items-center justify-center gap-1.5 cursor-pointer flex-shrink-0"
+          title="Clear all active filters"
+        >
+          <X size={13} />
+          <span>Clear</span>
+        </button>
       )}
     </div>
   );

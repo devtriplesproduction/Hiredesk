@@ -21,9 +21,9 @@ export function Btn({ variant="ghost", size="md", className, children, ...props 
 export function Input({ label, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label?:string }) {
   return (
     <div className="flex flex-col gap-1.5">
-      {label && <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest">{label}</div>}
+      {label && <div className="text-xs font-semibold text-[#A8A8A8] uppercase tracking-wider">{label}</div>}
       <input className={clsx(
-        "bg-[var(--glass)] border border-[var(--border)] rounded-xl text-[var(--text)] text-sm px-3.5 py-2.5 transition-colors outline-none focus:border-[var(--border-3)] placeholder:text-[var(--text-3)]",
+        "bg-[var(--glass)] border border-[var(--border)] rounded-xl text-[#F5F5F5] text-sm px-3.5 py-2.5 transition-colors outline-none focus:border-[var(--border-3)] placeholder:text-[#808080]",
         className
       )} {...props} />
     </div>
@@ -33,9 +33,9 @@ export function Input({ label, className, ...props }: React.InputHTMLAttributes<
 export function Select({ label, className, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { label?:string }) {
   return (
     <div className="flex flex-col gap-1.5">
-      {label && <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest">{label}</div>}
+      {label && <div className="text-xs font-semibold text-[#A8A8A8] uppercase tracking-wider">{label}</div>}
       <select className={clsx(
-        "bg-[var(--glass-2)] border border-[var(--border)] rounded-xl text-[var(--text)] text-sm px-3.5 py-2.5 transition-colors cursor-pointer appearance-none outline-none focus:border-[var(--border-3)] [&>option]:bg-[#1a1a1a]",
+        "bg-[var(--glass-2)] border border-[var(--border)] rounded-xl text-[#F5F5F5] text-sm px-3.5 py-2.5 transition-colors cursor-pointer appearance-none outline-none focus:border-[var(--border-3)] [&>option]:bg-[#1a1a1a] [&>option]:text-[#F5F5F5]",
         className
       )} {...props}>{children}</select>
     </div>
@@ -55,9 +55,13 @@ export function Modal({ open, onClose, children, className }: { open:boolean; on
 }
 
 export function ScoreBadge({ score }: { score:number }) {
+  const isHi = score >= 70;
+  const isMid = score >= 45;
   return (
-    <span className={clsx("font-mono text-xs font-semibold px-2.5 py-1 rounded-lg",
-      score>=70?"score-hi":score>=45?"score-mid":"score-lo")}>
+    <span className={clsx(
+      "font-mono text-[11.5px] font-semibold min-w-[36px] h-[26px] px-2 rounded-[7px] border inline-flex items-center justify-center select-none",
+      isHi ? "score-hi" : isMid ? "score-mid" : "score-lo"
+    )}>
       {score}
     </span>
   );
@@ -65,7 +69,10 @@ export function ScoreBadge({ score }: { score:number }) {
 
 export function StatusBadge({ status }: { status:Candidate["status"] }) {
   return (
-    <span className={clsx("text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-lg", `status-${status}`)}>
+    <span className={clsx(
+      "text-[10.5px] font-semibold uppercase tracking-wider h-[23px] px-2.5 rounded-[6px] border inline-flex items-center justify-center whitespace-nowrap select-none",
+      `status-${status}`
+    )}>
       {status}
     </span>
   );
@@ -107,3 +114,5 @@ export function SkillTag({ label }: { label:string }) {
     </span>
   );
 }
+
+export { dialog, useDialog, DialogProvider } from "@/lib/dialog";

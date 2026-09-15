@@ -47,7 +47,7 @@ interface Store {
 const DEFAULT_FILTERS: Filters = {
   search: "", roleId: "all", status: "all",
   city: "", gender: "all", ageRange: "all", exp: "all",
-  sort: "newest",
+  employmentStatus: "all", sort: "newest",
 };
 
 const StoreCtx = createContext<Store | null>(null);
@@ -468,11 +468,11 @@ export function useFilteredCandidates() {
   const { candidates, filters } = useStore();
 
   return useMemo(() => {
-    const { roleId, status, city, gender, exp, ageRange, search, sort } = filters;
+    const { roleId, status, city, gender, exp, ageRange, search, sort, employmentStatus } = filters;
 
     // Pre-compute search query once
     const q = search ? search.toLowerCase() : null;
-    const [lo, hi] = ageRange !== "all" ? parseAgeRange(ageRange) : [0, 999];
+    const [lo, hi] = (ageRange && ageRange !== "all") ? parseAgeRange(ageRange as string) : [0, 999];
 
     const filtered = candidates.filter(c => {
       if (roleId !== "all" && c.roleId !== roleId) return false;
@@ -480,6 +480,7 @@ export function useFilteredCandidates() {
       if (city && c.city !== city) return false;
       if (gender !== "all" && c.gender !== gender) return false;
       if (exp !== "all" && c.exp !== exp) return false;
+      if (employmentStatus && employmentStatus !== "all" && c.employmentStatus !== employmentStatus) return false;
       if (ageRange !== "all" && (c.age < lo || c.age > hi)) return false;
       if (q && !c.name.toLowerCase().includes(q)
             && !c.email.toLowerCase().includes(q)

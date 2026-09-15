@@ -1,4 +1,50 @@
-import type { Candidate, Role, Contract, ScoreBreakdown } from "@/types";
+import type { Candidate, Role, Contract, ScoreBreakdown, EmploymentStatus } from "@/types";
+
+export function getEmploymentStatusMeta(status?: EmploymentStatus) {
+  switch (status) {
+    case "CURRENTLY_WORKING":
+      return {
+        label: "Currently Working",
+        badgeLabel: "Working",
+        icon: "🟢",
+        color: "#10B981",
+        textColor: "text-emerald-400",
+        bg: "rgba(16, 185, 129, 0.12)",
+        border: "rgba(16, 185, 129, 0.3)",
+      };
+    case "STUDENT_FRESHER":
+      return {
+        label: "Student / Fresher",
+        badgeLabel: "Student",
+        icon: "🔵",
+        color: "#06B6D4",
+        textColor: "text-cyan-400",
+        bg: "rgba(6, 182, 212, 0.12)",
+        border: "rgba(6, 182, 212, 0.3)",
+      };
+    case "NOT_CURRENTLY_WORKING":
+      return {
+        label: "Not Currently Working",
+        badgeLabel: "Not Working",
+        icon: "⚪",
+        color: "#9CA3AF",
+        textColor: "text-zinc-400",
+        bg: "rgba(156, 163, 175, 0.12)",
+        border: "rgba(156, 163, 175, 0.3)",
+      };
+    case "UNKNOWN":
+    default:
+      return {
+        label: "Status Unknown",
+        badgeLabel: "Unknown",
+        icon: "🟡",
+        color: "#F59E0B",
+        textColor: "text-amber-400",
+        bg: "rgba(245, 158, 11, 0.12)",
+        border: "rgba(245, 158, 11, 0.3)",
+      };
+  }
+}
 
 export const DEFAULT_ROLES: Role[] = [
   { id:"dev-ft",   name:"Web/App Developer",       type:"Full-time", count:0, isActive:true, keywords:["react","node","javascript","typescript","python","flutter","nextjs","mongodb","sql","api","git","css","html","aws","docker"] },

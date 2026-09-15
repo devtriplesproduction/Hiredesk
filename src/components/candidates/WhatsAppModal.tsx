@@ -4,6 +4,7 @@ import { useStore } from "@/lib/store";
 import type { Candidate } from "@/types";
 import { normalizePhoneNumber, validatePhoneNumber } from "@/lib/utils/phone";
 import { getPublicBaseUrl } from "@/lib/url";
+import { dialog } from "@/components/ui";
 import { Btn, Input, Select } from "@/components/ui";
 import { DocumentPreview } from "@/components/documents/DocumentPreview";
 
@@ -189,7 +190,7 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
 
   const handleSend = () => {
     if (!isPhoneValid) {
-      alert("Please enter a valid phone number before sending.");
+      dialog.warning("Please enter a valid phone number before sending.");
       return;
     }
 

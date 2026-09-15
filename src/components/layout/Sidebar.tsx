@@ -91,7 +91,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
   const router = useRouter();
   const pathname = usePathname();
   const { candidates, roles, filters, setFilters, exportCSV } = useStore();
-  
+
   const stageCounts = useMemo(() => {
     const res: Record<string, number> = {};
     HIRING_STAGES.forEach(grp => {
@@ -148,7 +148,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
     <>
       {/* Mobile Backdrop */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm lg:hidden transition-all duration-200"
           onClick={onClose}
         />
@@ -162,8 +162,8 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
         {/* Mobile Header with close button */}
         <div className="flex items-center justify-between px-2.5 py-2 lg:hidden mb-2 border-b border-[var(--border)]">
           <div className="text-xs font-extrabold tracking-tight uppercase text-[#8B919C]">Navigation</div>
-          <Btn 
-            onClick={onClose} 
+          <Btn
+            onClick={onClose}
             className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-white hover:bg-[var(--glass-2)] border border-[var(--border)]"
           >
             <X size={15} />
@@ -208,7 +208,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
                     className={clsx(
                       "transition-transform duration-200 flex-shrink-0",
                       isExpanded ? "rotate-90" : "",
-                      isMainActive ? "text-[#00D9FF]" : "text-[#8B919C] group-hover:text-white"
+                      isMainActive ? "text-[#00D9FF]" : "text-[#B0B0B0] group-hover:text-white"
                     )}
                   />
                 }
@@ -241,7 +241,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
           label="All Candidates"
           badge={candidates.length}
           active={(filters?.roleId ?? "all") === "all"}
-          onClick={() => { setFilters({ roleId:"all" }); router.push("/candidates"); onClose?.(); }}
+          onClick={() => { setFilters({ roleId: "all" }); router.push("/candidates"); onClose?.(); }}
         />
         {roles.map(r => (
           <SItem
@@ -255,14 +255,14 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
         ))}
         <div className="h-px bg-[var(--border)] my-2" />
         <SLabel>Tools</SLabel>
-        <SItem label="Export CSV" onClick={() => { exportCSV(); onClose?.(); }} />
+        <SItem label="Export Excel" onClick={() => { exportCSV(); onClose?.(); }} />
       </aside>
     </>
   );
 }
 
 function SLabel({ children }: { children: React.ReactNode }) {
-  return <div className="text-[10px] font-semibold text-[#8B919C] uppercase tracking-widest px-2.5 pt-2 pb-1">{children}</div>;
+  return <div className="text-[10.5px] font-semibold text-[#B0B0B0] uppercase tracking-widest px-2.5 pt-2 pb-1">{children}</div>;
 }
 
 function SItem({ label, badge, onClick, small, accent, active, activeColor, rightElement }: {
@@ -285,13 +285,13 @@ function SItem({ label, badge, onClick, small, accent, active, activeColor, righ
           active
             ? ""
             : accent
-            ? ""
-            : "text-[#E6E8EB] group-hover:text-[#FFFFFF] hover:text-[#FFFFFF]"
+              ? ""
+              : "text-[#F2F2F2] group-hover:text-[#FFFFFF] hover:text-[#FFFFFF]"
         )}
         style={{
           fontSize: small ? "12px" : "13px",
           fontWeight: 500,
-          color: active ? effectiveActiveColor : (accent || undefined),
+          color: active ? effectiveActiveColor : (accent || "#F2F2F2"),
         }}
       >
         {label}
@@ -302,15 +302,15 @@ function SItem({ label, badge, onClick, small, accent, active, activeColor, righ
           style={
             active && activeColor
               ? {
-                  background: `${effectiveActiveColor}1A`,
-                  border: `1px solid ${effectiveActiveColor}33`,
-                  color: effectiveActiveColor,
-                }
+                background: `${effectiveActiveColor}1A`,
+                border: `1px solid ${effectiveActiveColor}33`,
+                color: effectiveActiveColor,
+              }
               : {
-                  background: "#292929",
-                  border: "1px solid #3A3A3A",
-                  color: "#A1A6AF",
-                }
+                background: "#292929",
+                border: "1px solid #3A3A3A",
+                color: "#D4D4D8",
+              }
           }
         >
           {badge}

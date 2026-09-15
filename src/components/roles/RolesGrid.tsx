@@ -45,10 +45,10 @@ export default function RolesGrid() {
             >
               <div className="flex justify-between items-start mb-2">
                 <div className="flex-1 min-w-0 mr-2">
-                  <div className="text-sm sm:text-base font-bold truncate text-[#E6E8EB]">{r.name}</div>
-                  <div className="font-mono text-[10px] text-[var(--text-3)] mt-0.5 uppercase tracking-widest">{r.type}</div>
+                  <div className="text-sm sm:text-base font-semibold truncate text-[#F2F2F2]">{r.name}</div>
+                  <div className="font-mono text-[10.5px] text-[#B0B0B0] mt-0.5 uppercase tracking-widest font-medium">{r.type}</div>
                 </div>
-                <span className="font-mono text-xs px-2 py-0.5 rounded-lg border border-[#3A3A3A] bg-[#292929] text-[#A1A6AF] flex-shrink-0">{r.count}</span>
+                <span className="font-mono text-xs px-2 py-0.5 rounded-lg border border-[#3A3A3A] bg-[#292929] text-[#D4D4D8] font-medium flex-shrink-0">{r.count}</span>
               </div>
 
               {/* Bar */}
@@ -59,18 +59,18 @@ export default function RolesGrid() {
               {/* Keywords */}
               <div className="flex flex-wrap gap-1">
                 {r.keywords.slice(0, 4).map(k => (
-                  <span key={k} className="font-mono text-[9px] px-1.5 py-0.5 rounded border border-[var(--border)] text-[var(--text-3)] uppercase">
+                  <span key={k} className="font-mono text-[9.5px] px-1.5 py-0.5 rounded border border-[var(--border-2)] bg-[var(--glass)] text-[#A0A0A0] uppercase font-medium">
                     {k}
                   </span>
                 ))}
                 {r.keywords.length > 4 && (
-                  <span className="font-mono text-[9px] text-[var(--text-3)]">+{r.keywords.length - 4}</span>
+                  <span className="font-mono text-[9.5px] text-[#A0A0A0] font-medium self-center">+{r.keywords.length - 4}</span>
                 )}
               </div>
 
               {r.count > 0 && (
-                <div className="mt-3 pt-2 border-t border-[var(--border)] font-mono text-[10px] text-[var(--text-3)]">
-                  Avg score: {Math.round(avgScore)}
+                <div className="mt-3 pt-2 border-t border-[var(--border)] font-mono text-[10.5px] text-[#8A8A8A]">
+                  Avg score: <span className="text-[#F2F2F2] font-semibold">{Math.round(avgScore)}</span>
                 </div>
               )}
             </div>
@@ -80,17 +80,17 @@ export default function RolesGrid() {
         {/* Add role card */}
         <Btn
           onClick={() => setShowAdd(true)}
-          className="p-4 sm:p-5 rounded-xl border-2 border-dashed border-[var(--border)] text-[var(--text-3)] hover:border-[var(--border-2)] hover:text-[var(--text-2)] transition-all duration-200 flex flex-col items-center justify-center gap-2 min-h-[120px] active:scale-[0.98]"
+          className="p-4 sm:p-5 rounded-xl border-2 border-dashed border-[var(--border-2)] text-[#A0A0A0] hover:border-[var(--border-3)] hover:text-[#F2F2F2] transition-all duration-200 flex flex-col items-center justify-center gap-2 min-h-[120px] active:scale-[0.98]"
         >
-          <div className="text-3xl opacity-40">+</div>
-          <div className="font-mono text-[10px] uppercase tracking-widest">Add Role</div>
+          <div className="text-3xl text-[#A0A0A0] font-light">+</div>
+          <div className="font-mono text-[10.5px] uppercase tracking-widest text-[#B0B0B0] font-medium">Add Role</div>
         </Btn>
       </div>
 
       {/* Add Role Modal */}
       <Modal open={showAdd} onClose={() => setShowAdd(false)} className="max-w-[460px] w-full">
-        <div className="text-lg sm:text-xl font-bold mb-1">Add New Role</div>
-        <div className="font-mono text-[10px] text-[var(--text-3)] mb-5">Define role name, type, and scoring keywords</div>
+        <div className="text-lg sm:text-xl font-bold mb-1 text-[#F2F2F2] tracking-tight">Add New Role</div>
+        <div className="font-mono text-xs text-[#B0B0B0] mb-5 tracking-wide">Define role name, type, and scoring keywords</div>
 
         <div className="flex flex-col gap-4">
           <Input label="Role Name" placeholder="e.g. Brand Strategist" value={name} onChange={e => setName(e.target.value)} />
