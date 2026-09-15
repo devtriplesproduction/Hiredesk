@@ -5,6 +5,7 @@ import { DocumentPreview } from "./DocumentPreview";
 import { DocumentData, DOC_GROUPS } from "./documentGenerator";
 import { Candidate, Employee, EmployeeBond, EmployeeResignation } from "@/types";
 import { format } from "date-fns";
+import { dialog } from "@/components/ui";
 
 interface DocumentStudioModalProps {
   candidate: Candidate;
@@ -148,7 +149,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
       pdf.save(`${candidate.name}_${docType}.pdf`);
     } catch (e) {
       console.error(e);
-      alert("Error generating PDF");
+      dialog.error("Error generating PDF");
     } finally {
       setIsGenerating(false);
     }

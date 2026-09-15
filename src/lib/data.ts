@@ -1,4 +1,50 @@
-import type { Candidate, Role, Contract, ScoreBreakdown } from "@/types";
+import type { Candidate, Role, Contract, ScoreBreakdown, EmploymentStatus } from "@/types";
+
+export function getEmploymentStatusMeta(status?: EmploymentStatus) {
+  switch (status) {
+    case "CURRENTLY_WORKING":
+      return {
+        label: "Currently Working",
+        badgeLabel: "Working",
+        icon: "🟢",
+        color: "#10B981",
+        textColor: "text-emerald-400",
+        bg: "rgba(16, 185, 129, 0.12)",
+        border: "rgba(16, 185, 129, 0.3)",
+      };
+    case "STUDENT_FRESHER":
+      return {
+        label: "Student / Fresher",
+        badgeLabel: "Student",
+        icon: "🔵",
+        color: "#06B6D4",
+        textColor: "text-cyan-400",
+        bg: "rgba(6, 182, 212, 0.12)",
+        border: "rgba(6, 182, 212, 0.3)",
+      };
+    case "NOT_CURRENTLY_WORKING":
+      return {
+        label: "Not Currently Working",
+        badgeLabel: "Not Working",
+        icon: "⚪",
+        color: "#9CA3AF",
+        textColor: "text-zinc-400",
+        bg: "rgba(156, 163, 175, 0.12)",
+        border: "rgba(156, 163, 175, 0.3)",
+      };
+    case "UNKNOWN":
+    default:
+      return {
+        label: "Status Unknown",
+        badgeLabel: "Unknown",
+        icon: "🟡",
+        color: "#F59E0B",
+        textColor: "text-amber-400",
+        bg: "rgba(245, 158, 11, 0.12)",
+        border: "rgba(245, 158, 11, 0.3)",
+      };
+  }
+}
 
 export const DEFAULT_ROLES: Role[] = [
   { id:"dev-ft",   name:"Web/App Developer",       type:"Full-time", count:0, isActive:true, keywords:["react","node","javascript","typescript","python","flutter","nextjs","mongodb","sql","api","git","css","html","aws","docker"] },
@@ -67,6 +113,13 @@ export function makeCandidate(roleId: string, overrides: Partial<Candidate>={}):
     score:genScore(roleId, pickN(role.keywords,4).join(" ")),
     status:pick(STATUSES), city:pick(CITIES), gender:pick(GENDERS),
     age:Math.floor(Math.random()*18)+21, exp:pick(EXP_LEVELS), education:pick(EDU),
+    employmentStatus: overrides.exp === "Fresher" ? "STUDENT_FRESHER" : "CURRENTLY_WORKING",
+    employmentStatusConfidence: overrides.exp === "Fresher" ? 85 : 92,
+    currentCompany: overrides.exp === "Fresher" ? undefined : "Tech Corp",
+    currentRole: overrides.exp === "Fresher" ? undefined : role.name,
+    employmentStartDate: overrides.exp === "Fresher" ? undefined : "2023",
+    employmentEndDate: overrides.exp === "Fresher" ? undefined : "Present",
+    employmentStatusSource: overrides.exp === "Fresher" ? "Fresher profile entry" : "Active work experience",
     skills:pickN(pool,Math.floor(Math.random()*3)+2),
     resumeFile:`${fn}_${ln}_Resume.pdf`,
     appliedAt:new Date(Date.now()-seedOffset).toLocaleDateString("en-IN"),

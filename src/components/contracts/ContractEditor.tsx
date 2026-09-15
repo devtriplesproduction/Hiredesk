@@ -228,7 +228,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
           font-size: 10px;
           font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.4);
+          color: rgba(255, 255, 255, 0.65);
           letter-spacing: 1.5px;
           pointer-events: none;
         }
@@ -384,110 +384,180 @@ export default function ContractEditor({ contract, onBack }: Props) {
       `}} />
 
       {/* Back + title */}
-      <div className="flex items-center justify-between gap-3">
-        <Btn onClick={onBack} className="flex items-center gap-2 text-sm text-[var(--text-3)] hover:text-white transition-colors font-medium flex-shrink-0">
-          ← Back
-        </Btn>
-        <div className="text-sm sm:text-base font-bold tracking-tight leading-tight truncate">{contract.name}</div>
+      <div className="flex items-center justify-between gap-4 pb-1">
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer select-none outline-none flex-shrink-0 bg-[#151719] hover:bg-[#202328] active:bg-[#181B1F] text-[#E8EAED] hover:text-white active:text-white border-[#2E333B] hover:border-[#00D9FF] focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
+        >
+          <span className="text-sm leading-none">←</span>
+          <span>BACK</span>
+        </button>
+        <div className="text-base sm:text-lg font-bold tracking-tight leading-tight truncate text-[#FFFFFF]">
+          {contract.name}
+        </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-5 items-start">
-        {/* Controls Sidebar */}
-        <div className="w-full lg:w-64 flex-shrink-0">
-          <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
+      <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
+        {/* Controls Sidebar - Solid Dark Panel */}
+        <div className="w-full lg:w-72 flex-shrink-0">
+          <div className="rounded-2xl border border-[#24282E] bg-[#111316] p-4 sm:p-5 flex flex-col gap-5 shadow-2xl">
 
-            {/* Logo upload */}
-            <div className="min-w-[160px] lg:min-w-0 flex-shrink-0 lg:flex-auto">
-              <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-2">Company Logo</div>
-              {logoUrl
-                ? <div className="relative rounded-xl overflow-hidden" style={{ border: "1px solid var(--border-2)" }}>
-                    <img src={logoUrl} alt="Logo" className="w-full h-14 object-contain p-2 bg-white" />
-                    <Btn onClick={() => clearImage("tsp_logo", setLogoUrl)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded bg-black/70 text-white text-xs flex items-center justify-center">✕</Btn>
-                  </div>
-                : <Btn onClick={() => logoRef.current?.click()}
-                    className="w-full py-2.5 rounded-xl text-sm text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors text-center border-2 border-dashed"
-                    style={{ borderColor: "var(--border-2)" }}>
-                    + Logo
-                  </Btn>
-              }
-              <input ref={logoRef} type="file" accept="image/*" className="hidden"
-                onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0], "tsp_logo", setLogoUrl)} />
+            {/* Company Logo Upload */}
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#8A909B] mb-2.5 flex items-center justify-between">
+                <span>Company Logo</span>
+                {logoUrl && <span className="text-[10px] text-emerald-400 font-semibold tracking-normal">Loaded</span>}
+              </div>
+              {logoUrl ? (
+                <div className="relative rounded-xl overflow-hidden border border-[#2A2F37] bg-white p-2.5 shadow-sm">
+                  <img src={logoUrl} alt="Logo" className="w-full h-14 object-contain" />
+                  <button
+                    type="button"
+                    onClick={() => clearImage("tsp_logo", setLogoUrl)}
+                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-black/80 hover:bg-black text-white text-xs flex items-center justify-center transition-colors cursor-pointer"
+                    title="Remove Logo"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => logoRef.current?.click()}
+                  className="w-full py-3 rounded-xl text-xs font-semibold text-[#9AA0AA] hover:text-white transition-all text-center border-2 border-dashed border-[#2B3038] hover:border-[#00D9FF]/60 bg-[#15171B] hover:bg-[#1A1D23] cursor-pointer"
+                >
+                  + UPLOAD LOGO
+                </button>
+              )}
+              <input
+                ref={logoRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0], "tsp_logo", setLogoUrl)}
+              />
             </div>
 
-            {/* Signature upload */}
-            <div className="min-w-[160px] lg:min-w-0 flex-shrink-0 lg:flex-auto">
-              <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-2">Signature</div>
-              {signUrl
-                ? <div className="relative rounded-xl overflow-hidden" style={{ border: "1px solid var(--border-2)" }}>
-                    <img src={signUrl} alt="Sign" className="w-full h-12 object-contain p-2 bg-white" />
-                    <Btn onClick={() => clearImage("tsp_sign", setSignUrl)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded bg-black/70 text-white text-xs flex items-center justify-center">✕</Btn>
-                  </div>
-                : <Btn onClick={() => signRef.current?.click()}
-                    className="w-full py-2.5 rounded-xl text-sm text-[var(--text-3)] hover:text-[var(--text-2)] transition-colors text-center border-2 border-dashed"
-                    style={{ borderColor: "var(--border-2)" }}>
-                    + Signature
-                  </Btn>
-              }
-              <input ref={signRef} type="file" accept="image/*" className="hidden"
-                onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0], "tsp_sign", setSignUrl)} />
+            {/* Authorized Signature Upload */}
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#8A909B] mb-2.5 flex items-center justify-between">
+                <span>Authorized Signature</span>
+                {signUrl && <span className="text-[10px] text-emerald-400 font-semibold tracking-normal">Loaded</span>}
+              </div>
+              {signUrl ? (
+                <div className="relative rounded-xl overflow-hidden border border-[#2A2F37] bg-white p-2.5 shadow-sm">
+                  <img src={signUrl} alt="Sign" className="w-full h-12 object-contain" />
+                  <button
+                    type="button"
+                    onClick={() => clearImage("tsp_sign", setSignUrl)}
+                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-black/80 hover:bg-black text-white text-xs flex items-center justify-center transition-colors cursor-pointer"
+                    title="Remove Signature"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => signRef.current?.click()}
+                  className="w-full py-3 rounded-xl text-xs font-semibold text-[#9AA0AA] hover:text-white transition-all text-center border-2 border-dashed border-[#2B3038] hover:border-[#00D9FF]/60 bg-[#15171B] hover:bg-[#1A1D23] cursor-pointer"
+                >
+                  + UPLOAD SIGNATURE
+                </button>
+              )}
+              <input
+                ref={signRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0], "tsp_sign", setSignUrl)}
+              />
             </div>
 
-            {/* Format toolbar */}
-            <div className="min-w-[140px] lg:min-w-0 flex-shrink-0 lg:flex-auto">
-              <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-2">Format</div>
+            {/* Format Toolbar */}
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#8A909B] mb-2.5">
+                Format
+              </div>
               <div className="flex gap-2">
-                {[["B","bold"],["I","italic"],["U","underline"]].map(([l,c]) => (
-                  <Btn key={c} onClick={() => fmt(c)}
-                    className="w-9 h-9 rounded-lg text-sm font-bold text-[var(--text-2)] hover:text-white transition-colors"
-                    style={{ background: "var(--glass-2)", border: "1px solid var(--border)" }}>{l}</Btn>
+                {[
+                  { label: "B", cmd: "bold", title: "Bold" },
+                  { label: "I", cmd: "italic", title: "Italic" },
+                  { label: "U", cmd: "underline", title: "Underline" },
+                ].map(({ label, cmd, title }) => (
+                  <button
+                    key={cmd}
+                    type="button"
+                    onClick={() => fmt(cmd)}
+                    title={title}
+                    className="w-10 h-10 rounded-xl bg-[#17191D] hover:bg-[#20242C] active:bg-[#131518] border border-[#2A2F37] hover:border-[#00D9FF]/50 text-[#E8EAED] hover:text-white transition-all font-bold text-sm flex items-center justify-center cursor-pointer active:scale-95 shadow-sm"
+                  >
+                    <span className={cmd === "italic" ? "italic" : cmd === "underline" ? "underline" : ""}>
+                      {label}
+                    </span>
+                  </button>
                 ))}
               </div>
             </div>
 
-            {/* Insert fields */}
-            <div className="min-w-[200px] lg:min-w-0 flex-shrink-0 lg:flex-auto">
-              <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-2">Insert Field</div>
-              <div className="flex lg:flex-col gap-1 flex-wrap">
+            {/* Insert Fields */}
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#8A909B] mb-2.5">
+                Insert Field
+              </div>
+              <div className="flex flex-col gap-1.5 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
                 {FIELDS.map(f => (
-                  <Btn key={f} onClick={() => insertField(f)}
-                    className="text-left text-xs px-2.5 py-1.5 rounded-lg text-[var(--text-3)] hover:text-[var(--text-2)] hover:bg-[var(--glass-2)] transition-colors font-mono border border-transparent hover:border-[var(--border)]">
-                    {f}
-                  </Btn>
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => insertField(f)}
+                    className="text-left text-[11.5px] font-mono px-3 py-2 rounded-lg bg-[#16181C] hover:bg-[#1E222A] text-[#A6ADB8] hover:text-[#00D9FF] border border-[#262A32] hover:border-[#00D9FF]/40 transition-all duration-150 flex items-center justify-between group cursor-pointer"
+                  >
+                    <span>{f}</span>
+                    <span className="text-[10px] text-[#636A75] group-hover:text-[#00D9FF] transition-colors">+</span>
+                  </button>
                 ))}
               </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="min-w-[160px] lg:min-w-0 flex-shrink-0 lg:flex-auto flex lg:flex-col gap-2">
-              <Btn onClick={handlePrint}
-                className="flex-1 lg:flex-none py-2.5 rounded-xl text-sm font-semibold bg-white text-black hover:bg-white/90 transition-all whitespace-nowrap px-3 text-center">
-                🖨 Print / PDF
-              </Btn>
-              <Btn onClick={syncBody}
-                className="flex-1 lg:flex-none py-2 rounded-xl text-sm font-medium text-[var(--text-2)] hover:text-white transition-colors px-3 text-center"
-                style={{ background: "var(--glass-2)", border: "1px solid var(--border)" }}>
-                💾 Save
-              </Btn>
+            {/* Action buttons (Print / PDF & Save) */}
+            <div className="pt-3 border-t border-[#22262C] flex flex-col gap-2.5">
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider bg-white hover:bg-zinc-200 text-black shadow-lg hover:shadow-white/10 transition-all text-center flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+              >
+                <span>🖨</span>
+                <span>PRINT / PDF</span>
+              </button>
+              <button
+                type="button"
+                onClick={syncBody}
+                className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider bg-[#17191D] hover:bg-[#20242C] text-[#E8EAED] hover:text-white border border-[#2A2F37] hover:border-[#00D9FF] transition-all text-center flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+              >
+                <span>💾</span>
+                <span>SAVE TEMPLATE</span>
+              </button>
             </div>
           </div>
         </div>
 
         {/* Professional A4 Paper Editor Canvas */}
-        <div className="flex-1 min-w-0 flex flex-col">
-          <div className="flex items-center justify-between gap-2 mb-3">
-            <div className="text-xs text-[var(--text-3)] font-medium uppercase tracking-widest">
-              A4 Document Editor — Click Paper to Edit
+        <div className="flex-1 min-w-0 flex flex-col w-full">
+          <div className="flex items-center justify-between gap-3 mb-3.5">
+            <div className="text-xs text-[#9AA0AA] font-semibold uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span>A4 Document Editor — Click Paper to Edit</span>
             </div>
 
             {/* Visual Zoom Controls */}
-            <div className="flex items-center gap-1 bg-[#1a1a1d] px-2 py-1 rounded-lg border border-[var(--border)]">
-              <span className="text-[11px] text-[var(--text-3)] font-medium mr-1">Zoom:</span>
+            <div className="flex items-center gap-1 bg-[#121417] px-2.5 py-1.5 rounded-xl border border-[#24282E]">
+              <span className="text-[11px] font-semibold text-[#8A909B] mr-1">Zoom:</span>
               <button
                 type="button"
                 onClick={handleFitZoom}
-                className="text-[11px] px-1.5 py-0.5 rounded text-[var(--text-2)] hover:text-white hover:bg-white/10 transition-colors"
+                className="text-[11.5px] px-2.5 py-1 rounded-lg text-[#9AA0AA] hover:text-white hover:bg-white/10 font-medium transition-all cursor-pointer"
                 title="Fit Document to Window Width"
               >
                 Fit
@@ -497,8 +567,10 @@ export default function ContractEditor({ contract, onBack }: Props) {
                   key={z}
                   type="button"
                   onClick={() => setZoom(z)}
-                  className={`text-[11px] px-1.5 py-0.5 rounded transition-colors ${
-                    zoom === z ? "bg-white text-black font-semibold" : "text-[var(--text-3)] hover:text-white"
+                  className={`text-[11.5px] px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
+                    zoom === z
+                      ? "bg-white text-black font-bold shadow-sm"
+                      : "text-[#9AA0AA] hover:text-white hover:bg-white/10"
                   }`}
                 >
                   {Math.round(z * 100)}%
@@ -508,18 +580,18 @@ export default function ContractEditor({ contract, onBack }: Props) {
           </div>
 
           {/* Paper container with chrome window bar */}
-          <div className="rounded-2xl overflow-hidden shadow-2xl flex flex-col" style={{ border: "1px solid rgba(255,255,255,0.12)" }}>
+          <div className="rounded-2xl overflow-hidden shadow-2xl flex flex-col border border-[#262B33] bg-[#0E1013]">
             {/* Paper chrome bar */}
-            <div className="px-4 py-2.5 flex items-center justify-between" style={{ background: "#18181b", borderBottom: "1px solid var(--border)" }}>
+            <div className="px-4 py-3 flex items-center justify-between bg-[#14161A] border-b border-[#22262C]">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                <div className="w-3 h-3 rounded-full bg-green-500/60" />
-                <span className="ml-2 text-xs font-medium text-[var(--text-2)]">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#EF4444]/70" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]/70" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#10B981]/70" />
+                <span className="ml-2 text-xs font-medium text-[#A0A6B2]">
                   A4 · 210mm × 297mm · {contract.name}
                 </span>
               </div>
-              <div className="text-xs text-[var(--text-3)] font-mono">
+              <div className="text-xs font-mono text-[#8E949E] bg-[#0D0E11] px-2.5 py-0.5 rounded-md border border-[#22262C]">
                 {Math.round(zoom * 100)}% scale
               </div>
             </div>
@@ -527,9 +599,9 @@ export default function ContractEditor({ contract, onBack }: Props) {
             {/* Dark Workspace Desk with centered A4 pages */}
             <div
               ref={workspaceRef}
-              className="w-full overflow-x-auto overflow-y-auto p-6 sm:p-10 flex flex-col items-center"
+              className="w-full overflow-x-auto overflow-y-auto p-6 sm:p-10 flex flex-col items-center custom-scrollbar"
               style={{
-                background: "#0c0c0e",
+                background: "#090A0C",
                 minHeight: "750px",
                 maxHeight: "82vh",
               }}
@@ -557,9 +629,10 @@ export default function ContractEditor({ contract, onBack }: Props) {
 
           {/* Logo/sign status */}
           {(logoUrl || signUrl) && (
-            <div className="mt-3 text-xs text-[var(--text-3)] font-medium px-1">
-              {logoUrl && "✅ Company Logo loaded · "}
-              {signUrl && "✅ Authorized Signature loaded"}
+            <div className="mt-3 text-xs text-[#8A909B] font-medium px-1 flex items-center gap-2">
+              {logoUrl && <span>✅ Company Logo loaded</span>}
+              {logoUrl && signUrl && <span>·</span>}
+              {signUrl && <span>✅ Authorized Signature loaded</span>}
             </div>
           )}
         </div>
@@ -567,3 +640,4 @@ export default function ContractEditor({ contract, onBack }: Props) {
     </div>
   );
 }
+

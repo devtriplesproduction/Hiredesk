@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Btn } from "@/components/ui";
+import { Btn, dialog } from "@/components/ui";
 
 export default function OnboardingPage({ params }: { params: { candidateId: string } }) {
   const { candidateId } = params;
@@ -29,8 +29,8 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
   }
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    if (!e.target.files || !e.target.files[0]) return;
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     setUploading(true);
     const formData = new FormData();
@@ -45,10 +45,10 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
       if (res.ok) {
         await fetchDocuments();
       } else {
-        alert("Upload failed. Please try again.");
+        dialog.error("Upload failed. Please try again.");
       }
     } catch (err) {
-      alert("Network error.");
+      dialog.error("Network error.");
     } finally {
       setUploading(false);
       e.target.value = "";

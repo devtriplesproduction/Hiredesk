@@ -1,8 +1,9 @@
 "use client";
 import { useStore } from "@/lib/store";
 import { getDocumentSignedUrl } from "@/lib/supabase";
-import { Btn,  ScoreBadge, StatusBadge, SkillTag } from "@/components/ui";
-import type { Candidate } from "@/types";
+import { Btn, ScoreBadge, StatusBadge, SkillTag, dialog } from "@/components/ui";
+import type { Candidate, EmploymentStatus } from "@/types";
+import { getEmploymentStatusMeta } from "@/lib/data";
 import { clsx } from "clsx";
 import { useRouter } from "next/navigation";
 import { getPublicBaseUrl } from "@/lib/url";
@@ -30,7 +31,7 @@ const INFO_FIELDS: InfoField[] = [
   { key: "phone", label: "Phone", icon: "📞" },
   { key: "city", label: "City", icon: "📍" },
   { key: "gender", label: "Gender", icon: "👤" },
-  { key: "age", label: "Age", icon: "🎂", suffix: " yrs" },
+  { key: "employmentStatus", label: "Employment Status", icon: "💼" },
   { key: "exp", label: "Experience", icon: "💼" },
   { key: "education", label: "Education", icon: "🎓" },
   { key: "appliedAt", label: "Applied", icon: "📅" },
@@ -77,6 +78,9 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
       city: c.city,
       gender: c.gender,
       age: c.age,
+      employmentStatus: c.employmentStatus ?? "UNKNOWN",
+      currentCompany: c.currentCompany,
+      currentRole: c.currentRole,
       exp: c.exp,
       education: c.education,
       note: c.note,
@@ -86,7 +90,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
   const [convertingToEmployee, setConvertingToEmployee] = useState(false);
 
   async function handleConvertToEmployee() {
-    if (!candidateRole) return alert("Role details missing");
+    if (!candidateRole) return dialog.warning("Role details missing");
     setConvertingToEmployee(true);
     try {
       const res = await fetch("/api/employees", {
@@ -106,9 +110,9 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
       
       addEmployee(data.employee);
       updateCandidate(c.id, { status: "hired" });
-      alert("Successfully converted to Employee!");
+      dialog.success("Successfully converted to Employee!");
     } catch (err: any) {
-      alert("Failed to convert to Employee: " + err.message);
+      dialog.error("Failed to convert to Employee: " + err.message);
     } finally {
       setConvertingToEmployee(false);
     }
@@ -135,13 +139,13 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
       updateEmployeeBond(data.bond);
       updateEmployee(candidateEmployee.id, { bondRequirement: !current ? "Required" : "Not Required" });
     } catch (err: any) {
-      alert("Failed to update bond: " + err.message);
+      dialog.error("Failed to update bond: " + err.message);
     }
   }
 
   async function handleSubmitResignation() {
-    if (!candidateEmployee || !resignationReason) return alert("Reason is required");
-    if (isBreach && !breachReason) return alert("Breach reason is required");
+    if (!candidateEmployee || !resignationReason) return dialog.warning("Reason is required");
+    if (isBreach && !breachReason) return dialog.warning("Breach reason is required");
     
     setProcessingResignation(true);
     try {
@@ -161,7 +165,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
       updateEmployee(candidateEmployee.id, { status: "terminated" });
       setShowResignationForm(false);
     } catch (err: any) {
-      alert("Failed to process resignation: " + err.message);
+      dialog.error("Failed to process resignation: " + err.message);
     } finally {
       setProcessingResignation(false);
     }
@@ -180,10 +184,35 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
     updateCandidate(c.id, { name });
   }
 
-  function handleDelete() {
-    if (confirm(`Delete ${c.name}'s profile? This cannot be undone.`)) {
-      deleteCandidate(c.id);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (isDeleting) return;
+    const confirmed = await dialog.confirm({
+      title: "Delete Candidate Profile",
+      message: `Are you sure you want to delete ${c.name}'s profile? This cannot be undone.`,
+      confirmText: "DELETE PROFILE",
+      cancelText: "CANCEL",
+      isDestructive: true,
+    });
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteCandidate(c.id);
       onClose();
+      dialog.success({
+        title: "Candidate Deleted",
+        message: `${c.name}'s profile has been permanently deleted from the database.`,
+      });
+    } catch (err: any) {
+      console.error("[CandidateDetail] Delete error:", err);
+      dialog.error({
+        title: "Candidate Deletion Failed",
+        message: `Failed to delete candidate: ${err?.message || "Database error"}. The record was not removed.`,
+      });
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -346,8 +375,8 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
           {activeTab === "profile" && (
             <div className="flex flex-col gap-6 w-full">
 
-              {/* Extraction Confidence Indicators */}
-              {c.extractionConfidence !== undefined && (
+              {/* Extraction & Employment Diagnostics */}
+              {(c.extractionConfidence !== undefined || c.employmentStatusSource) && (
                 <div className="w-full flex flex-col gap-3">
                   {/* Alert panel for Low Confidence */}
                   {isLowConfidence && (
@@ -364,17 +393,42 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                   )}
 
                   {/* Diagnostic Badge Strip */}
-                  <div className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-medium"
+                  <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-4 py-3 rounded-xl text-xs font-medium"
                     style={{ background: "var(--glass)", border: "1px solid var(--border)" }}>
-                    <span className="text-[var(--text-3)] font-semibold flex items-center gap-1.5">
-                      🔍 Extraction Method: <strong className="text-zinc-300 font-bold">{c.extractionSource}</strong>
-                    </span>
-                    <span className={clsx(
-                      "px-2.5 py-0.5 rounded font-bold tracking-wide",
-                      c.extractionConfidence >= 70 ? "text-[var(--green)] bg-[var(--green)]/10" : "text-amber-500 bg-amber-500/10"
-                    )}>
-                      {c.extractionConfidence}% Confidence
-                    </span>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                      {c.extractionSource && (
+                        <span className="text-[var(--text-3)] font-semibold flex items-center gap-1.5">
+                          🔍 Name Method: <strong className="text-zinc-300 font-bold">{c.extractionSource}</strong>
+                        </span>
+                      )}
+                      {c.employmentStatusSource && (
+                        <span className="text-[var(--text-3)] font-semibold flex items-center gap-1.5">
+                          💼 Employment: <strong className="text-zinc-300 font-bold">{c.employmentStatusSource}</strong>
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {c.employmentStatusConfidence !== undefined && (
+                        <span
+                          className="px-2.5 py-0.5 rounded font-bold tracking-wide text-[11px]"
+                          style={{
+                            color: getEmploymentStatusMeta(c.employmentStatus).color,
+                            background: getEmploymentStatusMeta(c.employmentStatus).bg,
+                            border: `1px solid ${getEmploymentStatusMeta(c.employmentStatus).border}`,
+                          }}
+                        >
+                          {getEmploymentStatusMeta(c.employmentStatus).icon} {c.employmentStatusConfidence}% Confidence
+                        </span>
+                      )}
+                      {c.extractionConfidence !== undefined && (
+                        <span className={clsx(
+                          "px-2.5 py-0.5 rounded font-bold tracking-wide",
+                          c.extractionConfidence >= 70 ? "text-[var(--green)] bg-[var(--green)]/10" : "text-amber-500 bg-amber-500/10"
+                        )}>
+                          {c.extractionConfidence}% Name
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -384,22 +438,52 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                 {INFO_FIELDS.map(({ key, label, icon, suffix = "" }) => {
                   const val = isEditing ? editState[key as keyof Candidate] : c[key as keyof Candidate];
                   const display = val ? `${val}${suffix}` : "—";
+                  const statusMeta = getEmploymentStatusMeta(c.employmentStatus);
                   
                   return (
                     <div key={key} className="flex items-center gap-3.5 p-4 sm:p-5 rounded-2xl transition-all hover:bg-white/[0.02] min-h-[84px]"
                       style={{ background: "var(--glass)", border: "1px solid var(--border)", boxShadow: "inset 0 1px 1px rgba(255,255,255,0.02)" }}>
-                      <span className="text-2xl flex-shrink-0 w-8 flex items-center justify-center drop-shadow-sm">{icon}</span>
+                      <span className="text-2xl flex-shrink-0 w-8 flex items-center justify-center drop-shadow-sm">
+                        {key === "employmentStatus" ? statusMeta.icon : icon}
+                      </span>
                       
                       <div className="flex-1 min-w-0">
                         <div className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-1">{label}</div>
                         {isEditing && key !== "appliedAt" ? (
-                          <input
-                            type={key === "age" ? "number" : "text"}
-                            value={val === undefined ? "" : String(val)}
-                            onChange={e => setEditState(prev => ({ ...prev, [key]: key === "age" ? Number(e.target.value) : e.target.value }))}
-                            className="w-full bg-black/40 border border-white/5 rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-white/20"
-                            placeholder={`Enter ${label}`}
-                          />
+                          key === "employmentStatus" ? (
+                            <select
+                              value={String(editState.employmentStatus || "UNKNOWN")}
+                              onChange={e => setEditState(prev => ({ ...prev, employmentStatus: e.target.value as EmploymentStatus }))}
+                              className="w-full bg-[#14171B] border border-[#2D333B] text-white rounded-lg px-2 py-1 text-xs outline-none focus:border-[#00D9FF]"
+                            >
+                              <option value="CURRENTLY_WORKING">🟢 Currently Working</option>
+                              <option value="STUDENT_FRESHER">🔵 Student / Fresher</option>
+                              <option value="NOT_CURRENTLY_WORKING">⚪ Not Currently Working</option>
+                              <option value="UNKNOWN">🟡 Status Unknown</option>
+                            </select>
+                          ) : (
+                            <input
+                              type="text"
+                              value={val === undefined ? "" : String(val)}
+                              onChange={e => setEditState(prev => ({ ...prev, [key]: e.target.value }))}
+                              className="w-full bg-black/40 border border-white/5 rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-white/20"
+                              placeholder={`Enter ${label}`}
+                            />
+                          )
+                        ) : key === "employmentStatus" ? (
+                          <div className="flex flex-col justify-center min-h-[28px]">
+                            <div className="text-sm font-bold truncate flex items-center gap-1.5" style={{ color: statusMeta.color }}>
+                              <span>{statusMeta.label}</span>
+                            </div>
+                            {(c.currentRole || c.currentCompany) ? (
+                              <div
+                                className="text-[11.5px] text-[#8E949E] font-medium truncate mt-0.5"
+                                title={[c.currentRole, c.currentCompany].filter(Boolean).join(" · ")}
+                              >
+                                {[c.currentRole, c.currentCompany].filter(Boolean).join(" · ")}
+                              </div>
+                            ) : null}
+                          </div>
                         ) : (
                           <div className="flex items-center justify-between gap-2 min-h-[28px]">
                             <div className="text-sm font-bold text-white truncate" title={String(val)}>{display}</div>
@@ -409,7 +493,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                   if (c.phone) {
                                     setIsWhatsAppOpen(true);
                                   } else {
-                                    alert("Phone number is unavailable.");
+                                    dialog.info("Phone number is unavailable.");
                                   }
                                 }}
                                 disabled={!c.phone}
@@ -432,7 +516,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                   if (c.email) {
                                     setIsEmailOpen(true);
                                   } else {
-                                    alert("Email address is unavailable.");
+                                    dialog.info("Email address is unavailable.");
                                   }
                                 }}
                                 disabled={!c.email}
@@ -1129,23 +1213,76 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                           <>
                             <textarea placeholder="Interview Notes..." value={r2Notes} onChange={e => setR2Notes(e.target.value)}
                               className="w-full bg-[#0E0F12] text-[var(--text)] text-xs border border-[#24272D] rounded-lg p-2.5 outline-none h-16 focus:border-[#A78BFA]/50 transition-colors" />
-                            <div className="flex gap-2 mt-1">
-                              <Btn className="bg-[var(--green)] text-black text-[10px] font-bold px-3 py-1.5 rounded-lg flex-1" onClick={() => {
-                                updateInterview(r2.id, { status: "completed", decision: "select", notes: r2Notes });
-                                updateCandidate(c.id, { status: "offer" });
-                                addOffer({
-                                  id: crypto.randomUUID(), candidateId: c.id, contractTemplateId: null,
-                                  status: "draft", sentAt: null, respondedAt: null, createdAt: new Date().toISOString()
-                                });
-                              }}>Approve</Btn>
-                              <Btn className="bg-[var(--red)] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex-1" onClick={() => {
-                                const reason = prompt("Reason for rejection:");
-                                if (reason !== null) {
-                                  const note = r2Notes + (reason ? `\nRejection Reason: ${reason}` : "");
-                                  updateInterview(r2.id, { status: "completed", decision: "reject", notes: note });
-                                  updateCandidate(c.id, { status: "rejected", note: (c.note || "") + `\nRejected in R2: ${reason}` });
-                                }
-                              }}>Reject</Btn>
+                            <div className="flex flex-wrap items-center gap-3 mt-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  updateInterview(r2.id, { status: "completed", decision: "select", notes: r2Notes });
+                                  updateCandidate(c.id, { status: "offer" });
+                                  addOffer({
+                                    id: crypto.randomUUID(), candidateId: c.id, contractTemplateId: null,
+                                    status: "draft", sentAt: null, respondedAt: null, createdAt: new Date().toISOString()
+                                  });
+                                }}
+                                className="inline-flex items-center justify-center gap-2 h-[42px] px-5 rounded-[10px] text-[13px] font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] min-w-[125px]"
+                                style={{
+                                  background: "rgba(34, 197, 94, 0.08)",
+                                  border: "1px solid rgba(34, 197, 94, 0.35)",
+                                  color: "#22C55E",
+                                }}
+                                onMouseEnter={e => {
+                                  e.currentTarget.style.background = "rgba(34, 197, 94, 0.15)";
+                                  e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.55)";
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.background = "rgba(34, 197, 94, 0.08)";
+                                  e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.35)";
+                                }}
+                                onMouseDown={e => {
+                                  e.currentTarget.style.background = "rgba(34, 197, 94, 0.20)";
+                                }}
+                                onMouseUp={e => {
+                                  e.currentTarget.style.background = "rgba(34, 197, 94, 0.15)";
+                                }}
+                              >
+                                <Check className="w-4 h-4 text-[#22C55E]" />
+                                <span>Approve</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const reason = prompt("Reason for rejection:");
+                                  if (reason !== null) {
+                                    const note = r2Notes + (reason ? `\nRejection Reason: ${reason}` : "");
+                                    updateInterview(r2.id, { status: "completed", decision: "reject", notes: note });
+                                    updateCandidate(c.id, { status: "rejected", note: (c.note || "") + `\nRejected in R2: ${reason}` });
+                                  }
+                                }}
+                                className="inline-flex items-center justify-center gap-1.5 h-[42px] px-5 rounded-[10px] text-[13px] font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] min-w-[110px]"
+                                style={{
+                                  background: "rgba(239, 68, 68, 0.08)",
+                                  border: "1px solid rgba(239, 68, 68, 0.35)",
+                                  color: "#EF4444",
+                                }}
+                                onMouseEnter={e => {
+                                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
+                                  e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.55)";
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.08)";
+                                  e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.35)";
+                                }}
+                                onMouseDown={e => {
+                                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.20)";
+                                }}
+                                onMouseUp={e => {
+                                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
+                                }}
+                              >
+                                <X className="w-4 h-4 text-[#EF4444]" />
+                                <span>Reject</span>
+                              </button>
                             </div>
                           </>
                         )}
@@ -1293,7 +1430,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     <Btn className="text-[10px] bg-[var(--glass-3)] px-2 py-1 rounded"
                       onClick={() => {
                         navigator.clipboard.writeText(`${getPublicBaseUrl()}/onboarding/${c.id}`);
-                        alert("Candidate upload link copied to clipboard.");
+                        dialog.success("Candidate upload link copied to clipboard.");
                       }}
                     >Copy Upload Link</Btn>
                   </div>
@@ -1315,7 +1452,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                               onClick={async () => {
                                 const url = await getDocumentSignedUrl(doc.filePath);
                                 if (url) window.open(url, '_blank');
-                                else alert("Failed to open document securely.");
+                                else dialog.error("Failed to open document securely.");
                               }}>View</Btn>
                           </div>
                           {doc.status === "pending" ? (
@@ -1464,7 +1601,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                 if (c.email) {
                   setIsEmailOpen(true);
                 } else {
-                  alert("Email address is unavailable for this candidate.");
+                  dialog.info("Email address is unavailable for this candidate.");
                 }
               }}
               disabled={!c.email}
@@ -1483,7 +1620,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                 if (c.phone) {
                   setIsWhatsAppOpen(true);
                 } else {
-                  alert("Phone number is unavailable for this candidate.");
+                  dialog.info("Phone number is unavailable for this candidate.");
                 }
               }}
               disabled={!c.phone}
@@ -1498,9 +1635,10 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
             </Btn>
 
             <Btn onClick={handleDelete}
-              className="text-sm font-semibold px-5 py-2.5 rounded-xl transition-all"
+              disabled={isDeleting}
+              className="text-sm font-semibold px-5 py-2.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ background: "rgba(255,68,68,0.08)", border: "1px solid rgba(255,68,68,0.2)", color: "var(--red)" }}>
-              Delete
+              {isDeleting ? "Deleting..." : "Delete"}
             </Btn>
           </div>
         </div>

@@ -8,6 +8,7 @@ import GenerateContractModal from "./GenerateContractModal";
 import type { Contract } from "@/types";
 import { clsx } from "clsx";
 import { Btn } from "@/components/ui";
+import { AlertTriangle, CheckCircle2, Upload } from "lucide-react";
 
 const CONTRACT_META: Record<string, { color: string; roles: string[] }> = {
   "emp-ft":    { color: "#4ade80", roles: ["All Full-time roles"] },
@@ -135,59 +136,123 @@ export default function ContractsList() {
           })}
         </div>
 
+        {/* Right-Side Panel: Legal Disclaimer & Global Brand Assets */}
         <div className="flex flex-col gap-4">
-          <div className="p-5 rounded-2xl flex flex-col" style={{ background: "var(--glass)", border: "1px solid var(--border)" }}>
-            <div className="flex items-start gap-3">
-              <span className="text-xl flex-shrink-0">⚖️</span>
-              <div>
-                <div className="text-sm font-semibold mb-1.5">Legal Disclaimer</div>
-                <div className="text-xs text-[var(--text-3)] leading-relaxed">
-                  These templates are tailored for an Indian agency under standard Indian employment and commercial law.
-                  All fields in <strong className="text-[var(--text-2)]">[BRACKETS]</strong> must be filled before use.
-                  We recommend having these reviewed by a qualified legal professional before signing.
-                </div>
-              </div>
+          {/* 1. Legal Disclaimer Card */}
+          <div className="p-5 sm:p-6 rounded-[14px] bg-[#151617] border border-[#292C31] flex flex-col">
+            <div className="flex items-center gap-2.5 mb-3.5">
+              <span className="text-[17px] leading-none text-[#F5C542] select-none">⚖️</span>
+              <h2 className="text-[15px] font-semibold text-[#E8E8E8] tracking-tight">Legal Disclaimer</h2>
             </div>
+            <p className="text-[13px] text-[#9DA3AE] leading-[1.6]">
+              These templates are tailored for an Indian agency under standard Indian employment and commercial law.
+              All fields in <strong className="text-[#F3F4F6] font-semibold">[BRACKETS]</strong> must be filled before use.
+              We recommend having these reviewed by a qualified legal professional before signing.
+            </p>
           </div>
 
-          <div className="p-5 rounded-2xl flex flex-col" style={{ background: "var(--glass)", border: "1px solid var(--border)" }}>
-            <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-3">Global Brand Assets</div>
-            <div className="flex flex-col gap-4">
-              <div className="p-3 rounded-xl border border-[var(--border)] flex flex-col items-center justify-center text-center">
-                {hasLogo 
-                  ? <div className="text-xs text-[var(--green)]">✅ Logo Uploaded</div>
-                  : <div className="text-[10px] text-[var(--yellow)]">⚠️ Missing Logo</div>}
-                <div className="flex gap-2 w-full mt-2">
-                  <Btn variant="outline" size="sm" onClick={() => logoRef.current?.click()} className="flex-1">
-                    {hasLogo ? "Update Logo" : "Upload Logo"}
-                  </Btn>
+          {/* 2. Global Brand Assets Card */}
+          <div className="p-5 sm:p-6 rounded-[14px] bg-[#151617] border border-[#292C31] flex flex-col">
+            <div className="text-[12px] font-semibold text-[#8B919C] uppercase tracking-[0.08em] mb-4">
+              Global Brand Assets
+            </div>
+
+            <div className="flex flex-col gap-3.5">
+              {/* Asset 1: Company Logo */}
+              <div className="p-4 rounded-xl bg-[#191B1E] border border-[#2B2E34] flex flex-col items-center justify-center gap-3">
+                {hasLogo ? (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-semibold bg-[rgba(34,197,94,0.08)] border border-[rgba(34,197,94,0.25)] text-[#22C55E] select-none">
+                    <CheckCircle2 size={12} className="text-[#22C55E]" />
+                    <span>Logo Uploaded</span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-semibold bg-[rgba(245,197,66,0.08)] border border-[rgba(245,197,66,0.25)] text-[#F5C542] select-none">
+                    <AlertTriangle size={12} className="text-[#F5C542]" />
+                    <span>Missing Logo</span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 w-full">
+                  <button
+                    type="button"
+                    onClick={() => logoRef.current?.click()}
+                    className="flex-1 h-[40px] px-3 rounded-lg text-[13px] font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer inline-flex items-center justify-center gap-1.5 select-none outline-none bg-[#202328] hover:bg-[#262A30] active:bg-[#1A1C20] text-[#D8DCE3] hover:text-white border-[#33373E] hover:border-[#00D9FF] focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
+                  >
+                    <Upload size={13} className="text-[#8B919C] group-hover:text-white" />
+                    <span>{hasLogo ? "Update Logo" : "Upload Logo"}</span>
+                  </button>
+
                   {hasLogo && (
-                    <Btn variant="ghost" size="sm" onClick={() => handleClear("tsp_logo", setHasLogo)}>Clear</Btn>
+                    <button
+                      type="button"
+                      onClick={() => handleClear("tsp_logo", setHasLogo)}
+                      className="h-[40px] px-3 rounded-lg text-[12px] font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer inline-flex items-center justify-center select-none outline-none bg-[#202328] hover:bg-[#262A30] active:bg-[#1A1C20] text-[#8E949E] hover:text-[#EF4444] border-[#33373E] hover:border-[#EF4444]/40 focus-visible:ring-1 focus-visible:ring-[#EF4444]/30 active:scale-[0.98]"
+                      title="Remove uploaded logo"
+                    >
+                      Clear
+                    </button>
                   )}
                 </div>
-                <input ref={logoRef} type="file" accept="image/*" className="hidden"
-                  onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], "tsp_logo", setHasLogo)} />
+
+                <input
+                  ref={logoRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], "tsp_logo", setHasLogo)}
+                />
               </div>
 
-              <div className="p-3 rounded-xl border border-[var(--border)] flex flex-col items-center justify-center text-center">
-                {hasSign 
-                  ? <div className="text-xs text-[var(--green)]">✅ Sign Uploaded</div>
-                  : <div className="text-[10px] text-[var(--yellow)]">⚠️ Missing Signature</div>}
-                <div className="flex gap-2 w-full mt-2">
-                  <Btn variant="outline" size="sm" onClick={() => signRef.current?.click()} className="flex-1">
-                    {hasSign ? "Update Sign" : "Upload Sign"}
-                  </Btn>
+              {/* Asset 2: Company Signature */}
+              <div className="p-4 rounded-xl bg-[#191B1E] border border-[#2B2E34] flex flex-col items-center justify-center gap-3">
+                {hasSign ? (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-semibold bg-[rgba(34,197,94,0.08)] border border-[rgba(34,197,94,0.25)] text-[#22C55E] select-none">
+                    <CheckCircle2 size={12} className="text-[#22C55E]" />
+                    <span>Sign Uploaded</span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11.5px] font-semibold bg-[rgba(245,197,66,0.08)] border border-[rgba(245,197,66,0.25)] text-[#F5C542] select-none">
+                    <AlertTriangle size={12} className="text-[#F5C542]" />
+                    <span>Missing Signature</span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 w-full">
+                  <button
+                    type="button"
+                    onClick={() => signRef.current?.click()}
+                    className="flex-1 h-[40px] px-3 rounded-lg text-[13px] font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer inline-flex items-center justify-center gap-1.5 select-none outline-none bg-[#202328] hover:bg-[#262A30] active:bg-[#1A1C20] text-[#D8DCE3] hover:text-white border-[#33373E] hover:border-[#00D9FF] focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
+                  >
+                    <Upload size={13} className="text-[#8B919C] group-hover:text-white" />
+                    <span>{hasSign ? "Update Sign" : "Upload Sign"}</span>
+                  </button>
+
                   {hasSign && (
-                    <Btn variant="ghost" size="sm" onClick={() => handleClear("tsp_sign", setHasSign)}>Clear</Btn>
+                    <button
+                      type="button"
+                      onClick={() => handleClear("tsp_sign", setHasSign)}
+                      className="h-[40px] px-3 rounded-lg text-[12px] font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer inline-flex items-center justify-center select-none outline-none bg-[#202328] hover:bg-[#262A30] active:bg-[#1A1C20] text-[#8E949E] hover:text-[#EF4444] border-[#33373E] hover:border-[#EF4444]/40 focus-visible:ring-1 focus-visible:ring-[#EF4444]/30 active:scale-[0.98]"
+                      title="Remove uploaded signature"
+                    >
+                      Clear
+                    </button>
                   )}
                 </div>
-                <input ref={signRef} type="file" accept="image/*" className="hidden"
-                  onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], "tsp_sign", setHasSign)} />
+
+                <input
+                  ref={signRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], "tsp_sign", setHasSign)}
+                />
               </div>
             </div>
-            <div className="text-[10px] text-[var(--text-3)] mt-3.5 leading-relaxed">
+
+            {/* Footnote */}
+            <p className="text-[12px] text-[#8B919C] mt-4 leading-relaxed">
               * Uploading assets here automatically configures the brand design across all legal templates and contracts.
-            </div>
+            </p>
           </div>
         </div>
       </div>

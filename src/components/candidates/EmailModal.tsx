@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useStore } from "@/lib/store";
 import { getPublicBaseUrl } from "@/lib/url";
 import type { Candidate } from "@/types";
-import { Btn } from "@/components/ui";
+import { Btn, dialog } from "@/components/ui";
 
 interface Props {
   candidate: Candidate;
@@ -178,7 +178,7 @@ export default function EmailModal({ candidate, onClose }: Props) {
 
   const handleSend = async () => {
     if (!isEmailValid) {
-      alert("Please enter a valid email before sending.");
+      dialog.warning("Please enter a valid email before sending.");
       return;
     }
 
@@ -223,10 +223,10 @@ export default function EmailModal({ candidate, onClose }: Props) {
       const updatedNote = (candidate.note || "").trim() + (candidate.note ? "\n\n" : "") + systemNote;
       updateCandidate(candidate.id, { note: updatedNote });
 
-      alert("Email sent successfully!");
+      dialog.success("Email sent successfully!");
     } catch (error: any) {
       console.error(error);
-      alert("Failed to send email. Make sure GMAIL_APP_PASSWORD is set in .env.local.");
+      dialog.error("Failed to send email. Make sure GMAIL_APP_PASSWORD is set in .env.local.");
     } finally {
       setIsSending(false);
     }

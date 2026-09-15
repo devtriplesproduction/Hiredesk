@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import type { Candidate, Role, Contract, Filters, Interview, Offer, CandidateDocument, Employee, EmployeeBond, EmployeeResignation } from "@/types";
 import { DEFAULT_ROLES, generateSeedCandidates, getContractTemplates } from "@/lib/data";
 import { exportCandidatesToCSV } from "@/lib/utils/csv";
+import { dialog } from "@/lib/dialog";
 
 interface Store {
   candidates: Candidate[];
@@ -15,9 +16,10 @@ interface Store {
   addCandidate: (c: Candidate) => void;
   addCandidates: (c: Candidate[]) => void;
   updateCandidate: (id: string, patch: Partial<Candidate>) => void;
-  deleteCandidate: (id: string) => void;
-  deleteCandidates: (ids: string[]) => void;
-  deleteBelowScore: (threshold: number) => number;
+  deleteCandidate: (id: string) => Promise<boolean>;
+  deleteCandidates: (ids: string[]) => Promise<number>;
+  deleteBelowScore: (threshold: number) => Promise<{ count: number; ids: string[] }>;
+  refreshCandidates: () => Promise<Candidate[]>;
   addRole: (r: Role) => void;
   updateContract: (id: string, body: string) => void;
   setFilters: (f: Partial<Filters>) => void;
@@ -46,7 +48,7 @@ interface Store {
 
 const DEFAULT_FILTERS: Filters = {
   search: "", roleId: "all", status: "all",
-  city: "", gender: "all", ageRange: "all", exp: "all",
+  city: "", gender: "all", employmentStatus: "all", ageRange: "all", exp: "all",
   sort: "newest",
 };
 
@@ -277,7 +279,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
     import("@/lib/supabase").then(db => db.insertDBCandidates(newOnes)).catch(err => {
       console.error(err);
-      alert("Failed to save candidate to database: " + (err?.message || JSON.stringify(err)));
+      dialog.error("Failed to save candidate to database: " + (err?.message || JSON.stringify(err)));
     });
   }, []);
 
@@ -292,46 +294,99 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     import("@/lib/supabase").then(db => db.updateDBCandidate(id, patch)).catch(err => console.error(err));
   }, []);
 
-  const deleteCandidate = useCallback((id: string) => {
+  const refreshCandidates = useCallback(async (): Promise<Candidate[]> => {
+    try {
+      const { getDBCandidates } = await import("@/lib/supabase");
+      const dbCandidates = await getDBCandidates();
+      setCandidatesRaw(dbCandidates);
+      setRolesRaw(prev => computeRoleCounts(dbCandidates, prev));
+      console.log(`[HireDesk Store] Refreshed ${dbCandidates.length} candidates from persistent database.`);
+      return dbCandidates;
+    } catch (err) {
+      console.error("[HireDesk Store] Error refreshing candidates from database:", err);
+      return [];
+    }
+  }, []);
+
+  const deleteCandidate = useCallback(async (id: string): Promise<boolean> => {
+    // 1. Await persistent database cascading deletion first
+    const { deleteDBCandidate } = await import("@/lib/supabase");
+    await deleteDBCandidate(id);
+
+    // 2. Only after database confirms deletion, update client state
     setCandidatesRaw(prev => {
       const next = prev.filter(c => c.id !== id);
       setRolesRaw(rPrev => computeRoleCounts(next, rPrev));
       return next;
     });
-    import("@/lib/supabase").then(db => db.deleteDBCandidate(id)).catch(err => console.error(err));
+
+    // 3. Clear from selection if selected
+    setSelectedIds(prev => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+
+    return true;
   }, []);
 
-  const deleteCandidates = useCallback((ids: string[]) => {
-    const idSet = new Set(ids);
+  const deleteCandidates = useCallback(async (ids: string[]): Promise<number> => {
+    const validIds = ids.filter(id => Boolean(id && typeof id === "string" && id.trim()));
+    if (!validIds.length) return 0;
+
+    // 1. Await persistent database cascading deletion first
+    const { deleteDBCandidates } = await import("@/lib/supabase");
+    await deleteDBCandidates(validIds);
+
+    // 2. Only after database confirms deletion, update client state
+    const idSet = new Set(validIds);
     setCandidatesRaw(prev => {
       const next = prev.filter(c => !idSet.has(c.id));
       setRolesRaw(rPrev => computeRoleCounts(next, rPrev));
       return next;
     });
-    setSelectedIds(new Set());
-    import("@/lib/supabase").then(db => db.deleteDBCandidates(ids)).catch(err => console.error(err));
+
+    // 3. Clear selected candidates
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      validIds.forEach(id => next.delete(id));
+      return next;
+    });
+
+    return validIds.length;
   }, []);
 
-  const deleteBelowScore = useCallback((threshold: number) => {
-    let deletedCount = 0;
-    const toDeleteIds: string[] = [];
+  const deleteBelowScore = useCallback(async (threshold: number): Promise<{ count: number; ids: string[] }> => {
+    // Determine candidates to delete from current state
+    const toDelete = candidates.filter(c => c.score.total < threshold);
+    const toDeleteIds = toDelete.map(c => c.id);
+
+    if (toDeleteIds.length === 0) {
+      return { count: 0, ids: [] };
+    }
+
+    // 1. Await persistent database cascading deletion first
+    const { deleteDBCandidates } = await import("@/lib/supabase");
+    await deleteDBCandidates(toDeleteIds);
+
+    // 2. Only after database confirms deletion, update client state
+    const idSet = new Set(toDeleteIds);
     setCandidatesRaw(prev => {
-      const next = prev.filter(c => {
-        if (c.score.total < threshold) { 
-          deletedCount++; 
-          toDeleteIds.push(c.id);
-          return false; 
-        }
-        return true;
-      });
+      const next = prev.filter(c => !idSet.has(c.id));
       setRolesRaw(rPrev => computeRoleCounts(next, rPrev));
       return next;
     });
-    if (toDeleteIds.length > 0) {
-      import("@/lib/supabase").then(db => db.deleteDBCandidates(toDeleteIds)).catch(err => console.error(err));
-    }
-    return deletedCount;
-  }, []);
+
+    // 3. Clear from selection
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      toDeleteIds.forEach(id => next.delete(id));
+      return next;
+    });
+
+    return { count: toDeleteIds.length, ids: toDeleteIds };
+  }, [candidates]);
 
   const addRole = useCallback((r: Role) => {
     setRolesRaw(prev => [...prev, r]);
@@ -430,6 +485,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     candidates, roles, contracts, filters, selectedIds,
     setCandidates, setRoles, addCandidate, addCandidates,
     updateCandidate, deleteCandidate, deleteCandidates, deleteBelowScore,
+    refreshCandidates,
     addRole, updateContract, setFilters, clearFilters,
     toggleSelect, toggleSelectAll, clearSelection, exportCSV,
     interviews, setInterviews, addInterview, updateInterview, offers, addOffer, updateOffer,
@@ -439,6 +495,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     candidates, roles, contracts, filters, selectedIds,
     setCandidates, setRoles, addCandidate, addCandidates,
     updateCandidate, deleteCandidate, deleteCandidates, deleteBelowScore,
+    refreshCandidates,
     addRole, updateContract, setFilters, clearFilters,
     toggleSelect, toggleSelectAll, clearSelection, exportCSV,
     interviews, setInterviews, addInterview, updateInterview, offers, addOffer, updateOffer,
@@ -484,11 +541,11 @@ export function useFilteredCandidates() {
   const { candidates, filters } = useStore();
 
   return useMemo(() => {
-    const { roleId, status, city, gender, exp, ageRange, search, sort } = filters;
+    const { roleId, status, city, gender, exp, employmentStatus, ageRange, search, sort } = filters;
 
     // Pre-compute search query once
     const q = search ? search.toLowerCase() : null;
-    const [lo, hi] = ageRange !== "all" ? parseAgeRange(ageRange) : [0, 999];
+    const [lo, hi] = (ageRange && ageRange !== "all") ? parseAgeRange(ageRange) : [0, 999];
 
     const filtered = candidates.filter(c => {
       if (roleId !== "all" && c.roleId !== roleId) return false;
@@ -496,7 +553,11 @@ export function useFilteredCandidates() {
       if (city && c.city !== city) return false;
       if (gender !== "all" && c.gender !== gender) return false;
       if (exp !== "all" && c.exp !== exp) return false;
-      if (ageRange !== "all" && (c.age < lo || c.age > hi)) return false;
+      if (employmentStatus && employmentStatus !== "all") {
+        const cStatus = c.employmentStatus ?? "UNKNOWN";
+        if (cStatus !== employmentStatus) return false;
+      }
+      if (ageRange && ageRange !== "all" && (c.age < lo || c.age > hi)) return false;
       if (q && !c.name.toLowerCase().includes(q)
             && !c.email.toLowerCase().includes(q)
             && !c.roleName.toLowerCase().includes(q)) return false;

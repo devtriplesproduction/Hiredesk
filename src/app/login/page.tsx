@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { Btn } from "@/components/ui";
+import { Btn, dialog } from "@/components/ui";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -295,7 +295,7 @@ BEGIN
     WHERE id = user_id;
   END IF;
 END $$;`);
-                            alert("SQL query copied to clipboard!");
+                            dialog.success("SQL query copied to clipboard!");
                           }}
                           className="absolute right-2 top-2 px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[8px] text-zinc-300 font-bold uppercase transition-colors"
                         >

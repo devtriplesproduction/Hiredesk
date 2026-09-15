@@ -60,8 +60,13 @@ export async function insertDBCandidate(c: Candidate): Promise<void> {
   if (error) {
     // If it's a missing column error (Postgres code 42703), retry without extraction fields
     if (error.code === "42703" || error.message?.includes("column")) {
-      console.warn("[Supabase Sync] Database is missing name extraction columns. Retrying candidate insert without them...");
-      const { extractionSource, extractionConfidence, extractionMetadata, ...sanitized } = cleaned as any;
+      console.warn("[Supabase Sync] Database is missing extra columns. Retrying candidate insert without them...");
+      const {
+        extractionSource, extractionConfidence, extractionMetadata,
+        employmentStatus, employmentStatusConfidence, currentCompany,
+        currentRole, employmentStartDate, employmentEndDate, employmentStatusSource,
+        ...sanitized
+      } = cleaned as any;
       const { error: retryError } = await supabase.from("candidates").insert(sanitized);
       if (retryError) throw retryError;
     } else {
@@ -76,9 +81,14 @@ export async function insertDBCandidates(candidates: Candidate[]): Promise<void>
   const { error } = await supabase.from("candidates").insert(cleaned);
   if (error) {
     if (error.code === "42703" || error.message?.includes("column")) {
-      console.warn("[Supabase Sync] Database is missing name extraction columns. Retrying bulk insert without them...");
+      console.warn("[Supabase Sync] Database is missing extra columns. Retrying bulk insert without them...");
       const sanitizedCandidates = cleaned.map(c => {
-        const { extractionSource, extractionConfidence, extractionMetadata, ...rest } = c as any;
+        const {
+          extractionSource, extractionConfidence, extractionMetadata,
+          employmentStatus, employmentStatusConfidence, currentCompany,
+          currentRole, employmentStartDate, employmentEndDate, employmentStatusSource,
+          ...rest
+        } = c as any;
         return rest;
       });
       const { error: retryError } = await supabase.from("candidates").insert(sanitizedCandidates);
@@ -95,8 +105,13 @@ export async function updateDBCandidate(id: string, patch: Partial<Candidate>): 
   const { error } = await supabase.from("candidates").update(cleaned).eq("id", id);
   if (error) {
     if (error.code === "42703" || error.message?.includes("column")) {
-      console.warn("[Supabase Sync] Database is missing name extraction columns. Retrying candidate update without them...");
-      const { extractionSource, extractionConfidence, extractionMetadata, ...sanitizedPatch } = cleaned as any;
+      console.warn("[Supabase Sync] Database is missing extra columns. Retrying candidate update without them...");
+      const {
+        extractionSource, extractionConfidence, extractionMetadata,
+        employmentStatus, employmentStatusConfidence, currentCompany,
+        currentRole, employmentStartDate, employmentEndDate, employmentStatusSource,
+        ...sanitizedPatch
+      } = cleaned as any;
       const { error: retryError } = await supabase.from("candidates").update(sanitizedPatch).eq("id", id);
       if (retryError) throw retryError;
     } else {
@@ -106,20 +121,56 @@ export async function updateDBCandidate(id: string, patch: Partial<Candidate>): 
   }
 }
 
-export async function deleteDBCandidate(id: string): Promise<void> {
-  const { error } = await supabase.from("candidates").delete().eq("id", id);
-  if (error) {
-    console.error("Error deleting candidate from Supabase:", error);
-    throw error;
+export async function deleteDBCandidates(ids: string[]): Promise<void> {
+  const validIds = ids.filter(id => Boolean(id && typeof id === "string" && id.trim()));
+  if (!validIds.length) return;
+
+  // 1. Primary: Use dedicated server API route with service role permissions & cascading delete
+  try {
+    const res = await fetch("/api/candidates/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: validIds }),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success) return;
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || `Server responded with status ${res.status}`);
+    }
+  } catch (apiErr: any) {
+    console.warn("[Supabase Sync] API candidate deletion failed, attempting direct Supabase cascade delete:", apiErr);
+
+    // 2. Fallback: Direct client-side cascading delete
+    // Find associated employees to clean up bonds and resignations
+    const { data: emps } = await supabase
+      .from("employees")
+      .select("id")
+      .in("candidate_id", validIds);
+
+    if (emps && emps.length > 0) {
+      const empIds = emps.map((e: any) => e.id);
+      await supabase.from("employee_resignations").delete().in("employee_id", empIds);
+      await supabase.from("employee_bonds").delete().in("employee_id", empIds);
+      await supabase.from("employees").delete().in("id", empIds);
+    }
+
+    await supabase.from("candidate_documents").delete().in("candidateId", validIds);
+    await supabase.from("offers").delete().in("candidateId", validIds);
+    await supabase.from("interviews").delete().in("candidateId", validIds);
+
+    const { error } = await supabase.from("candidates").delete().in("id", validIds);
+    if (error) {
+      console.error("Error deleting candidate(s) from Supabase:", error);
+      throw error;
+    }
   }
 }
 
-export async function deleteDBCandidates(ids: string[]): Promise<void> {
-  const { error } = await supabase.from("candidates").delete().in("id", ids);
-  if (error) {
-    console.error("Error deleting bulk candidates from Supabase:", error);
-    throw error;
-  }
+export async function deleteDBCandidate(id: string): Promise<void> {
+  return deleteDBCandidates([id]);
 }
 
 /**

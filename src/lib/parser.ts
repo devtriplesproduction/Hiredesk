@@ -1,5 +1,5 @@
 "use client";
-import type { Candidate, Role } from "@/types";
+import type { Candidate, Role, EmploymentStatus } from "@/types";
 import { makeCandidate, detectBestRole, scoreCandidateFromText, SKILLS_POOL } from "@/lib/data";
 import { extractTextAndMetaFromPDF, PDFTextLine } from "@/lib/utils/pdf";
 
@@ -716,6 +716,278 @@ function extractSkills(text: string, roleId: string): string[] {
   return rolePool.slice(0, 5);
 }
 
+export interface EmploymentStatusResult {
+  employmentStatus: EmploymentStatus;
+  employmentStatusConfidence: number;
+  currentCompany?: string;
+  currentRole?: string;
+  employmentStartDate?: string;
+  employmentEndDate?: string;
+  employmentStatusSource: string;
+}
+
+/**
+ * Contextual, date-aware employment status detection engine.
+ * Priority:
+ * 1. Latest Work Experience + "Present/Current/Ongoing" or open-ended date -> CURRENTLY_WORKING
+ * 2. Explicit current employment statements within Work Experience -> CURRENTLY_WORKING
+ * 3. Latest work experience with definite completed end date -> NOT_CURRENTLY_WORKING
+ * 4. Student / Fresher signals (when no current active employment) -> STUDENT_FRESHER
+ * 5. Unknown fallback -> UNKNOWN (no guessing)
+ */
+export function extractEmploymentStatus(text: string): EmploymentStatusResult {
+  if (!text || !text.trim()) {
+    return {
+      employmentStatus: "UNKNOWN",
+      employmentStatusConfidence: 0,
+      employmentStatusSource: "No text content available in resume"
+    };
+  }
+
+  // 1. Mask non-employment occurrences of "current" / "present" to avoid false positives
+  const maskedText = text
+    .replace(/\b(?:current|present)\s+(?:address|location|city|residence|place|domicile|postal|pin(?:\s*code)?)\s*[:\-]?\s*[^\n\r,]+/gi, " [MASKED_ADDRESS] ")
+    .replace(/\b(?:current|present)\s+(?:ctc|salary|package|compensation|inhand|take\s*home)\s*[:\-]?\s*[^\n\r]+/gi, " [MASKED_CTC] ")
+    .replace(/\b(?:current|present)\s+(?:skills|tech\s+stack|technologies|tools|competencies)\s*[:\-]?\s*[^\n\r]+/gi, " [MASKED_SKILLS] ")
+    .replace(/\b(?:current|present)\s+(?:project|projects|assignment|assignments)\s*[:\-]?\s*[^\n\r]+/gi, " [MASKED_PROJECTS] ");
+
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+  const expHeaderRegex = /^(?:work\s+experience|professional\s+experience|experience|employment\s+history|work\s+history|career\s+history|internships?|employment)$/i;
+  const eduHeaderRegex = /^(?:education|academic(?:s|\s+background|\s+qualifications?|\s+records?)?|qualifications?)$/i;
+  const otherHeaderRegex = /^(?:projects?|technical\s+skills|skills|certifications?|awards?|achievements?|personal\s+details|personal\s+information|contact\s+info|declaration|hobbies|interests|languages)$/i;
+  const eduDegreeRegex = /\b(?:B\.?Tech|BCA|MCA|MBA|B\.?Sc|M\.?Sc|B\.?Com|M\.?Com|BBA|BDes|M\.?Tech|Diploma|Bachelor(?:'s)?|Master(?:'s)?|Degree|Ph\.?D|10th|12th|HSC|SSC|CBSE|ICSE|University|College|Institute|School)\b/i;
+
+  // Track section for each line
+  let currentSection = "GENERAL";
+  const lineSections: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const cleanHeader = lines[i].replace(/[:\-#*=_]/g, "").trim();
+    if (expHeaderRegex.test(cleanHeader)) {
+      currentSection = "EXPERIENCE";
+    } else if (eduHeaderRegex.test(cleanHeader)) {
+      currentSection = "EDUCATION";
+    } else if (otherHeaderRegex.test(cleanHeader)) {
+      currentSection = "OTHER";
+    }
+    lineSections[i] = currentSection;
+  }
+
+  const hasExplicitExpSection = lineSections.some(s => s === "EXPERIENCE");
+
+  // Common date tokens
+  const MONTH_NAMES = "(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)";
+  const ONGOING_WORDS = "(?:present|current|ongoing|till\\s+present|to\\s+present|presently|till\\s+date|to\\s+date|now)";
+  const DATE_TOKEN = `(?:${MONTH_NAMES}\\s*\\.?\\s*\\d{4}|\\d{1,2}[\\/\\-]\\d{4}|\\b20\\d\\d|\\b19\\d\\d)`;
+
+  interface ParsedJobDate {
+    raw: string;
+    startDateStr: string;
+    endDateStr: string;
+    startYear: number;
+    endYear?: number;
+    isOngoing: boolean;
+    lineIndex: number;
+    fullLine: string;
+  }
+
+  const detectedDates: ParsedJobDate[] = [];
+
+  // Parse lines for date ranges
+  lines.forEach((line, idx) => {
+    // Skip address/CTC/skills lines that were masked
+    if (line.includes("[MASKED_")) return;
+
+    const section = lineSections[idx];
+    // If line is in education section or is an education degree line, skip as employment
+    if (section === "EDUCATION" || eduDegreeRegex.test(line)) {
+      return;
+    }
+
+    // If an explicit experience section exists, only look for dates within EXPERIENCE section
+    if (hasExplicitExpSection && section !== "EXPERIENCE") {
+      return;
+    }
+
+    // A. Match standard range: <Start> [- / to] <End / Present>
+    const lineDateRegex = new RegExp(
+      `(${DATE_TOKEN})\\s*(?:[-–—]|to)\\s*(${ONGOING_WORDS}|${DATE_TOKEN})`,
+      "gi"
+    );
+
+    let match: RegExpExecArray | null;
+    while ((match = lineDateRegex.exec(line)) !== null) {
+      const raw = match[0].trim();
+      const startStr = (match[1] || "").trim();
+      const endStr = (match[2] || "").trim();
+
+      const startYearMatch = startStr.match(/\b(20\d\d|19\d\d)\b/);
+      const startYear = startYearMatch ? parseInt(startYearMatch[1], 10) : 2020;
+
+      const isOngoing = new RegExp(`^${ONGOING_WORDS}$`, "i").test(endStr);
+      let endYear: number | undefined;
+      if (!isOngoing && endStr) {
+        const endYearMatch = endStr.match(/\b(20\d\d|19\d\d)\b/);
+        if (endYearMatch) endYear = parseInt(endYearMatch[1], 10);
+      }
+
+      detectedDates.push({
+        raw,
+        startDateStr: startStr,
+        endDateStr: isOngoing ? "Present" : endStr,
+        startYear,
+        endYear,
+        isOngoing,
+        lineIndex: idx,
+        fullLine: line,
+      });
+    }
+
+    // B. Match open-ended range: e.g. "Jan 2024 -" or "2023 -" or "2024 – "
+    const openEndedMatch = line.match(new RegExp(`(${DATE_TOKEN})\\s*[-–—]\\s*(?:$|[|•])`, "i"));
+    if (openEndedMatch && !detectedDates.some(d => d.lineIndex === idx)) {
+      const startStr = openEndedMatch[1].trim();
+      const startYearMatch = startStr.match(/\b(20\d\d|19\d\d)\b/);
+      const startYear = startYearMatch ? parseInt(startYearMatch[1], 10) : 2020;
+      detectedDates.push({
+        raw: openEndedMatch[0].trim(),
+        startDateStr: startStr,
+        endDateStr: "Present",
+        startYear,
+        isOngoing: true,
+        lineIndex: idx,
+        fullLine: line,
+      });
+    }
+  });
+
+  // Extract Company & Role context around a detected job date line
+  function extractRoleAndCompanyAround(lineIdx: number): { role?: string; company?: string } {
+    const roleRegex = /\b(?:Software\s+Engineer|Frontend\s+Developer|Backend\s+Developer|Full\s*stack\s+Developer|Web\s+Developer|Developer|Graphic\s+Designer|UI\/UX\s+Designer|Video\s+Editor|Digital\s+Marketer|Social\s+Media\s+Manager|Sales\s+Executive|Performance\s+Marketer|Content\s+Strategist|Cameraman|Associate|Consultant|Intern|Engineer|Manager|Specialist|Analyst)\b/i;
+
+    let detectedRole: string | undefined;
+    let detectedCompany: string | undefined;
+
+    // Check current line tokens if piped/separated
+    const currLine = lines[lineIdx] || "";
+    const parts = currLine.split(/[|•–—\t]+/).map(p => p.trim()).filter(Boolean);
+    for (const p of parts) {
+      if (!detectedRole && roleRegex.test(p)) {
+        detectedRole = p;
+      } else if (!detectedCompany && !roleRegex.test(p) && !new RegExp(DATE_TOKEN, "i").test(p) && p.length > 2 && p.length < 50) {
+        detectedCompany = p.replace(/^at\s+/i, "").trim();
+      }
+    }
+
+    // Inspect previous 2 lines if needed
+    const startIdx = Math.max(0, lineIdx - 2);
+    for (let i = startIdx; i <= lineIdx; i++) {
+      const lineContent = lines[i] || "";
+      if (!detectedRole) {
+        const rMatch = lineContent.match(roleRegex);
+        if (rMatch) detectedRole = rMatch[0];
+      }
+      if (!detectedCompany) {
+        const atMatch = lineContent.match(/\bat\s+([A-Z][A-Za-z0-9\s&.,]{2,35})/);
+        if (atMatch) {
+          detectedCompany = atMatch[1].trim();
+        } else if (!roleRegex.test(lineContent) && !new RegExp(DATE_TOKEN, "i").test(lineContent) && lineContent.length >= 3 && lineContent.length <= 40) {
+          if (/^[A-Z]/.test(lineContent) && !/^(?:experience|work|employment|education|skills|projects)/i.test(lineContent)) {
+            detectedCompany = lineContent;
+          }
+        }
+      }
+    }
+
+    return { role: detectedRole, company: detectedCompany };
+  }
+
+  // Check explicit employment statements
+  const explicitWorkRegex = /\b(?:currently\s+working(?:\s+as)?|currently\s+employed(?:\s+at)?|working\s+as|presently\s+working(?:\s+as)?|employed\s+at|currently\s+associated\s+with|current\s+role\s*[:\-]|current\s+position\s*[:\-]|presently\s+employed)\b\s*([^\n\r,.]{3,60})/i;
+  const explicitWorkMatch = maskedText.match(explicitWorkRegex);
+
+  // Check Student / Fresher signals
+  const studentFresherRegex = /\b(?:currently\s+pursuing|final[- ]year\s+student|final\s+year\s+student|b\.?tech\s+student|bca\s+student|mca\s+student|mba\s+student|undergraduate\s+student|postgraduate\s+student|bachelor'?s\s+candidate|master'?s\s+candidate|pursuing\s+(?:b\.?tech|bca|mca|mba|m\.?tech|b\.?sc|m\.?sc|b\.?com|bba|degree|graduation|post\s*graduation)|fresher|recent\s+graduate|fresh\s+graduate|entry[- ]level|no\s+professional\s+experience)\b/i;
+  const studentMatch = maskedText.match(studentFresherRegex);
+
+  // 1. Evaluate parsed date entries
+  if (detectedDates.length > 0) {
+    const ongoingJobs = detectedDates.filter(d => d.isOngoing);
+
+    if (ongoingJobs.length > 0) {
+      // Latest ongoing job wins (prioritized over student indicators per Case 9)
+      ongoingJobs.sort((a, b) => b.startYear - a.startYear);
+      const latestOngoing = ongoingJobs[0];
+      const { role, company } = extractRoleAndCompanyAround(latestOngoing.lineIndex);
+
+      return {
+        employmentStatus: "CURRENTLY_WORKING",
+        employmentStatusConfidence: 96,
+        currentCompany: company,
+        currentRole: role,
+        employmentStartDate: latestOngoing.startDateStr,
+        employmentEndDate: "Present",
+        employmentStatusSource: `Latest work experience: ${latestOngoing.raw}`
+      };
+    }
+
+    // All detected jobs have ended -> Latest past job determines status
+    detectedDates.sort((a, b) => (b.endYear ?? b.startYear) - (a.endYear ?? a.startYear));
+    const latestEnded = detectedDates[0];
+    const { role, company } = extractRoleAndCompanyAround(latestEnded.lineIndex);
+
+    return {
+      employmentStatus: "NOT_CURRENTLY_WORKING",
+      employmentStatusConfidence: 85,
+      currentCompany: company,
+      currentRole: role,
+      employmentStartDate: latestEnded.startDateStr,
+      employmentEndDate: latestEnded.endDateStr,
+      employmentStatusSource: `Latest work experience ended: ${latestEnded.raw}`
+    };
+  }
+
+  // 2. Check explicit employment statements
+  if (explicitWorkMatch) {
+    const rawStatement = explicitWorkMatch[0].trim();
+    let role: string | undefined;
+    let company: string | undefined;
+    const asMatch = rawStatement.match(/as\s+([A-Za-z\s]+?)(?:\s+at\s+([A-Za-z0-9\s]+))?$/i);
+    if (asMatch) {
+      role = asMatch[1].trim();
+      company = asMatch[2]?.trim();
+    } else {
+      const atMatch = rawStatement.match(/at\s+([A-Za-z0-9\s]+)$/i);
+      if (atMatch) company = atMatch[1].trim();
+    }
+
+    return {
+      employmentStatus: "CURRENTLY_WORKING",
+      employmentStatusConfidence: 92,
+      currentCompany: company,
+      currentRole: role,
+      employmentEndDate: "Present",
+      employmentStatusSource: `Explicit statement: "${rawStatement}"`
+    };
+  }
+
+  // 3. Check Student / Fresher signals
+  if (studentMatch) {
+    return {
+      employmentStatus: "STUDENT_FRESHER",
+      employmentStatusConfidence: 88,
+      employmentStatusSource: `Student / fresher signal: "${studentMatch[0]}"`
+    };
+  }
+
+  // 4. Status Unknown fallback (no guesswork)
+  return {
+    employmentStatus: "UNKNOWN",
+    employmentStatusConfidence: 0,
+    employmentStatusSource: "No employment history or student context detected"
+  };
+}
+
 /**
  * Complete Overhauled Name Extraction and Verification Pipeline
  * Computes: Extract → Normalize → Score Heuristics → Validate
@@ -882,6 +1154,7 @@ export async function parseResumeFile(
   const gender = extractGender(text, resolvedName);
   const age = extractAge(text);
   const skills = extractSkills(text, roleId);
+  const employment = extractEmploymentStatus(text);
 
   // Construct final Candidate object
   return makeCandidate(roleId, {
@@ -893,6 +1166,13 @@ export async function parseResumeFile(
     exp,
     gender,
     age,
+    employmentStatus: employment.employmentStatus,
+    employmentStatusConfidence: employment.employmentStatusConfidence,
+    currentCompany: employment.currentCompany,
+    currentRole: employment.currentRole,
+    employmentStartDate: employment.employmentStartDate,
+    employmentEndDate: employment.employmentEndDate,
+    employmentStatusSource: employment.employmentStatusSource,
     roleName: role.name,
     score,
     resumeFile: file.name,

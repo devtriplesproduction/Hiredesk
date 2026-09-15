@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useCallback, useMemo } from "react";
 import { useStore } from "@/lib/store";
-import { Btn } from "@/components/ui";
+import { Btn, dialog } from "@/components/ui";
 import { parseResumeFile } from "@/lib/parser";
 import type { Candidate } from "@/types";
 import { clsx } from "clsx";
@@ -57,7 +57,7 @@ export default function UploadZone() {
 
   const addFiles = useCallback((files: FileList | File[]) => {
     const pdfs = Array.from(files).filter(f => f.name.toLowerCase().endsWith(".pdf"));
-    if (!pdfs.length) { alert("Please upload PDF files only."); return; }
+    if (!pdfs.length) { dialog.warning("Please upload PDF files only."); return; }
     setQueue(prev => [...prev, ...pdfs.map(f => ({ file: f, status: "wait" as const }))]);
   }, []);
 

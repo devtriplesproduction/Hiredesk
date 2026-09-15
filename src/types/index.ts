@@ -74,6 +74,8 @@ export interface ScoreBreakdown {
   total: number;
 }
 
+export type EmploymentStatus = "CURRENTLY_WORKING" | "STUDENT_FRESHER" | "NOT_CURRENTLY_WORKING" | "UNKNOWN";
+
 export interface Candidate {
   id: string;
   name: string;
@@ -86,6 +88,13 @@ export interface Candidate {
   city: string;
   gender: string;
   age: number;
+  employmentStatus?: EmploymentStatus;
+  employmentStatusConfidence?: number;
+  currentCompany?: string;
+  currentRole?: string;
+  employmentStartDate?: string;
+  employmentEndDate?: string;
+  employmentStatusSource?: string;
   exp: string;
   education: string;
   skills: string[];
@@ -141,7 +150,9 @@ export interface Filters {
   status: string;
   city: string;
   gender: string;
-  ageRange: string;
+  employmentStatus: string;
+  ageRange?: string;
   exp: string;
   sort: SortKey;
 }
+

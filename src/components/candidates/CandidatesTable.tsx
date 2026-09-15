@@ -1,7 +1,8 @@
 "use client";
 import { useState, useCallback, useMemo, memo } from "react";
 import { useStore, useFilteredCandidates } from "@/lib/store";
-import { Btn, ScoreBadge, StatusBadge, EmptyState } from "@/components/ui";
+import { Btn, ScoreBadge, StatusBadge, EmptyState, dialog } from "@/components/ui";
+import { getEmploymentStatusMeta } from "@/lib/data";
 import CandidateDetail from "./CandidateDetail";
 import FiltersBar from "./FiltersBar";
 import BulkDeleteModal from "./BulkDeleteModal";
@@ -9,9 +10,9 @@ import SmartMatchModal from "./SmartMatchModal";
 import type { Candidate } from "@/types";
 import { clsx } from "clsx";
 
-const thCls = "font-mono text-[9px] uppercase tracking-widest text-[var(--text-3)] px-3 py-2.5 text-left font-normal border-b border-[var(--border)]";
-const tdCls = "px-3 py-2.5 border-b border-white/[0.04] align-middle";
-const tdMono = clsx(tdCls, "font-mono text-[10px] text-[var(--text-3)]");
+const thCls = "font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[#737983] px-3 py-3 text-left border-b border-[#1D2126] select-none";
+const tdCls = "px-3 py-3 border-b border-[#1D2126] align-middle";
+const tdText = clsx(tdCls, "text-[11.5px] text-[#8E949E]");
 
 // ─── Memoized Row: only re-renders when its own candidate or selection changes ─
 interface RowProps {
@@ -22,28 +23,57 @@ interface RowProps {
 }
 
 const CandidateRow = memo(function CandidateRow({ candidate: c, isSelected, onSelect, onView }: RowProps) {
+  const statusMeta = getEmploymentStatusMeta(c.employmentStatus);
+
   return (
-    <tr className="hover:bg-white/[0.02] transition-colors">
-      <td className={tdCls}>
-        <input type="checkbox" checked={isSelected} onChange={() => onSelect(c.id)} />
+    <tr
+      className="h-[54px] hover:bg-[#121519] transition-colors duration-150 cursor-pointer group"
+      onClick={() => onView(c)}
+    >
+      <td className={clsx(tdCls, "w-[44px] text-center")} onClick={e => e.stopPropagation()}>
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onSelect(c.id)}
+          className="w-[16px] h-[16px] rounded border-[#2B2F35] bg-[#151719] accent-[#00D9FF] cursor-pointer"
+        />
       </td>
+      <td className={tdCls}>
+        <div className="flex flex-col justify-center min-w-0">
+          <div className="font-semibold text-[14px] text-[#E8EAED] group-hover:text-white transition-colors truncate">
+            {c.name}
+          </div>
+          <div className="text-[11px] text-[#666C76] mt-0.5 truncate">
+            {c.email}
+          </div>
+        </div>
+      </td>
+      <td className={tdCls}>
+        <div className="text-[11.5px] text-[#9AA0AA] truncate">{c.roleName}</div>
+      </td>
+      <td className={clsx(tdCls, "text-center")}>
+        <ScoreBadge score={c.score.total} />
+      </td>
+      <td className={tdCls}>
+        <StatusBadge status={c.status} />
+      </td>
+      <td className={tdText}>{c.city || "—"}</td>
+      <td className={tdText}>{c.gender || "—"}</td>
       <td className={tdCls}>
         <div
-          className="font-semibold text-[13px] cursor-pointer hover:text-white transition-colors"
-          onClick={() => onView(c)}
-        >{c.name}</div>
-        <div className="font-mono text-[9px] text-[var(--text-3)]">{c.email}</div>
+          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] text-[11px] font-semibold tracking-wide whitespace-nowrap"
+          style={{
+            color: statusMeta.color,
+            backgroundColor: statusMeta.bg,
+            border: `1px solid ${statusMeta.border}`,
+          }}
+        >
+          <span className="text-[10px] leading-none">{statusMeta.icon}</span>
+          <span>{statusMeta.badgeLabel}</span>
+        </div>
       </td>
-      <td className={tdCls}>
-        <div className="font-mono text-[10px] text-[var(--text-2)]">{c.roleName}</div>
-      </td>
-      <td className={tdCls}><ScoreBadge score={c.score.total} /></td>
-      <td className={tdCls}><StatusBadge status={c.status} /></td>
-      <td className={tdMono}>{c.city}</td>
-      <td className={tdMono}>{c.gender}</td>
-      <td className={tdMono}>{c.age}</td>
-      <td className={tdMono}>{c.exp}</td>
-      <td className={tdMono}>{c.appliedAt}</td>
+      <td className={tdText}>{c.exp || "—"}</td>
+      <td className={clsx(tdText, "whitespace-nowrap")}>{c.appliedAt || "—"}</td>
     </tr>
   );
 });
@@ -68,12 +98,38 @@ export default function CandidatesTable() {
   }, [filtered, selectedIds]);
 
   const filteredIds = useMemo(() => filtered.map(c => c.id), [filtered]);
+  const [isDeletingSelected, setIsDeletingSelected] = useState(false);
 
   // ─── Stable row action handlers ─────────────────────────────────────────────
-  const handleDeleteSelected = useCallback(() => {
-    if (!confirm(`Delete ${selCount} selected candidates?`)) return;
-    deleteCandidates(Array.from(selectedIds));
-  }, [selCount, selectedIds, deleteCandidates]);
+  const handleDeleteSelected = useCallback(async () => {
+    if (isDeletingSelected || selCount === 0) return;
+    const ids = Array.from(selectedIds);
+    const confirmed = await dialog.confirm({
+      title: "Delete Candidates",
+      message: `Are you sure you want to delete ${selCount} selected candidate${selCount !== 1 ? "s" : ""}? This action cannot be undone.`,
+      confirmText: `DELETE ${selCount} CANDIDATE${selCount !== 1 ? "S" : ""}`,
+      cancelText: "CANCEL",
+      isDestructive: true,
+    });
+    if (!confirmed) return;
+
+    setIsDeletingSelected(true);
+    try {
+      const deletedCount = await deleteCandidates(ids);
+      dialog.success({
+        title: "Candidates Deleted",
+        message: `Successfully deleted ${deletedCount} candidate${deletedCount !== 1 ? "s" : ""} from the database.`,
+      });
+    } catch (err: any) {
+      console.error("[CandidatesTable] Bulk delete error:", err);
+      dialog.error({
+        title: "Deletion Failed",
+        message: `Unable to delete candidates: ${err?.message || "Database error"}. The records remain in the database.`,
+      });
+    } finally {
+      setIsDeletingSelected(false);
+    }
+  }, [isDeletingSelected, selCount, selectedIds, deleteCandidates]);
 
   const handleApproveSelected = useCallback(() => {
     Array.from(selectedIds).forEach(id => updateCandidate(id, { status: "approved" }));
@@ -82,8 +138,15 @@ export default function CandidatesTable() {
 
   const handleView = useCallback((c: Candidate) => setActiveCandidate(c), []);
 
-  const handleReject = useCallback((id: string, name: string) => {
-    if (confirm(`Delete ${name}?`)) updateCandidate(id, { status: "rejected" });
+  const handleReject = useCallback(async (id: string, name: string) => {
+    const confirmed = await dialog.confirm({
+      title: "Delete Candidate",
+      message: `Are you sure you want to delete ${name}?`,
+      confirmText: "DELETE",
+      cancelText: "CANCEL",
+      isDestructive: true,
+    });
+    if (confirmed) updateCandidate(id, { status: "rejected" });
   }, [updateCandidate]);
 
   return (
@@ -92,24 +155,69 @@ export default function CandidatesTable() {
 
       {/* Bulk action bar */}
       {selCount > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-2.5 rounded-lg mb-3 bg-[var(--glass-2)] border border-[var(--border-2)]">
-          <span className="font-mono text-[11px] text-[var(--text-2)]">{selCount} selected</span>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-2.5 rounded-[10px] mb-3.5 bg-[#151719] border border-[#2B2F35]">
+          <span className="text-[12px] font-medium text-[#E1E4E8]">{selCount} selected</span>
           <div className="flex flex-wrap gap-2">
-            <Btn variant="ghost" size="sm" onClick={handleApproveSelected}>✓ Approve All</Btn>
-            <Btn variant="danger" size="sm" onClick={handleDeleteSelected}>✕ Delete Selected</Btn>
-            <Btn variant="outline" size="sm" onClick={clearSelection}>Clear</Btn>
+            <Btn variant="ghost" size="sm" onClick={handleApproveSelected} disabled={isDeletingSelected}>✓ Approve All</Btn>
+            <Btn variant="danger" size="sm" onClick={handleDeleteSelected} disabled={isDeletingSelected}>
+              {isDeletingSelected ? "Deleting..." : "✕ Delete Selected"}
+            </Btn>
+            <Btn variant="outline" size="sm" onClick={clearSelection} disabled={isDeletingSelected}>Clear</Btn>
           </div>
         </div>
       )}
 
-      {/* Results count */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-3">
-        <div className="font-mono text-[10px] text-[var(--text-3)]">
+      {/* Results count & Actions */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-3.5">
+        <div className="text-[12px] text-[#858B95] font-medium">
           {filtered.length} result{filtered.length !== 1 ? "s" : ""}
         </div>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <Btn variant="ghost" size="sm" className="flex-1 sm:flex-none justify-center" onClick={() => setShowSmartMatch(true)}>✨ Smart Match</Btn>
-          <Btn variant="ghost" size="sm" className="flex-1 sm:flex-none justify-center" onClick={() => setShowBulkDelete(true)}>⌀ Bulk Delete</Btn>
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={() => setShowSmartMatch(true)}
+            className="h-[35px] px-3.5 rounded-[8px] text-[11.5px] font-semibold tracking-wide transition-all duration-150 inline-flex items-center justify-center gap-1.5 cursor-pointer select-none active:scale-[0.98]"
+            style={{
+              background: "rgba(0, 217, 255, 0.08)",
+              border: "1px solid rgba(0, 217, 255, 0.25)",
+              color: "#00D9FF",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = "rgba(0, 217, 255, 0.15)";
+              e.currentTarget.style.borderColor = "rgba(0, 217, 255, 0.45)";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = "rgba(0, 217, 255, 0.08)";
+              e.currentTarget.style.borderColor = "rgba(0, 217, 255, 0.25)";
+            }}
+          >
+            <span>✨</span>
+            <span>SMART MATCH</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowBulkDelete(true)}
+            className="h-[35px] px-3.5 rounded-[8px] text-[11.5px] font-semibold tracking-wide transition-all duration-150 inline-flex items-center justify-center gap-1.5 cursor-pointer select-none active:scale-[0.98]"
+            style={{
+              background: "#151719",
+              border: "1px solid #2B2F35",
+              color: "#9A9FA8",
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = "rgba(239, 68, 68, 0.10)";
+              e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.35)";
+              e.currentTarget.style.color = "#EF4444";
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = "#151719";
+              e.currentTarget.style.borderColor = "#2B2F35";
+              e.currentTarget.style.color = "#9A9FA8";
+            }}
+          >
+            <span>⌀</span>
+            <span>BULK DELETE</span>
+          </button>
         </div>
       </div>
 
@@ -122,43 +230,53 @@ export default function CandidatesTable() {
               {filtered.map(c => {
                 const isSel = selectedIds.has(c.id);
                 return (
-                  <div key={c.id} 
-                    className={clsx(
-                      "glass p-4 rounded-xl flex flex-col gap-3 transition-all duration-150",
-                      isSel ? "bg-[var(--glass-2)] border-[var(--border-3)]" : ""
-                    )}>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-2.5 min-w-0">
-                        <input 
-                          type="checkbox" 
-                          checked={isSel} 
-                          onChange={() => toggleSelect(c.id)} 
-                          className="mt-1"
+                  <div
+                    key={c.id}
+                    className="p-4 rounded-[11px] border border-[#24282E] flex flex-col gap-3"
+                    style={{ background: "rgba(10, 11, 13, 0.55)" }}
+                  >
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <input
+                          type="checkbox"
+                          checked={isSel}
+                          onChange={() => toggleSelect(c.id)}
+                          className="w-[16px] h-[16px] rounded border-[#2B2F35] bg-[#151719] accent-[#00D9FF] cursor-pointer shrink-0"
                         />
                         <div className="min-w-0">
                           <div 
-                            className="font-bold text-[14px] cursor-pointer hover:text-white truncate"
+                            className="font-semibold text-[14px] text-[#E8EAED] cursor-pointer hover:text-white truncate"
                             onClick={() => handleView(c)}
                           >
                             {c.name}
                           </div>
-                          <div className="font-mono text-[10px] text-[var(--text-3)] truncate">{c.email}</div>
+                          <div className="text-[11px] text-[#70757F] mt-0.5 truncate">{c.email}</div>
                         </div>
                       </div>
                       <StatusBadge status={c.status} />
                     </div>
 
-                    <div className="flex justify-between items-center gap-3 border-t border-white/[0.03] pt-3">
+                    <div className="flex justify-between items-center gap-3 border-t border-[#1D2126] pt-3">
                       <div className="min-w-0">
-                        <div className="font-mono text-[11px] text-[var(--text-2)] truncate">{c.roleName}</div>
-                        <div className="font-mono text-[9px] text-[var(--text-3)] mt-0.5">
-                          {c.city} · {c.exp} · {c.age} yrs
+                        <div className="text-[11.5px] text-[#9AA0AA] truncate">{c.roleName}</div>
+                        <div className="text-[11px] text-[#8E949E] mt-0.5">
+                          {c.city} · {c.exp} · {
+                            (() => {
+                              const statusMeta = getEmploymentStatusMeta(c.employmentStatus);
+                              return (
+                                <span className="inline-flex items-center gap-1" style={{ color: statusMeta.color }}>
+                                  <span>{statusMeta.icon}</span>
+                                  <span>{statusMeta.badgeLabel}</span>
+                                </span>
+                              );
+                            })()
+                          }
                         </div>
                       </div>
                       <ScoreBadge score={c.score.total} />
                     </div>
 
-                    <div className="flex justify-end gap-2 border-t border-white/[0.03] pt-3">
+                    <div className="flex justify-end gap-2 border-t border-[#1D2126] pt-3">
                       <Btn variant="ghost" size="sm" onClick={() => handleView(c)}>View Profile</Btn>
                       <Btn variant="danger" size="sm" onClick={() => handleReject(c.id, c.name)}>✕</Btn>
                     </div>
@@ -168,36 +286,46 @@ export default function CandidatesTable() {
             </div>
 
             {/* Desktop Candidate Table */}
-            <div className="hidden md:block rounded-xl overflow-hidden border border-[var(--border)]">
-              <table className="w-full border-collapse">
-                <thead style={{ background: "rgba(255,255,255,0.025)" }}>
-                  <tr>
-                    <th className={thCls}>
-                      <input type="checkbox" checked={allSelected} onChange={() => toggleSelectAll(filteredIds)} />
-                    </th>
-                    <th className={thCls}>Candidate</th>
-                    <th className={thCls}>Role</th>
-                    <th className={thCls}>Score</th>
-                    <th className={thCls}>Status</th>
-                    <th className={thCls}>City</th>
-                    <th className={thCls}>Gender</th>
-                    <th className={thCls}>Age</th>
-                    <th className={thCls}>Exp</th>
-                    <th className={thCls}>Applied</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(c => (
-                    <CandidateRow
-                      key={c.id}
-                      candidate={c}
-                      isSelected={selectedIds.has(c.id)}
-                      onSelect={toggleSelect}
-                      onView={handleView}
-                    />
-                  ))}
-                </tbody>
-              </table>
+            <div
+              className="hidden md:block rounded-[11px] overflow-hidden border border-[#24282E]"
+              style={{ background: "rgba(10, 11, 13, 0.55)" }}
+            >
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead style={{ background: "#0D0E11" }}>
+                    <tr>
+                      <th className={clsx(thCls, "w-[44px] text-center")}>
+                        <input
+                          type="checkbox"
+                          checked={allSelected}
+                          onChange={() => toggleSelectAll(filteredIds)}
+                          className="w-[16px] h-[16px] rounded border-[#2B2F35] bg-[#151719] accent-[#00D9FF] cursor-pointer"
+                        />
+                      </th>
+                      <th className={clsx(thCls, "w-[23%]")}>Candidate</th>
+                      <th className={clsx(thCls, "w-[14%]")}>Role</th>
+                      <th className={clsx(thCls, "w-[7%] text-center")}>Score</th>
+                      <th className={clsx(thCls, "w-[11%]")}>Status</th>
+                      <th className={clsx(thCls, "w-[8%]")}>City</th>
+                      <th className={clsx(thCls, "w-[8%]")}>Gender</th>
+                      <th className={clsx(thCls, "w-[11%]")}>Employment</th>
+                      <th className={clsx(thCls, "w-[8%]")}>Exp</th>
+                      <th className={clsx(thCls, "w-[10%]")}>Applied</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map(c => (
+                      <CandidateRow
+                        key={c.id}
+                        candidate={c}
+                        isSelected={selectedIds.has(c.id)}
+                        onSelect={toggleSelect}
+                        onView={handleView}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </>
         )}

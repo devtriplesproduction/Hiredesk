@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Btn } from "@/components/ui";
+import { Btn, dialog } from "@/components/ui";
 
 export default function CandidateOfferPage() {
   const params = useParams();
@@ -25,23 +25,21 @@ export default function CandidateOfferPage() {
         if (data.candidate) setCandidate(data.candidate);
         if (data.offer) setOffer(data.offer);
       } catch (err) {
-        console.error("Failed to load offer data:", err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
     }
-    loadData();
+    if (candidateId) loadData();
   }, [candidateId]);
 
   const handleRespond = async (decision: "accepted" | "rejected") => {
-    if (!offer) return;
-    
     let reason = "";
     if (decision === "rejected") {
       const input = prompt("Please provide a reason for rejecting the offer:");
       if (input === null) return; // User cancelled
       if (!input.trim()) {
-        alert("A reason is required to reject the offer.");
+        dialog.warning("A reason is required to reject the offer.");
         return;
       }
       reason = input.trim();
@@ -67,7 +65,7 @@ export default function CandidateOfferPage() {
 
       const { status } = await res.json();
       
-      alert(`Offer ${decision} successfully!`);
+      await dialog.success(`Offer ${decision} successfully!`);
       
       // Update local state to reflect UI change
       setOffer({ ...offer, status: decision });
@@ -79,7 +77,7 @@ export default function CandidateOfferPage() {
       }
     } catch (err: any) {
       console.error(err);
-      alert(err.message);
+      dialog.error(err.message);
     } finally {
       setSubmitting(false);
     }
