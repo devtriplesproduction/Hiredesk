@@ -6,7 +6,9 @@ import { DocumentData, DOC_GROUPS } from "./documentGenerator";
 import { Candidate, Employee, EmployeeBond, EmployeeResignation, Offer } from "@/types";
 import { useStore } from "@/lib/store";
 import { format } from "date-fns";
-import { dialog } from "@/components/ui";
+import { dialog, Select, Input } from "@/components/ui";
+import { FilterSelect } from "@/components/candidates/FilterSelect";
+import DateTimePicker from "@/components/ui/DateTimePicker";
 
 interface DocumentStudioModalProps {
   candidate: Candidate;
@@ -172,59 +174,75 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
   const activeGroups = DOC_GROUPS[docType as keyof typeof DOC_GROUPS] || ["candidate"];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6 overflow-hidden">
-      <div className="bg-white rounded-2xl w-full max-w-[1400px] h-full max-h-[90vh] flex flex-col shadow-2xl border border-gray-100/50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 sm:p-6 overflow-hidden animate-in fade-in duration-300">
+      <div className="bg-zinc-950 rounded-2xl w-full max-w-[1400px] h-full max-h-[90vh] flex flex-col shadow-[0_0_50px_rgba(0,0,0,0.9)] border border-white/10 relative overflow-hidden">
         
-        <div className="flex items-center justify-between p-4 px-6 border-b border-gray-100 bg-white/50 backdrop-blur-sm">
-          <div className="flex flex-col">
-            <h2 className="text-xl font-semibold tracking-tight text-gray-900">Document Studio</h2>
-            <p className="text-sm text-gray-500">Generating for <span className="font-medium text-gray-700">{candidate.name}</span></p>
+        {/* Glow effect */}
+        <div className="absolute top-0 left-1/4 right-1/4 h-[2px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-[100px] bg-indigo-500/10 blur-[80px] pointer-events-none"></div>
+
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 px-7 border-b border-white/10 bg-gradient-to-b from-white/[0.05] to-transparent relative z-10">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-400 tracking-tight">Document Studio</h2>
+            <p className="text-xs text-zinc-400 font-medium">Generating for <span className="font-bold text-white">{candidate.name}</span></p>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
+          <button onClick={onClose} className="w-9 h-9 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-all hover:rotate-90">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
 
-        <div className="flex flex-1 overflow-hidden">
-          <div className="w-[380px] bg-gray-50 border-r border-gray-200 flex flex-col z-10 overflow-y-auto">
-            <div className="p-5 space-y-6">
+        {/* Body */}
+        <div className="flex flex-1 overflow-hidden relative z-10">
+          {/* Settings Sidebar */}
+          <div className="w-[400px] bg-zinc-900/30 border-r border-white/5 flex flex-col overflow-y-auto custom-scrollbar">
+            <div className="p-6 space-y-8">
               
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Document Type</label>
-                <select 
-                  className="w-full bg-white border border-gray-200 text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+              <div className="space-y-2.5">
+                <label className="text-[10px] font-black uppercase tracking-[0.15em] text-zinc-400">Document Type</label>
+                <FilterSelect
+                  options={DOC_OPTIONS}
                   value={docType}
-                  onChange={(e) => setDocType(e.target.value)}
-                >
-                  <optgroup label="Offer Stage">
-                    {DOC_OPTIONS.filter(o => o.stage === "offer").map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </optgroup>
-                  <optgroup label="Onboarding">
-                    {DOC_OPTIONS.filter(o => o.stage === "onboarding").map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </optgroup>
-                  <optgroup label="Exit">
-                    {DOC_OPTIONS.filter(o => o.stage === "exit").map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </optgroup>
-                </select>
+                  onChange={setDocType}
+                  className="bg-black/40 border-white/10"
+                />
               </div>
 
-              <div className="space-y-6 pt-4 border-t border-gray-200">
+              <div className="space-y-8 pt-6 border-t border-white/5">
                 {activeGroups.map((group: string) => (
-                  <div key={group} className="space-y-3">
-                    <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">{group}</h3>
-                    <div className="space-y-3">
-                      {FIELD_GROUPS[group]?.map(field => (
-                        <div key={field.key} className="space-y-1">
-                          <label className="text-xs font-medium text-gray-600">{field.label}</label>
-                          <input 
-                            type="text" 
-                            name={field.key} 
-                            value={(data as any)[field.key] || ""} 
+                  <div key={group} className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)]"></span>
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400/90">{group} Configuration</h3>
+                    </div>
+                    <div className="space-y-4">
+                      {FIELD_GROUPS[group]?.map(field => {
+                        const isDateField = field.key.toLowerCase().includes("date") || field.key === "lastWorkingDay";
+                        
+                        if (isDateField) {
+                          return (
+                            <div key={field.key} className="flex flex-col gap-1.5">
+                              <label className="text-xs font-semibold text-[#A8A8A8] uppercase tracking-wider">{field.label}</label>
+                              <DateTimePicker
+                                value={(data as any)[field.key] || ""}
+                                onChange={(val) => setData({ ...data, [field.key]: val })}
+                                placeholder={`Select ${field.label.toLowerCase()}`}
+                              />
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <Input
+                            key={field.key}
+                            label={field.label}
+                            name={field.key}
+                            value={(data as any)[field.key] || ""}
                             onChange={handleInputChange}
-                            className="w-full bg-white border border-gray-200 text-sm rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500 outline-none"
+                            placeholder={`Enter ${field.label.toLowerCase()}`}
                           />
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -233,25 +251,52 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
             </div>
           </div>
 
-          <div className="flex-1 bg-gray-200 overflow-y-auto p-8 relative flex flex-col items-center gap-4">
+          {/* Preview Canvas */}
+          <div className="flex-1 bg-black/80 overflow-y-auto p-8 relative flex flex-col items-center gap-6 shadow-[inset_0_0_40px_rgba(0,0,0,0.5)] custom-scrollbar">
+             <div className="absolute top-4 left-6 flex items-center gap-2 text-xs font-medium text-zinc-500 bg-zinc-900/50 px-3 py-1.5 rounded-lg border border-white/5 backdrop-blur-md">
+               <span className="relative flex h-2 w-2">
+                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                 <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+               </span>
+               Live Preview
+             </div>
              <DocumentPreview documentType={docType} data={data} />
           </div>
         </div>
 
-        <div className="p-4 px-6 border-t border-gray-100 bg-white flex justify-between items-center shrink-0">
-          <div className="text-xs text-gray-500">
-            Previewing: {DOC_OPTIONS.find(o => o.value === docType)?.label}
+        {/* Footer */}
+        <div className="p-5 px-7 border-t border-white/10 bg-gradient-to-t from-black to-zinc-900/50 flex justify-between items-center shrink-0 relative z-10 backdrop-blur-md">
+          <div className="text-[11px] font-medium text-zinc-500 flex items-center gap-2">
+            <svg className="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            {DOC_OPTIONS.find(o => o.value === docType)?.label}
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-              Close
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={onClose} 
+              className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-zinc-300 hover:text-white bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all"
+            >
+              Cancel
             </button>
             <button
               onClick={handleDownload}
               disabled={isGenerating}
-              className="px-5 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 disabled:opacity-70 flex items-center gap-2"
+              className={`px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white rounded-xl transition-all duration-300 flex items-center gap-2 shadow-[0_0_20px_rgba(99,102,241,0.2)] ${
+                isGenerating 
+                  ? "bg-indigo-600/50 cursor-wait" 
+                  : "bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] hover:-translate-y-0.5"
+              }`}
             >
-              {isGenerating ? "Generating PDF..." : "Download PDF"}
+              {isGenerating ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  Download PDF
+                </>
+              )}
             </button>
           </div>
         </div>
