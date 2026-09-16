@@ -251,12 +251,19 @@ input[type="range"]::-webkit-slider-thumb {
       align-items: center;
       gap: 20px;
     }
+.document-studio-wrapper .preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
 .document-studio-wrapper .page {
       width: 210mm;
       height: 297mm;
       position: relative;
       background: #fff;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
       overflow: hidden;
       flex-shrink: 0;
     }

@@ -171,18 +171,36 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
         </div>
 
         {/* Mobile Navigation Links */}
-        <div className="flex flex-col gap-0.5 lg:hidden mb-2 pb-2 border-b border-[var(--border)]">
-          {NAV.map(n => (
-            <Btn key={n.href} onClick={() => { router.push(n.href); onClose?.(); }}
-              className={clsx(
-                "flex items-center gap-2.5 px-2.5 py-2 rounded-xl w-full text-left transition-all duration-150 border",
-                pathname === n.href
-                  ? "text-white bg-[var(--glass-3)] border-[var(--border-2)]"
-                  : "text-[var(--text-2)] bg-transparent border-transparent hover:text-white hover:bg-[var(--glass-2)]"
-              )}>
-              <span className="text-xs font-semibold">{n.label}</span>
-            </Btn>
-          ))}
+        <div className="flex flex-col gap-1 lg:hidden mb-2 pb-2 border-b border-[var(--border)]">
+          {NAV.map(n => {
+            const isActive = n.href === "/" ? pathname === "/" : (pathname === n.href || pathname?.startsWith(n.href + "/"));
+            return (
+              <Btn
+                key={n.href}
+                onClick={() => { router.push(n.href); onClose?.(); }}
+                className={clsx(
+                  "flex items-center justify-between px-3 py-2.5 rounded-xl w-full text-left transition-all duration-150 border",
+                  isActive
+                    ? "text-white font-semibold bg-[#1F2228] border-[#383D48] shadow-sm"
+                    : "text-[var(--text-2)] bg-transparent border-transparent hover:text-white hover:bg-[var(--glass-2)]"
+                )}
+              >
+                <div className="flex items-center gap-2.5">
+                  {isActive ? (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#00D9FF] shadow-[0_0_8px_rgba(0,217,255,0.8)] flex-shrink-0" />
+                  ) : (
+                    <span className="w-1.5 h-1.5 rounded-full bg-transparent flex-shrink-0" />
+                  )}
+                  <span className="text-xs font-semibold">{n.label}</span>
+                </div>
+                {isActive && (
+                  <span className="text-[10px] font-mono font-bold tracking-wider text-[#00D9FF] bg-[#00D9FF]/10 px-1.5 py-0.5 rounded border border-[#00D9FF]/20">
+                    Active
+                  </span>
+                )}
+              </Btn>
+            );
+          })}
           <Btn onClick={handleLogout}
             className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl w-full text-left transition-all duration-150 border border-transparent text-[var(--red)] hover:bg-red-500/10 hover:border-red-500/20 mt-1">
             <span className="text-xs font-bold uppercase tracking-wider">Sign Out</span>

@@ -45,18 +45,30 @@ export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
         </div>
       </div>
 
-      <nav className="hidden lg:flex gap-0.5">
-        {NAV.map(n => (
-          <Btn key={n.href} onClick={() => router.push(n.href)}
-            className={clsx(
-              "text-sm font-medium px-4 py-2 rounded-lg transition-all duration-150 border",
-              pathname === n.href
-                ? "text-white bg-[var(--glass-3)] border-[var(--border-2)]"
-                : "text-[var(--text-2)] bg-transparent border-transparent hover:text-white hover:bg-[var(--glass-2)]"
-            )}>
-            {n.label}
-          </Btn>
-        ))}
+      <nav className="hidden lg:flex items-center gap-1.5">
+        {NAV.map(n => {
+          const isActive = n.href === "/" ? pathname === "/" : (pathname === n.href || pathname?.startsWith(n.href + "/"));
+          return (
+            <Btn
+              key={n.href}
+              onClick={() => router.push(n.href)}
+              className={clsx(
+                "relative text-sm font-medium px-4 py-2 rounded-xl transition-all duration-150 border inline-flex items-center gap-2",
+                isActive
+                  ? "text-white font-semibold bg-[#1F2228] border-[#383D48] shadow-sm shadow-black/40"
+                  : "text-[#8B919C] bg-transparent border-transparent hover:text-white hover:bg-white/[0.05]"
+              )}
+            >
+              {isActive && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#00D9FF] shadow-[0_0_8px_rgba(0,217,255,0.8)] flex-shrink-0" />
+              )}
+              <span>{n.label}</span>
+              {isActive && (
+                <span className="absolute -bottom-[1px] inset-x-3 h-[2px] bg-[#00D9FF] rounded-full shadow-[0_0_8px_rgba(0,217,255,0.7)]" />
+              )}
+            </Btn>
+          );
+        })}
       </nav>
 
       <div className="flex items-center gap-2 sm:gap-3">

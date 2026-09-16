@@ -13,7 +13,7 @@ import WhatsAppModal from "@/components/candidates/WhatsAppModal";
 import EmailModal from "@/components/candidates/EmailModal";
 import { DocumentStudioModal } from "@/components/documents/DocumentStudioModal";
 import DateTimePicker from "@/components/ui/DateTimePicker";
-import { Check, X, User, BarChart2, FileText, CheckCircle2, Clock, Calendar, Briefcase, GitBranch } from "lucide-react";
+import { Check, X, User, BarChart2, FileText, CheckCircle2, Clock, Calendar, Briefcase, GitBranch, ExternalLink, Copy, AlertCircle, Lock, ArrowRight } from "lucide-react";
 
 interface Props { candidate: Candidate; onClose: () => void; }
 
@@ -46,6 +46,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
   const [isEmailOpen, setIsEmailOpen] = useState(false);
   const [isDocStudioOpen, setIsDocStudioOpen] = useState(false);
   const [docStudioType, setDocStudioType] = useState<string | undefined>();
+  const [copiedUploadLink, setCopiedUploadLink] = useState(false);
 
   const candidateOffer = offers.find(o => o.candidateId === c.id);
   const candidateDocs = documents.filter(d => d.candidateId === c.id);
@@ -64,6 +65,30 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
   const [scheduleR2Error, setScheduleR2Error] = useState("");
   const [r1Notes, setR1Notes] = useState("");
   const [r2Notes, setR2Notes] = useState("");
+
+  useEffect(() => {
+    setR1Notes(r1?.notes || "");
+  }, [c.id, r1?.id, r1?.notes]);
+
+  useEffect(() => {
+    setR2Notes(r2?.notes || "");
+  }, [c.id, r2?.id, r2?.notes]);
+
+  // Derived Sequential Workflow Statuses
+  const isR1Rejected = r1?.status === "completed" && r1?.decision === "reject";
+  const isR1Completed = r1?.status === "completed" && r1?.decision === "select";
+  const isR1Scheduled = r1?.status === "scheduled";
+  const isR1Passed = !isR1Rejected && (
+    isR1Completed ||
+    Boolean(r2) ||
+    ["interview_2", "approved", "offer", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected", "hired"].includes(c.status)
+  );
+
+  const isR2Rejected = r2?.status === "completed" && r2?.decision === "reject";
+  const isR2Completed = r2?.status === "completed" && r2?.decision !== "reject";
+  const isR2Scheduled = r2?.status === "scheduled";
+  const isR2Available = isR1Passed && !r2 && c.status !== "rejected";
+  const isR2Locked = !isR1Passed;
 
   // Inline Editing States
   const [isEditing, setIsEditing] = useState(false);
@@ -883,26 +908,31 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
               }}
             >
               {/* Section Header */}
-              <div className="flex items-center gap-2">
-                <GitBranch className="w-3.5 h-3.5 text-[#A78BFA]" />
-                <span
-                  className="text-[12px] font-semibold uppercase tracking-[0.08em]"
-                  style={{ color: "#A78BFA" }}
-                >
-                  Workflow Actions
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <GitBranch className="w-3.5 h-3.5 text-[#A78BFA]" />
+                  <span
+                    className="text-[12px] font-semibold uppercase tracking-[0.08em]"
+                    style={{ color: "#A78BFA" }}
+                  >
+                    Workflow Actions
+                  </span>
+                </div>
+                <span className="text-[11px] font-mono font-medium text-[#70747D] uppercase tracking-wider">
+                  Interview Progression
                 </span>
               </div>
               
-              <div className="flex flex-col gap-2.5">
-                {/* Shortlist Action */}
+              <div className="flex flex-col gap-3">
+                {/* Shortlist Action Banner */}
                 {(c.status === "new" || c.status === "review") && (
                   <div
-                    className="p-4 rounded-[10px] flex items-center justify-between"
+                    className="p-4 rounded-[10px] flex items-center justify-between flex-wrap gap-3"
                     style={{ background: "#16171B", border: "1px solid #24272D" }}
                   >
                     <div>
                       <div className="font-semibold text-sm text-[#E7E9ED]">Shortlist Candidate</div>
-                      <div className="text-xs text-[#9A9DA6] mt-0.5">Move candidate to the shortlisted stage to begin interviews.</div>
+                      <div className="text-xs text-[#9A9DA6] mt-0.5">Move candidate to the shortlisted stage to begin interview scheduling.</div>
                     </div>
                     <Btn
                       className="text-xs font-bold px-4 py-2 rounded-lg active:scale-95 transition-all"
@@ -923,230 +953,447 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                   </div>
                 )}
 
-                {/* Round 1 */}
-                {(c.status !== "new" && c.status !== "review") && (
-                  <div
-                    className="p-4 rounded-[10px] flex flex-col gap-2.5"
-                    style={{ background: "#16171B", border: "1px solid #24272D" }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {r1?.status === "completed" ? (
-                          <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
-                        ) : (
-                          <Calendar className="w-4 h-4 text-[#A78BFA]" />
-                        )}
-                        <span className="font-semibold text-sm text-[#E7E9ED]">Round 1</span>
-                      </div>
-                      {r1?.status === "completed" && (
-                        <span
-                          className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px]"
-                          style={{
-                            background: "rgba(34, 197, 94, 0.08)",
-                            border: "1px solid rgba(34, 197, 94, 0.30)",
-                            color: "#22C55E",
-                          }}
-                        >
-                          Completed
-                        </span>
-                      )}
-                      {r1?.status === "scheduled" && c.status === "interview_1" && (
-                        <span
-                          className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px]"
-                          style={{
-                            background: "rgba(167, 139, 250, 0.08)",
-                            border: "1px solid rgba(167, 139, 250, 0.30)",
-                            color: "#A78BFA",
-                          }}
-                        >
-                          Scheduled
-                        </span>
-                      )}
+                {/* Horizontal Interview Progression Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch relative">
+                  {/* Subtle Visual Connector Arrow */}
+                  <div className="hidden md:flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200"
+                      style={{
+                        background: "#16171B",
+                        border: isR1Passed ? "1px solid rgba(34, 197, 94, 0.40)" : "1px solid #2B2F38",
+                        boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+                      }}
+                    >
+                      <ArrowRight
+                        className="w-3.5 h-3.5 transition-colors"
+                        style={{ color: isR1Passed ? "#22C55E" : "#70747D" }}
+                      />
                     </div>
+                  </div>
 
-                    {!r1 ? (
-                      c.status === "shortlisted" ? (
-                        <div className="flex flex-col gap-1.5 mt-1">
-                          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                            <DateTimePicker
-                              value={scheduleR1}
-                              onChange={val => {
-                                setScheduleR1(val);
-                                if (scheduleR1Error) setScheduleR1Error("");
-                              }}
-                              hasError={Boolean(scheduleR1Error)}
-                              placeholder="📅 Select interview date & time..."
-                            />
-                            <Btn
-                              className={clsx(
-                                "text-xs font-bold px-4 py-2 rounded-lg transition-all flex-shrink-0 text-center",
-                                scheduleR1 ? "active:scale-95 cursor-pointer" : "cursor-not-allowed opacity-50"
-                              )}
-                              style={{
-                                background: scheduleR1 ? "rgba(167, 139, 250, 0.08)" : "rgba(167, 139, 250, 0.03)",
-                                border: scheduleR1 ? "1px solid rgba(167, 139, 250, 0.35)" : "1px solid rgba(167, 139, 250, 0.15)",
-                                color: "#A78BFA",
-                              }}
-                              onMouseEnter={e => {
-                                if (scheduleR1) e.currentTarget.style.background = "rgba(167, 139, 250, 0.15)";
-                              }}
-                              onMouseLeave={e => {
-                                if (scheduleR1) e.currentTarget.style.background = "rgba(167, 139, 250, 0.08)";
-                              }}
-                              onClick={() => {
-                                if (!scheduleR1 || isNaN(new Date(scheduleR1).getTime())) {
-                                  setScheduleR1Error("Please select a valid date and time before scheduling.");
-                                  return;
-                                }
-                                addInterview({
-                                  id: crypto.randomUUID(),
-                                  candidateId: c.id,
-                                  round: 1,
-                                  scheduledAt: new Date(scheduleR1).toISOString(),
-                                  status: "scheduled",
-                                  notes: "",
-                                  decision: null,
-                                  createdAt: new Date().toISOString()
-                                });
-                                updateCandidate(c.id, { status: "interview_1" });
-                                setScheduleR1("");
-                                setScheduleR1Error("");
-                              }}>
-                              Schedule R1
-                            </Btn>
-                          </div>
-                          {scheduleR1Error && (
-                            <div className="text-[11px] font-mono text-red-400 mt-0.5 px-0.5">
-                              ⚠ {scheduleR1Error}
-                            </div>
+                  {/* ================= ROUND 1 CARD ================= */}
+                  <div
+                    className="p-4 sm:p-5 rounded-[10px] flex flex-col justify-between gap-3 min-h-[190px] transition-all"
+                    style={{
+                      background: "#16171B",
+                      border: isR1Passed
+                        ? "1px solid rgba(34, 197, 94, 0.30)"
+                        : isR1Rejected
+                        ? "1px solid rgba(239, 68, 68, 0.30)"
+                        : "1px solid #24272D",
+                    }}
+                  >
+                    <div>
+                      {/* Header */}
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-2">
+                          {isR1Passed ? (
+                            <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
+                          ) : isR1Rejected ? (
+                            <AlertCircle className="w-4 h-4 text-[#EF4444]" />
+                          ) : isR1Scheduled ? (
+                            <Calendar className="w-4 h-4 text-[#A78BFA]" />
+                          ) : (
+                            <Calendar className="w-4 h-4 text-[#70747D]" />
                           )}
+                          <span className="font-semibold text-sm text-[#E7E9ED]">Round 1</span>
                         </div>
-                      ) : (
-                        <div className="text-xs text-[#777B84]">No interview scheduled.</div>
-                      )
-                    ) : (
-                      <div className="flex flex-col gap-1.5">
-                        <div className="text-xs text-[#9A9DA6] flex items-center gap-1.5">
-                          <span>📅 Scheduled: {new Date(r1.scheduledAt!).toLocaleString()}</span>
-                          {r1.status !== "completed" && <span className="text-[#70747D]">({r1.status})</span>}
-                        </div>
-                        {r1.status === "scheduled" && c.status === "interview_1" && (
-                          <>
-                            <textarea placeholder="Interview Notes..." value={r1Notes} onChange={e => setR1Notes(e.target.value)}
-                              className="w-full bg-[#0E0F12] text-[var(--text)] text-xs border border-[#24272D] rounded-lg p-2.5 outline-none h-16 focus:border-[#A78BFA]/50 transition-colors" />
-                            <div className="flex flex-wrap items-center gap-3 mt-1">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  updateInterview(r1.id, { status: "completed", decision: "select", notes: r1Notes });
-                                  updateCandidate(c.id, { status: "interview_2" });
+
+                        {/* Status Badges */}
+                        {isR1Passed && (
+                          <span
+                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
+                            style={{
+                              background: "rgba(34, 197, 94, 0.08)",
+                              border: "1px solid rgba(34, 197, 94, 0.30)",
+                              color: "#22C55E",
+                            }}
+                          >
+                            <Check className="w-3 h-3" />
+                            <span>Completed</span>
+                          </span>
+                        )}
+                        {isR1Rejected && (
+                          <span
+                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
+                            style={{
+                              background: "rgba(239, 68, 68, 0.08)",
+                              border: "1px solid rgba(239, 68, 68, 0.30)",
+                              color: "#EF4444",
+                            }}
+                          >
+                            <X className="w-3 h-3" />
+                            <span>Rejected</span>
+                          </span>
+                        )}
+                        {isR1Scheduled && (
+                          <span
+                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
+                            style={{
+                              background: "rgba(167, 139, 250, 0.08)",
+                              border: "1px solid rgba(167, 139, 250, 0.30)",
+                              color: "#A78BFA",
+                            }}
+                          >
+                            <Calendar className="w-3 h-3" />
+                            <span>Scheduled</span>
+                          </span>
+                        )}
+                        {!r1 && !isR1Passed && !isR1Rejected && (
+                          (c.status === "new" || c.status === "review") ? (
+                            <span
+                              className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px]"
+                              style={{
+                                background: "rgba(245, 197, 66, 0.08)",
+                                border: "1px solid rgba(245, 197, 66, 0.25)",
+                                color: "#F5C542",
+                              }}
+                            >
+                              Pending Shortlist
+                            </span>
+                          ) : (
+                            <span
+                              className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
+                              style={{
+                                background: "rgba(0, 217, 255, 0.08)",
+                                border: "1px solid rgba(0, 217, 255, 0.30)",
+                                color: "#00D9FF",
+                              }}
+                            >
+                              <Clock className="w-3 h-3" />
+                              <span>Available</span>
+                            </span>
+                          )
+                        )}
+                      </div>
+
+                      {/* Body Content */}
+                      {!r1 && !isR1Passed && !isR1Rejected && (
+                        (c.status === "new" || c.status === "review") ? (
+                          <div className="flex flex-col gap-2.5 py-2">
+                            <p className="text-xs text-[#9A9DA6]">
+                              Candidate must be shortlisted before scheduling Round 1.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => updateCandidate(c.id, { status: "shortlisted" })}
+                              className="self-start text-xs font-semibold px-3 py-1.5 rounded-lg text-[#00D9FF] bg-[rgba(0,217,255,0.08)] border border-[rgba(0,217,255,0.30)] hover:bg-[rgba(0,217,255,0.15)] transition-all active:scale-95 cursor-pointer"
+                            >
+                              Shortlist Now
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col gap-2 mt-1">
+                            <div className="text-xs text-[#9A9DA6]">Ready to schedule Round 1 interview.</div>
+                            <div className="flex flex-col sm:flex-row gap-2 sm:items-center mt-1">
+                              <DateTimePicker
+                                value={scheduleR1}
+                                onChange={val => {
+                                  setScheduleR1(val);
+                                  if (scheduleR1Error) setScheduleR1Error("");
                                 }}
-                                className="inline-flex items-center justify-center gap-2 h-[42px] px-5 rounded-[10px] text-[13px] font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] min-w-[190px]"
+                                hasError={Boolean(scheduleR1Error)}
+                                placeholder="📅 Select date & time..."
+                              />
+                              <Btn
+                                className={clsx(
+                                  "text-xs font-bold px-4 py-2 rounded-lg transition-all flex-shrink-0 text-center h-[42px]",
+                                  scheduleR1 ? "active:scale-95 cursor-pointer" : "cursor-not-allowed opacity-50"
+                                )}
                                 style={{
-                                  background: "rgba(167, 139, 250, 0.10)",
-                                  border: "1px solid rgba(167, 139, 250, 0.35)",
+                                  background: scheduleR1 ? "rgba(167, 139, 250, 0.08)" : "rgba(167, 139, 250, 0.03)",
+                                  border: scheduleR1 ? "1px solid rgba(167, 139, 250, 0.35)" : "1px solid rgba(167, 139, 250, 0.15)",
                                   color: "#A78BFA",
                                 }}
                                 onMouseEnter={e => {
-                                  e.currentTarget.style.background = "rgba(167, 139, 250, 0.18)";
-                                  e.currentTarget.style.borderColor = "rgba(167, 139, 250, 0.55)";
+                                  if (scheduleR1) e.currentTarget.style.background = "rgba(167, 139, 250, 0.15)";
                                 }}
                                 onMouseLeave={e => {
-                                  e.currentTarget.style.background = "rgba(167, 139, 250, 0.10)";
-                                  e.currentTarget.style.borderColor = "rgba(167, 139, 250, 0.35)";
+                                  if (scheduleR1) e.currentTarget.style.background = "rgba(167, 139, 250, 0.08)";
                                 }}
-                                onMouseDown={e => {
-                                  e.currentTarget.style.background = "rgba(167, 139, 250, 0.24)";
-                                }}
-                                onMouseUp={e => {
-                                  e.currentTarget.style.background = "rgba(167, 139, 250, 0.18)";
-                                }}
-                              >
-                                <Check className="w-4 h-4 text-[#A78BFA]" />
-                                <span>Select for Next Round</span>
-                              </button>
-
-                              <button
-                                type="button"
                                 onClick={() => {
-                                  const reason = prompt("Reason for rejection:");
-                                  if (reason !== null) {
-                                    const note = r1Notes + (reason ? `\nRejection Reason: ${reason}` : "");
-                                    updateInterview(r1.id, { status: "completed", decision: "reject", notes: note });
-                                    updateCandidate(c.id, { status: "rejected", note: (c.note || "") + `\nRejected in R1: ${reason}` });
+                                  if (!scheduleR1 || isNaN(new Date(scheduleR1).getTime())) {
+                                    setScheduleR1Error("Please select a valid date and time before scheduling.");
+                                    return;
                                   }
-                                }}
-                                className="inline-flex items-center justify-center gap-1.5 h-[42px] px-5 rounded-[10px] text-[13px] font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] min-w-[110px]"
-                                style={{
-                                  background: "rgba(239, 68, 68, 0.08)",
-                                  border: "1px solid rgba(239, 68, 68, 0.35)",
-                                  color: "#EF4444",
-                                }}
-                                onMouseEnter={e => {
-                                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
-                                  e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.55)";
-                                }}
-                                onMouseLeave={e => {
-                                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.08)";
-                                  e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.35)";
-                                }}
-                                onMouseDown={e => {
-                                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.22)";
-                                }}
-                                onMouseUp={e => {
-                                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
-                                }}
-                              >
-                                <X className="w-4 h-4 text-[#EF4444]" />
-                                <span>Reject</span>
-                              </button>
+                                  addInterview({
+                                    id: crypto.randomUUID(),
+                                    candidateId: c.id,
+                                    round: 1,
+                                    scheduledAt: new Date(scheduleR1).toISOString(),
+                                    status: "scheduled",
+                                    notes: "",
+                                    decision: null,
+                                    createdAt: new Date().toISOString()
+                                  });
+                                  updateCandidate(c.id, { status: "interview_1" });
+                                  setScheduleR1("");
+                                  setScheduleR1Error("");
+                                }}>
+                                Schedule R1
+                              </Btn>
                             </div>
-                          </>
-                        )}
-                        {r1.status === "completed" && (
-                          <div className="flex flex-col gap-0.5 text-xs text-[#70747D] mt-1">
-                            <div><span className="text-[#9A9DA6]">Decision:</span> {r1.decision === "select" ? "Selected" : r1.decision}</div>
-                            {r1.notes && <div><span className="text-[#9A9DA6]">Notes:</span> {r1.notes}</div>}
+                            {scheduleR1Error && (
+                              <div className="text-[11px] font-mono text-red-400 mt-0.5 px-0.5">
+                                ⚠ {scheduleR1Error}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                        )
+                      )}
 
-                {/* Round 2 */}
-                {(r1?.decision === "select" || r2) && (
-                  <div
-                    className="p-4 rounded-[10px] flex flex-col gap-2.5"
-                    style={{ background: "#16171B", border: "1px solid #24272D" }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {r2?.status === "completed" ? (
-                          <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
-                        ) : (
-                          <Clock className="w-4 h-4 text-[#A78BFA]" />
-                        )}
-                        <span className="font-semibold text-sm text-[#E7E9ED]">Round 2</span>
-                      </div>
-                      {r2?.status === "completed" && (
-                        <span
-                          className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px]"
-                          style={{
-                            background: "rgba(34, 197, 94, 0.08)",
-                            border: "1px solid rgba(34, 197, 94, 0.30)",
-                            color: "#22C55E",
-                          }}
-                        >
-                          Completed
-                        </span>
+                      {r1 && (
+                        <div className="flex flex-col gap-2.5">
+                          <div className="text-xs text-[#9A9DA6] flex items-center gap-1.5 flex-wrap">
+                            <Calendar className="w-3.5 h-3.5 text-[#70747D]" />
+                            <span>Scheduled: {r1.scheduledAt ? new Date(r1.scheduledAt).toLocaleString() : "Date not set"}</span>
+                          </div>
+
+                          {/* Scheduled State Actions */}
+                          {isR1Scheduled && (
+                            <div className="flex flex-col gap-2 mt-0.5">
+                              <textarea
+                                placeholder="Interview Notes..."
+                                value={r1Notes}
+                                onChange={e => setR1Notes(e.target.value)}
+                                className="w-full bg-[#0E0F12] text-[var(--text)] text-xs border border-[#24272D] rounded-lg p-2.5 outline-none h-16 focus:border-[#A78BFA]/50 transition-colors"
+                              />
+                              <div className="flex flex-wrap items-center gap-2 pt-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    updateInterview(r1.id, { status: "completed", decision: "select", notes: r1Notes });
+                                    updateCandidate(c.id, { status: "interview_2" });
+                                  }}
+                                  className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3.5 rounded-[8px] text-xs font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] flex-1 min-w-[140px]"
+                                  style={{
+                                    background: "rgba(167, 139, 250, 0.10)",
+                                    border: "1px solid rgba(167, 139, 250, 0.35)",
+                                    color: "#A78BFA",
+                                  }}
+                                  onMouseEnter={e => {
+                                    e.currentTarget.style.background = "rgba(167, 139, 250, 0.18)";
+                                    e.currentTarget.style.borderColor = "rgba(167, 139, 250, 0.55)";
+                                  }}
+                                  onMouseLeave={e => {
+                                    e.currentTarget.style.background = "rgba(167, 139, 250, 0.10)";
+                                    e.currentTarget.style.borderColor = "rgba(167, 139, 250, 0.35)";
+                                  }}
+                                >
+                                  <Check className="w-3.5 h-3.5 text-[#A78BFA]" />
+                                  <span>Select for Next Round</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const reason = prompt("Reason for rejection:");
+                                    if (reason !== null) {
+                                      const note = r1Notes + (reason ? `\nRejection Reason: ${reason}` : "");
+                                      updateInterview(r1.id, { status: "completed", decision: "reject", notes: note });
+                                      updateCandidate(c.id, { status: "rejected", note: (c.note || "") + `\nRejected in R1: ${reason}` });
+                                    }
+                                  }}
+                                  className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3.5 rounded-[8px] text-xs font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98]"
+                                  style={{
+                                    background: "rgba(239, 68, 68, 0.08)",
+                                    border: "1px solid rgba(239, 68, 68, 0.35)",
+                                    color: "#EF4444",
+                                  }}
+                                  onMouseEnter={e => {
+                                    e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
+                                    e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.55)";
+                                  }}
+                                  onMouseLeave={e => {
+                                    e.currentTarget.style.background = "rgba(239, 68, 68, 0.08)";
+                                    e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.35)";
+                                  }}
+                                >
+                                  <X className="w-3.5 h-3.5 text-[#EF4444]" />
+                                  <span>Reject</span>
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Completed / Selected State Details */}
+                          {isR1Passed && (
+                            <div className="flex flex-col gap-1.5 text-xs text-[#70747D]">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[#9A9DA6]">Decision:</span>
+                                <span className="font-semibold text-[#22C55E]">Selected for Next Round</span>
+                              </div>
+                              {r1.notes && (
+                                <div className="text-xs text-[#8B919C] bg-[#0E0F12] p-2 rounded-lg border border-[#24272D]">
+                                  <span className="text-[#606060] font-medium block text-[11px] mb-0.5">Interview Notes:</span>
+                                  {r1.notes}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Rejected State Details */}
+                          {isR1Rejected && (
+                            <div className="flex flex-col gap-1.5 text-xs text-[#70747D]">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[#9A9DA6]">Decision:</span>
+                                <span className="font-semibold text-[#EF4444]">Rejected</span>
+                              </div>
+                              {r1.notes && (
+                                <div className="text-xs text-[#8B919C] bg-[#0E0F12] p-2 rounded-lg border border-[#24272D]">
+                                  <span className="text-[#606060] font-medium block text-[11px] mb-0.5">Notes:</span>
+                                  {r1.notes}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Fallback when stage is past R1 without explicit r1 record */}
+                      {!r1 && isR1Passed && (
+                        <div className="flex flex-col gap-1 text-xs text-[#70747D] py-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[#9A9DA6]">Decision:</span>
+                            <span className="font-semibold text-[#22C55E]">Selected (Stage: {c.status})</span>
+                          </div>
+                        </div>
                       )}
                     </div>
+                  </div>
 
-                    {!r2 ? (
-                      c.status === "interview_2" ? (
-                        <div className="flex flex-col gap-1.5 mt-1">
-                          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                  {/* ================= ROUND 2 CARD ================= */}
+                  <div
+                    className={clsx(
+                      "p-4 sm:p-5 rounded-[10px] flex flex-col justify-between gap-3 min-h-[190px] transition-all",
+                      isR2Locked && "opacity-60 select-none"
+                    )}
+                    style={{
+                      background: isR2Locked ? "#121316" : "#16171B",
+                      border: isR2Locked
+                        ? "1px dashed #24272D"
+                        : isR2Completed
+                        ? "1px solid rgba(34, 197, 94, 0.30)"
+                        : isR2Rejected
+                        ? "1px solid rgba(239, 68, 68, 0.30)"
+                        : "1px solid #24272D",
+                    }}
+                  >
+                    <div>
+                      {/* Header */}
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-2">
+                          {isR2Locked ? (
+                            <Lock className="w-4 h-4 text-[#70747D]" />
+                          ) : isR2Completed ? (
+                            <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
+                          ) : isR2Rejected ? (
+                            <AlertCircle className="w-4 h-4 text-[#EF4444]" />
+                          ) : isR2Scheduled ? (
+                            <Calendar className="w-4 h-4 text-[#A78BFA]" />
+                          ) : (
+                            <Clock className="w-4 h-4 text-[#00D9FF]" />
+                          )}
+                          <span className={clsx("font-semibold text-sm", isR2Locked ? "text-[#70747D]" : "text-[#E7E9ED]")}>
+                            Round 2
+                          </span>
+                        </div>
+
+                        {/* Status Badges */}
+                        {isR2Locked && (
+                          <span
+                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
+                            style={{
+                              background: "rgba(255, 255, 255, 0.04)",
+                              border: "1px solid rgba(255, 255, 255, 0.10)",
+                              color: "#8B919C",
+                            }}
+                          >
+                            <Lock className="w-3 h-3" />
+                            <span>Locked</span>
+                          </span>
+                        )}
+                        {isR2Available && (
+                          <span
+                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
+                            style={{
+                              background: "rgba(0, 217, 255, 0.08)",
+                              border: "1px solid rgba(0, 217, 255, 0.30)",
+                              color: "#00D9FF",
+                            }}
+                          >
+                            <Clock className="w-3 h-3" />
+                            <span>Available</span>
+                          </span>
+                        )}
+                        {isR2Scheduled && (
+                          <span
+                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
+                            style={{
+                              background: "rgba(167, 139, 250, 0.08)",
+                              border: "1px solid rgba(167, 139, 250, 0.30)",
+                              color: "#A78BFA",
+                            }}
+                          >
+                            <Calendar className="w-3 h-3" />
+                            <span>Scheduled</span>
+                          </span>
+                        )}
+                        {isR2Completed && (
+                          <span
+                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
+                            style={{
+                              background: "rgba(34, 197, 94, 0.08)",
+                              border: "1px solid rgba(34, 197, 94, 0.30)",
+                              color: "#22C55E",
+                            }}
+                          >
+                            <Check className="w-3 h-3" />
+                            <span>Completed</span>
+                          </span>
+                        )}
+                        {isR2Rejected && (
+                          <span
+                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
+                            style={{
+                              background: "rgba(239, 68, 68, 0.08)",
+                              border: "1px solid rgba(239, 68, 68, 0.30)",
+                              color: "#EF4444",
+                            }}
+                          >
+                            <X className="w-3 h-3" />
+                            <span>Rejected</span>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Body Content */}
+                      {isR2Locked && (
+                        <div className="flex flex-col items-center justify-center text-center py-6 gap-2 my-auto">
+                          <div className={clsx(
+                            "w-8 h-8 rounded-full flex items-center justify-center",
+                            isR1Rejected ? "bg-red-500/10 border border-red-500/20 text-red-400" : "bg-white/[0.03] border border-white/[0.08] text-[#70747D]"
+                          )}>
+                            <Lock className="w-4 h-4" />
+                          </div>
+                          <div className="text-xs font-semibold text-[#8B919C]">
+                            {isR1Rejected ? "Process Stopped" : "Round 2 Locked"}
+                          </div>
+                          <div className="text-[11px] text-[#606060] max-w-[210px]">
+                            {isR1Rejected
+                              ? "Candidate was rejected in Round 1. Round 2 is not available."
+                              : "Complete and select candidate in Round 1 first."}
+                          </div>
+                        </div>
+                      )}
+
+                      {isR2Available && (
+                        <div className="flex flex-col gap-2 mt-1">
+                          <div className="text-xs text-[#9A9DA6]">
+                            Round 1 passed! Ready to schedule Round 2.
+                          </div>
+                          <div className="flex flex-col sm:flex-row gap-2 sm:items-center mt-1">
                             <DateTimePicker
                               value={scheduleR2}
                               onChange={val => {
@@ -1154,18 +1401,17 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                 if (scheduleR2Error) setScheduleR2Error("");
                               }}
                               hasError={Boolean(scheduleR2Error)}
-                              placeholder="📅 Select interview date & time..."
+                              placeholder="📅 Select date & time..."
                             />
                             <Btn
                               className={clsx(
-                                "text-xs font-bold px-4 py-2 rounded-lg transition-all flex-shrink-0 text-center",
+                                "text-xs font-bold px-4 py-2 rounded-lg transition-all flex-shrink-0 text-center h-[42px]",
                                 scheduleR2 ? "active:scale-95 cursor-pointer" : "cursor-not-allowed opacity-50"
                               )}
                               style={{
                                 background: scheduleR2 ? "rgba(167, 139, 250, 0.08)" : "rgba(167, 139, 250, 0.03)",
                                 border: scheduleR2 ? "1px solid rgba(167, 139, 250, 0.40)" : "1px solid rgba(167, 139, 250, 0.15)",
                                 color: "#A78BFA",
-                                height: "42px",
                               }}
                               onMouseEnter={e => {
                                 if (scheduleR2) e.currentTarget.style.background = "rgba(167, 139, 250, 0.16)";
@@ -1188,6 +1434,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                   decision: null,
                                   createdAt: new Date().toISOString()
                                 });
+                                updateCandidate(c.id, { status: "interview_2" });
                                 setScheduleR2("");
                                 setScheduleR2Error("");
                               }}>
@@ -1200,102 +1447,122 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                             </div>
                           )}
                         </div>
-                      ) : (
-                        <div className="text-xs text-[#777B84]">No interview scheduled.</div>
-                      )
-                    ) : (
-                      <div className="flex flex-col gap-1.5">
-                        <div className="text-xs text-[#9A9DA6] flex items-center gap-1.5">
-                          <span>📅 Scheduled: {new Date(r2.scheduledAt!).toLocaleString()}</span>
-                          {r2.status !== "completed" && <span className="text-[#70747D]">({r2.status})</span>}
-                        </div>
-                        {r2.status === "scheduled" && c.status === "interview_2" && (
-                          <>
-                            <textarea placeholder="Interview Notes..." value={r2Notes} onChange={e => setR2Notes(e.target.value)}
-                              className="w-full bg-[#0E0F12] text-[var(--text)] text-xs border border-[#24272D] rounded-lg p-2.5 outline-none h-16 focus:border-[#A78BFA]/50 transition-colors" />
-                            <div className="flex flex-wrap items-center gap-3 mt-1">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  updateInterview(r2.id, { status: "completed", decision: "select", notes: r2Notes });
-                                  updateCandidate(c.id, { status: "offer" });
-                                  addOffer({
-                                    id: crypto.randomUUID(), candidateId: c.id, contractTemplateId: null,
-                                    status: "draft", sentAt: null, respondedAt: null, createdAt: new Date().toISOString()
-                                  });
-                                }}
-                                className="inline-flex items-center justify-center gap-2 h-[42px] px-5 rounded-[10px] text-[13px] font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] min-w-[125px]"
-                                style={{
-                                  background: "rgba(34, 197, 94, 0.08)",
-                                  border: "1px solid rgba(34, 197, 94, 0.35)",
-                                  color: "#22C55E",
-                                }}
-                                onMouseEnter={e => {
-                                  e.currentTarget.style.background = "rgba(34, 197, 94, 0.15)";
-                                  e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.55)";
-                                }}
-                                onMouseLeave={e => {
-                                  e.currentTarget.style.background = "rgba(34, 197, 94, 0.08)";
-                                  e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.35)";
-                                }}
-                                onMouseDown={e => {
-                                  e.currentTarget.style.background = "rgba(34, 197, 94, 0.20)";
-                                }}
-                                onMouseUp={e => {
-                                  e.currentTarget.style.background = "rgba(34, 197, 94, 0.15)";
-                                }}
-                              >
-                                <Check className="w-4 h-4 text-[#22C55E]" />
-                                <span>Approve</span>
-                              </button>
+                      )}
 
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const reason = prompt("Reason for rejection:");
-                                  if (reason !== null) {
-                                    const note = r2Notes + (reason ? `\nRejection Reason: ${reason}` : "");
-                                    updateInterview(r2.id, { status: "completed", decision: "reject", notes: note });
-                                    updateCandidate(c.id, { status: "rejected", note: (c.note || "") + `\nRejected in R2: ${reason}` });
-                                  }
-                                }}
-                                className="inline-flex items-center justify-center gap-1.5 h-[42px] px-5 rounded-[10px] text-[13px] font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] min-w-[110px]"
-                                style={{
-                                  background: "rgba(239, 68, 68, 0.08)",
-                                  border: "1px solid rgba(239, 68, 68, 0.35)",
-                                  color: "#EF4444",
-                                }}
-                                onMouseEnter={e => {
-                                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
-                                  e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.55)";
-                                }}
-                                onMouseLeave={e => {
-                                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.08)";
-                                  e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.35)";
-                                }}
-                                onMouseDown={e => {
-                                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.20)";
-                                }}
-                                onMouseUp={e => {
-                                  e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
-                                }}
-                              >
-                                <X className="w-4 h-4 text-[#EF4444]" />
-                                <span>Reject</span>
-                              </button>
-                            </div>
-                          </>
-                        )}
-                        {r2.status === "completed" && (
-                          <div className="flex flex-col gap-0.5 text-xs text-[#70747D] mt-1">
-                            <div><span className="text-[#9A9DA6]">Decision:</span> {r2.decision === "select" ? "Selected" : r2.decision}</div>
-                            {r2.notes && <div><span className="text-[#9A9DA6]">Notes:</span> {r2.notes}</div>}
+                      {r2 && (
+                        <div className="flex flex-col gap-2.5">
+                          <div className="text-xs text-[#9A9DA6] flex items-center gap-1.5 flex-wrap">
+                            <Calendar className="w-3.5 h-3.5 text-[#70747D]" />
+                            <span>Scheduled: {r2.scheduledAt ? new Date(r2.scheduledAt).toLocaleString() : "Date not set"}</span>
                           </div>
-                        )}
-                      </div>
-                    )}
+
+                          {/* Scheduled State Actions */}
+                          {isR2Scheduled && (
+                            <div className="flex flex-col gap-2 mt-0.5">
+                              <textarea
+                                placeholder="Interview Notes..."
+                                value={r2Notes}
+                                onChange={e => setR2Notes(e.target.value)}
+                                className="w-full bg-[#0E0F12] text-[var(--text)] text-xs border border-[#24272D] rounded-lg p-2.5 outline-none h-16 focus:border-[#A78BFA]/50 transition-colors"
+                              />
+                              <div className="flex flex-wrap items-center gap-2 pt-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    updateInterview(r2.id, { status: "completed", decision: "select", notes: r2Notes });
+                                    updateCandidate(c.id, { status: "offer" });
+                                    addOffer({
+                                      id: crypto.randomUUID(), candidateId: c.id, contractTemplateId: null,
+                                      status: "draft", sentAt: null, respondedAt: null, createdAt: new Date().toISOString()
+                                    });
+                                  }}
+                                  className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3.5 rounded-[8px] text-xs font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] flex-1 min-w-[110px]"
+                                  style={{
+                                    background: "rgba(34, 197, 94, 0.08)",
+                                    border: "1px solid rgba(34, 197, 94, 0.35)",
+                                    color: "#22C55E",
+                                  }}
+                                  onMouseEnter={e => {
+                                    e.currentTarget.style.background = "rgba(34, 197, 94, 0.15)";
+                                    e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.55)";
+                                  }}
+                                  onMouseLeave={e => {
+                                    e.currentTarget.style.background = "rgba(34, 197, 94, 0.08)";
+                                    e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.35)";
+                                  }}
+                                >
+                                  <Check className="w-3.5 h-3.5 text-[#22C55E]" />
+                                  <span>Approve</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const reason = prompt("Reason for rejection:");
+                                    if (reason !== null) {
+                                      const note = r2Notes + (reason ? `\nRejection Reason: ${reason}` : "");
+                                      updateInterview(r2.id, { status: "completed", decision: "reject", notes: note });
+                                      updateCandidate(c.id, { status: "rejected", note: (c.note || "") + `\nRejected in R2: ${reason}` });
+                                    }
+                                  }}
+                                  className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3.5 rounded-[8px] text-xs font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98]"
+                                  style={{
+                                    background: "rgba(239, 68, 68, 0.08)",
+                                    border: "1px solid rgba(239, 68, 68, 0.35)",
+                                    color: "#EF4444",
+                                  }}
+                                  onMouseEnter={e => {
+                                    e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
+                                    e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.55)";
+                                  }}
+                                  onMouseLeave={e => {
+                                    e.currentTarget.style.background = "rgba(239, 68, 68, 0.08)";
+                                    e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.35)";
+                                  }}
+                                >
+                                  <X className="w-3.5 h-3.5 text-[#EF4444]" />
+                                  <span>Reject</span>
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Completed State Details */}
+                          {isR2Completed && (
+                            <div className="flex flex-col gap-1.5 text-xs text-[#70747D]">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[#9A9DA6]">Decision:</span>
+                                <span className="font-semibold text-[#22C55E]">Selected / Approved</span>
+                              </div>
+                              {r2.notes && (
+                                <div className="text-xs text-[#8B919C] bg-[#0E0F12] p-2 rounded-lg border border-[#24272D]">
+                                  <span className="text-[#606060] font-medium block text-[11px] mb-0.5">Interview Notes:</span>
+                                  {r2.notes}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Rejected State Details */}
+                          {isR2Rejected && (
+                            <div className="flex flex-col gap-1.5 text-xs text-[#70747D]">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[#9A9DA6]">Decision:</span>
+                                <span className="font-semibold text-[#EF4444]">Rejected</span>
+                              </div>
+                              {r2.notes && (
+                                <div className="text-xs text-[#8B919C] bg-[#0E0F12] p-2 rounded-lg border border-[#24272D]">
+                                  <span className="text-[#606060] font-medium block text-[11px] mb-0.5">Notes:</span>
+                                  {r2.notes}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           )}
@@ -1417,70 +1684,236 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
             <div className="mt-5 pt-4 flex flex-col gap-3" style={{ borderTop: "1px solid var(--border)" }}>
               <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest">Onboarding Management</div>
               
-              <div className="p-3 rounded-lg border border-[var(--border)] bg-[var(--glass-2)]">
-                <div className="flex justify-between items-center mb-3">
-                  <div className="text-sm font-bold">Documents</div>
-                  <div className="flex gap-2">
-                    <Btn className="text-[10px] bg-[var(--primary)] text-black px-2 py-1 rounded font-bold"
+              <div
+                className="rounded-[12px] p-4 sm:p-5 flex flex-col gap-3.5 transition-all"
+                style={{
+                  background: "#111214",
+                  border: "1px solid #24272D",
+                }}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#A1A7B3]">
+                      <FileText className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-white tracking-tight">Documents</span>
+                      {candidateDocs.length > 0 && (
+                        <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-[var(--text-2)]">
+                          {candidateDocs.filter(d => d.status === "verified").length}/{candidateDocs.length} Verified
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
                       onClick={() => {
                         setDocStudioType("employee-agreement");
                         setIsDocStudioOpen(true);
                       }}
-                    >📄 Generate Docs</Btn>
-                    <Btn className="text-[10px] bg-[var(--glass-3)] px-2 py-1 rounded"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-600/20 hover:bg-blue-600/35 border border-blue-500/30 hover:border-blue-500/50 active:scale-95 transition-all cursor-pointer shadow-[0_0_12px_rgba(59,130,246,0.12)]"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-blue-400" />
+                      <span>Generate Docs</span>
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={() => {
                         navigator.clipboard.writeText(`${getPublicBaseUrl()}/onboarding/${c.id}`);
+                        setCopiedUploadLink(true);
+                        setTimeout(() => setCopiedUploadLink(false), 2000);
                         dialog.success("Candidate upload link copied to clipboard.");
                       }}
-                    >Copy Upload Link</Btn>
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#D1D5DB] hover:text-white bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.10] hover:border-white/[0.20] active:scale-95 transition-all cursor-pointer"
+                    >
+                      {copiedUploadLink ? (
+                        <Check className="w-3.5 h-3.5 text-[#22C55E]" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5 text-[#9A9DA6]" />
+                      )}
+                      <span>{copiedUploadLink ? "Copied Link" : "Copy Upload Link"}</span>
+                    </button>
                   </div>
                 </div>
-                
+
+                {/* Documents List */}
                 {candidateDocs.length === 0 ? (
-                  <div className="text-xs text-[var(--text-3)] italic">No documents uploaded yet.</div>
+                  <div
+                    className="p-6 rounded-[10px] flex flex-col items-center justify-center text-center gap-1.5"
+                    style={{ background: "#16171B", border: "1px dashed #24272D" }}
+                  >
+                    <FileText className="w-6 h-6 text-white/20 mb-1" />
+                    <div className="text-xs font-medium text-[#9A9DA6]">No documents uploaded yet.</div>
+                    <div className="text-[11px] text-[var(--text-3)]">Share the upload link above to collect candidate onboarding documents.</div>
+                  </div>
                 ) : (
                   <div className="flex flex-col gap-2">
-                    {candidateDocs.map(doc => (
-                      <div key={doc.id} className="flex flex-col gap-2 p-2 bg-[var(--glass)] border border-[var(--border-2)] rounded">
-                        <div className="flex justify-between items-center">
-                          <div className="text-xs font-medium truncate" title={doc.fileName}>{doc.fileName}</div>
-                          <div className="text-[10px] uppercase text-[var(--text-3)]">{doc.type}</div>
-                        </div>
-                        <div className="flex gap-2 items-center justify-between">
-                          <div className="flex gap-1">
-                            <Btn className="text-[10px] px-2 py-0.5 rounded bg-[var(--glass-4)] hover:bg-white/20 text-white"
+                    {candidateDocs.map(doc => {
+                      const isPending = doc.status === "pending";
+                      const isVerified = doc.status === "verified";
+                      const isRejected = doc.status === "rejected";
+
+                      return (
+                        <div
+                          key={doc.id}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:px-4 sm:py-2.5 rounded-[10px] transition-all duration-150 group"
+                          style={{
+                            background: "#16171B",
+                            border: "1px solid #24272D",
+                          }}
+                        >
+                          {/* File Details */}
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center flex-shrink-0 text-[#9A9DA6] group-hover:text-white group-hover:border-white/20 transition-all">
+                              <FileText className="w-4 h-4 text-[#A78BFA]" />
+                            </div>
+
+                            <div className="flex flex-col min-w-0 flex-1 gap-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span
+                                  className="text-xs sm:text-[13px] font-semibold text-[#F1F3F5] truncate max-w-[220px] sm:max-w-[340px]"
+                                  title={doc.fileName}
+                                >
+                                  {doc.fileName}
+                                </span>
+
+                                <span
+                                  className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-[5px]"
+                                  style={{
+                                    background: "rgba(255, 255, 255, 0.05)",
+                                    border: "1px solid rgba(255, 255, 255, 0.10)",
+                                    color: "#A1A7B3",
+                                  }}
+                                >
+                                  {doc.type || "Document"}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2 text-[11px]">
+                                {isPending && (
+                                  <span className="inline-flex items-center gap-1 font-medium text-amber-400/90">
+                                    <Clock className="w-3 h-3 text-amber-400" />
+                                    <span>Pending verification</span>
+                                  </span>
+                                )}
+                                {isVerified && (
+                                  <span className="inline-flex items-center gap-1 font-medium text-[#22C55E]">
+                                    <CheckCircle2 className="w-3 h-3 text-[#22C55E]" />
+                                    <span>Verified</span>
+                                  </span>
+                                )}
+                                {isRejected && (
+                                  <span className="inline-flex items-center gap-1 font-medium text-[#EF4444]">
+                                    <AlertCircle className="w-3 h-3 text-[#EF4444]" />
+                                    <span>Rejected</span>
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-center">
+                            <button
+                              type="button"
                               onClick={async () => {
                                 const url = await getDocumentSignedUrl(doc.filePath);
                                 if (url) window.open(url, '_blank');
                                 else dialog.error("Failed to open document securely.");
-                              }}>View</Btn>
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#D1D5DB] hover:text-white bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.10] hover:border-white/[0.20] active:scale-95 transition-all cursor-pointer"
+                              title="View document in new tab"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5 text-[#9A9DA6]" />
+                              <span>View</span>
+                            </button>
+
+                            {isPending ? (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    updateDocument(doc.id, { status: "verified" });
+                                    const allOtherVerified = candidateDocs.filter(d => d.id !== doc.id).every(d => d.status === "verified");
+                                    if (allOtherVerified) {
+                                      updateCandidate(c.id, { status: "onboarding_verified" });
+                                    } else {
+                                      updateCandidate(c.id, { status: "onboarding_review" });
+                                    }
+                                  }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#22C55E] hover:text-[#4ADE80] transition-all cursor-pointer active:scale-95"
+                                  style={{
+                                    background: "rgba(34, 197, 94, 0.10)",
+                                    border: "1px solid rgba(34, 197, 94, 0.35)",
+                                    boxShadow: "0 0 12px rgba(34, 197, 94, 0.10)",
+                                  }}
+                                  onMouseEnter={e => {
+                                    e.currentTarget.style.background = "rgba(34, 197, 94, 0.18)";
+                                    e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.60)";
+                                  }}
+                                  onMouseLeave={e => {
+                                    e.currentTarget.style.background = "rgba(34, 197, 94, 0.10)";
+                                    e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.35)";
+                                  }}
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>Verify</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    updateDocument(doc.id, { status: "rejected" });
+                                    updateCandidate(c.id, { status: "onboarding_rejected" });
+                                  }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#EF4444] hover:text-[#F87171] transition-all cursor-pointer active:scale-95"
+                                  style={{
+                                    background: "rgba(239, 68, 68, 0.10)",
+                                    border: "1px solid rgba(239, 68, 68, 0.35)",
+                                  }}
+                                  onMouseEnter={e => {
+                                    e.currentTarget.style.background = "rgba(239, 68, 68, 0.18)";
+                                    e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.60)";
+                                  }}
+                                  onMouseLeave={e => {
+                                    e.currentTarget.style.background = "rgba(239, 68, 68, 0.10)";
+                                    e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.35)";
+                                  }}
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                  <span>Reject</span>
+                                </button>
+                              </div>
+                            ) : (
+                              <span
+                                className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-[6px] inline-flex items-center gap-1.5"
+                                style={{
+                                  background: isVerified ? "rgba(34, 197, 94, 0.08)" : "rgba(239, 68, 68, 0.08)",
+                                  border: isVerified ? "1px solid rgba(34, 197, 94, 0.30)" : "1px solid rgba(239, 68, 68, 0.30)",
+                                  color: isVerified ? "#22C55E" : "#EF4444",
+                                }}
+                              >
+                                {isVerified ? (
+                                  <>
+                                    <CheckCircle2 className="w-3 h-3 text-[#22C55E]" />
+                                    <span>Verified</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <AlertCircle className="w-3 h-3 text-[#EF4444]" />
+                                    <span>Rejected</span>
+                                  </>
+                                )}
+                              </span>
+                            )}
                           </div>
-                          {doc.status === "pending" ? (
-                            <div className="flex gap-1">
-                              <Btn className="text-[10px] px-2 py-0.5 rounded bg-[var(--green)] text-black font-bold"
-                                onClick={() => {
-                                  updateDocument(doc.id, { status: "verified" });
-                                  const allOtherVerified = candidateDocs.filter(d => d.id !== doc.id).every(d => d.status === "verified");
-                                  if (allOtherVerified) {
-                                    updateCandidate(c.id, { status: "onboarding_verified" });
-                                  } else {
-                                    updateCandidate(c.id, { status: "onboarding_review" });
-                                  }
-                                }}>Verify</Btn>
-                              <Btn className="text-[10px] px-2 py-0.5 rounded bg-[var(--red)] text-white font-bold"
-                                onClick={() => {
-                                  updateDocument(doc.id, { status: "rejected" });
-                                  updateCandidate(c.id, { status: "onboarding_rejected" });
-                                }}>Reject</Btn>
-                            </div>
-                          ) : (
-                            <div className={clsx("text-[10px] font-bold uppercase", doc.status === "verified" ? "text-[var(--green)]" : "text-[var(--red)]")}>
-                              {doc.status}
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

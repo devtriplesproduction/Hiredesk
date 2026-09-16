@@ -7,6 +7,7 @@ import { Candidate, Employee, EmployeeBond, EmployeeResignation, Offer } from "@
 import { useStore } from "@/lib/store";
 import { format } from "date-fns";
 import { dialog } from "@/components/ui";
+import { FileText, Download, X } from "lucide-react";
 
 interface DocumentStudioModalProps {
   candidate: Candidate;
@@ -172,56 +173,117 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
   const activeGroups = DOC_GROUPS[docType as keyof typeof DOC_GROUPS] || ["candidate"];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6 overflow-hidden">
-      <div className="bg-white rounded-2xl w-full max-w-[1400px] h-full max-h-[90vh] flex flex-col shadow-2xl border border-gray-100/50">
-        
-        <div className="flex items-center justify-between p-4 px-6 border-b border-gray-100 bg-white/50 backdrop-blur-sm">
-          <div className="flex flex-col">
-            <h2 className="text-xl font-semibold tracking-tight text-gray-900">Document Studio</h2>
-            <p className="text-sm text-gray-500">Generating for <span className="font-medium text-gray-700">{candidate.name}</span></p>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-hidden animate-fade-in"
+      style={{ background: "rgba(0, 0, 0, 0.82)", backdropFilter: "blur(14px)" }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        className="w-full max-w-[1440px] h-full max-h-[92vh] flex flex-col rounded-2xl overflow-hidden border shadow-2xl relative animate-scale-up"
+        style={{ background: "#0D0E12", borderColor: "#24272D" }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 px-6 border-b border-[#24272D] bg-[#111215] shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-bold text-white tracking-tight leading-tight">
+                  Document Studio
+                </h2>
+                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-400">
+                  HireDesk Docs
+                </span>
+              </div>
+              <p className="text-xs text-[#8B919C] mt-0.5">
+                Generating for <span className="font-semibold text-white">{candidate.name}</span>
+                {candidate.roleName && <span className="text-[#606060]"> · {candidate.roleName}</span>}
+              </p>
+            </div>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#8B919C] hover:text-white bg-white/[0.04] hover:bg-white/[0.10] border border-white/[0.08] hover:border-white/[0.20] transition-all cursor-pointer active:scale-95"
+            title="Close"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
 
+        {/* Main Content: Sidebar + Workspace */}
         <div className="flex flex-1 overflow-hidden">
-          <div className="w-[380px] bg-gray-50 border-r border-gray-200 flex flex-col z-10 overflow-y-auto">
-            <div className="p-5 space-y-6">
-              
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">Document Type</label>
-                <select 
-                  className="w-full bg-white border border-gray-200 text-sm rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all shadow-sm"
+          {/* Left Form Panel */}
+          <div className="w-[340px] sm:w-[380px] bg-[#111215] border-r border-[#24272D] flex flex-col z-10 overflow-y-auto shrink-0">
+            <div className="p-4 sm:p-5 flex flex-col gap-5">
+              {/* Document Type Selector */}
+              <div className="p-3.5 rounded-xl bg-[#16171B] border border-[#24272D] flex flex-col gap-2">
+                <label className="text-[11px] font-semibold uppercase tracking-wider text-[#A78BFA] flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Document Template</span>
+                </label>
+                <select
+                  className="w-full bg-[#0E0F12] border border-[#2B2F38] hover:border-[#3D424E] focus:border-[#A78BFA] text-[#E6E8EB] text-xs font-semibold rounded-lg px-3 py-2.5 outline-none transition-all cursor-pointer"
                   value={docType}
-                  onChange={(e) => setDocType(e.target.value)}
+                  onChange={e => setDocType(e.target.value)}
                 >
-                  <optgroup label="Offer Stage">
-                    {DOC_OPTIONS.filter(o => o.stage === "offer").map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  <optgroup label="Offer Stage" className="bg-[#16171B] text-[#8B919C]">
+                    {DOC_OPTIONS.filter(o => o.stage === "offer").map(o => (
+                      <option key={o.value} value={o.value} className="bg-[#0E0F12] text-white">
+                        {o.label}
+                      </option>
+                    ))}
                   </optgroup>
-                  <optgroup label="Onboarding">
-                    {DOC_OPTIONS.filter(o => o.stage === "onboarding").map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  <optgroup label="Onboarding" className="bg-[#16171B] text-[#8B919C]">
+                    {DOC_OPTIONS.filter(o => o.stage === "onboarding").map(o => (
+                      <option key={o.value} value={o.value} className="bg-[#0E0F12] text-white">
+                        {o.label}
+                      </option>
+                    ))}
                   </optgroup>
-                  <optgroup label="Exit">
-                    {DOC_OPTIONS.filter(o => o.stage === "exit").map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  <optgroup label="Exit" className="bg-[#16171B] text-[#8B919C]">
+                    {DOC_OPTIONS.filter(o => o.stage === "exit").map(o => (
+                      <option key={o.value} value={o.value} className="bg-[#0E0F12] text-white">
+                        {o.label}
+                      </option>
+                    ))}
                   </optgroup>
                 </select>
               </div>
 
-              <div className="space-y-6 pt-4 border-t border-gray-200">
+              {/* Form Fields Groups */}
+              <div className="flex flex-col gap-4">
                 {activeGroups.map((group: string) => (
-                  <div key={group} className="space-y-3">
-                    <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wider">{group}</h3>
-                    <div className="space-y-3">
+                  <div
+                    key={group}
+                    className="p-3.5 rounded-xl bg-[#16171B] border border-[#24272D] flex flex-col gap-3"
+                  >
+                    <div className="flex items-center justify-between pb-1 border-b border-white/[0.06]">
+                      <h3 className="text-xs font-bold text-[#E6E8EB] uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA]"></span>
+                        <span>{group} Details</span>
+                      </h3>
+                      <span className="text-[10px] font-mono text-[#606060]">
+                        {FIELD_GROUPS[group]?.length || 0} fields
+                      </span>
+                    </div>
+
+                    <div className="flex flex-col gap-2.5">
                       {FIELD_GROUPS[group]?.map(field => (
-                        <div key={field.key} className="space-y-1">
-                          <label className="text-xs font-medium text-gray-600">{field.label}</label>
-                          <input 
-                            type="text" 
-                            name={field.key} 
-                            value={(data as any)[field.key] || ""} 
+                        <div key={field.key} className="flex flex-col gap-1">
+                          <label className="text-[11px] font-medium text-[#8B919C]">
+                            {field.label}
+                          </label>
+                          <input
+                            type="text"
+                            name={field.key}
+                            value={(data as any)[field.key] || ""}
                             onChange={handleInputChange}
-                            className="w-full bg-white border border-gray-200 text-sm rounded-md px-3 py-2 focus:ring-1 focus:ring-blue-500 outline-none"
+                            placeholder={`Enter ${field.label.toLowerCase()}...`}
+                            className="w-full bg-[#0E0F12] border border-[#24272D] hover:border-[#32363E] focus:border-[#A78BFA]/70 text-white text-xs rounded-lg px-3 py-2 outline-none transition-all placeholder:text-[#555] focus:bg-[#121317] focus:ring-1 focus:ring-[#A78BFA]/30"
                           />
                         </div>
                       ))}
@@ -229,29 +291,68 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
                   </div>
                 ))}
               </div>
-
             </div>
           </div>
 
-          <div className="flex-1 bg-gray-200 overflow-y-auto p-8 relative flex flex-col items-center gap-4">
-             <DocumentPreview documentType={docType} data={data} />
+          {/* Right Document Workspace (Preview Area) */}
+          <div
+            className="flex-1 overflow-y-auto p-6 sm:p-10 relative flex flex-col items-center gap-5 select-text"
+            style={{
+              background: "radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px) 0 0 / 24px 24px, #08090B",
+            }}
+          >
+            {/* Document Header Status Pill */}
+            <div className="sticky top-0 z-20 flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#16171B]/90 border border-white/[0.10] backdrop-blur-md shadow-xl text-[11px] font-medium text-[#8B919C]">
+              <FileText className="w-3.5 h-3.5 text-[#A78BFA]" />
+              <span className="text-[#E6E8EB] font-semibold">{DOC_OPTIONS.find(o => o.value === docType)?.label}</span>
+              <span className="w-1 h-1 rounded-full bg-[#70747D]"></span>
+              <span className="font-mono text-[10px] text-[#70747D]">A4 · 210mm × 297mm</span>
+              <span className="w-1 h-1 rounded-full bg-[#70747D]"></span>
+              <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Live Preview
+              </span>
+            </div>
+
+            <DocumentPreview documentType={docType} data={data} />
           </div>
         </div>
 
-        <div className="p-4 px-6 border-t border-gray-100 bg-white flex justify-between items-center shrink-0">
-          <div className="text-xs text-gray-500">
-            Previewing: {DOC_OPTIONS.find(o => o.value === docType)?.label}
+        {/* Footer */}
+        <div className="p-4 px-6 border-t border-[#24272D] bg-[#111215] flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 text-xs text-[#8B919C]">
+            <span className="text-[#606060]">Active Template:</span>
+            <span className="font-semibold text-white px-2.5 py-1 rounded-md bg-white/[0.05] border border-white/[0.08]">
+              {DOC_OPTIONS.find(o => o.value === docType)?.label}
+            </span>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#D1D5DB] hover:text-white bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.10] hover:border-white/[0.20] rounded-xl active:scale-95 transition-all cursor-pointer"
+            >
               Close
             </button>
+
             <button
+              type="button"
               onClick={handleDownload}
               disabled={isGenerating}
-              className="px-5 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 disabled:opacity-70 flex items-center gap-2"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 active:scale-95 border border-blue-400/30 rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.35)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              {isGenerating ? "Generating PDF..." : "Download PDF"}
+              {isGenerating ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Generating PDF...</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download PDF</span>
+                </>
+              )}
             </button>
           </div>
         </div>
