@@ -8,6 +8,7 @@ import { useStore } from "@/lib/store";
 import { format } from "date-fns";
 import { dialog } from "@/components/ui";
 import { FileText, Download, X } from "lucide-react";
+import DateTimePicker from "@/components/ui/DateTimePicker";
 
 interface DocumentStudioModalProps {
   candidate: Candidate;
@@ -272,21 +273,38 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
                     </div>
 
                     <div className="flex flex-col gap-2.5">
-                      {FIELD_GROUPS[group]?.map(field => (
-                        <div key={field.key} className="flex flex-col gap-1">
-                          <label className="text-[11px] font-medium text-[#8B919C]">
-                            {field.label}
-                          </label>
-                          <input
-                            type="text"
-                            name={field.key}
-                            value={(data as any)[field.key] || ""}
-                            onChange={handleInputChange}
-                            placeholder={`Enter ${field.label.toLowerCase()}...`}
-                            className="w-full bg-[#0E0F12] border border-[#24272D] hover:border-[#32363E] focus:border-[#A78BFA]/70 text-white text-xs rounded-lg px-3 py-2 outline-none transition-all placeholder:text-[#555] focus:bg-[#121317] focus:ring-1 focus:ring-[#A78BFA]/30"
-                          />
-                        </div>
-                      ))}
+                      {FIELD_GROUPS[group]?.map(field => {
+                        const isDateField = field.key.toLowerCase().includes("date") || field.key === "lastWorkingDay";
+
+                        if (isDateField) {
+                          return (
+                            <div key={field.key} className="flex flex-col gap-1">
+                              <label className="text-[11px] font-medium text-[#8B919C]">{field.label}</label>
+                              <DateTimePicker
+                                value={(data as any)[field.key] || ""}
+                                onChange={(val) => setData({ ...data, [field.key]: val })}
+                                placeholder={`Select ${field.label.toLowerCase()}...`}
+                              />
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div key={field.key} className="flex flex-col gap-1">
+                            <label className="text-[11px] font-medium text-[#8B919C]">
+                              {field.label}
+                            </label>
+                            <input
+                              type="text"
+                              name={field.key}
+                              value={(data as any)[field.key] || ""}
+                              onChange={handleInputChange}
+                              placeholder={`Enter ${field.label.toLowerCase()}...`}
+                              className="w-full bg-[#0E0F12] border border-[#24272D] hover:border-[#32363E] focus:border-[#A78BFA]/70 text-white text-xs rounded-lg px-3 py-2 outline-none transition-all placeholder:text-[#555] focus:bg-[#121317] focus:ring-1 focus:ring-[#A78BFA]/30"
+                            />
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 ))}

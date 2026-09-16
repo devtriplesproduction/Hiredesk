@@ -112,7 +112,8 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
   
   const defaultTemplate = useMemo(() => {
     if (candidate.status === "shortlisted") return "shortlist";
-    if (candidate.status === "interview_1" || candidate.status === "interview_2") return "interview";
+    if (candidate.status === "interview_1") return "interview";
+    if (candidate.status === "interview_2") return "next-round";
     if (candidate.status === "rejected") return "reject";
     if (candidate.status === "approved") return "next-round";
     if (candidate.status === "offer" || candidate.status === "offer_sent") return "offer";
