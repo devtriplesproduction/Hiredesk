@@ -141,6 +141,8 @@ export interface Contract {
   desc: string;
   type: string;
   body: string;
+  logoUrl?: string | null;
+  signUrl?: string | null;
 }
 
 export type SortKey = "newest" | "oldest" | "score-desc" | "score-asc" | "name-az";

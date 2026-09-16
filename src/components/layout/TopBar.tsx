@@ -59,9 +59,6 @@ export default function TopBar({ onMenuClick }: { onMenuClick?: () => void }) {
                   : "text-[#8B919C] bg-transparent border-transparent hover:text-white hover:bg-white/[0.05]"
               )}
             >
-              {isActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00D9FF] shadow-[0_0_8px_rgba(0,217,255,0.8)] flex-shrink-0" />
-              )}
               <span>{n.label}</span>
               {isActive && (
                 <span className="absolute -bottom-[1px] inset-x-3 h-[2px] bg-[#00D9FF] rounded-full shadow-[0_0_8px_rgba(0,217,255,0.7)]" />

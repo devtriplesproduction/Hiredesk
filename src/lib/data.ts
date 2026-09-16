@@ -160,9 +160,9 @@ export function generateSeedCandidates(roles: Role[]): Candidate[] {
 const today = () => new Date().toLocaleDateString("en-IN",{year:"numeric",month:"long",day:"numeric"});
 
 const LH = (refSuffix: string) => `
-<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid #111;padding-bottom:16px;margin-bottom:28px">
+<div class="letterhead" style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2.5px solid #111;padding-bottom:16px;margin-bottom:28px">
   <div>
-    <div style="height:56px;display:flex;align-items:center;margin-bottom:8px"><!--LOGO--></div>
+    <div class="contract-logo-slot" data-slot="logo" style="height:56px;display:flex;align-items:center;margin-bottom:8px"><!--LOGO--></div>
     <div style="font-family:Arial,sans-serif;font-size:7.5pt;color:#999;margin-top:2px">Rajdhani Towers, First floor, Rajwada, Satara · info@triplesproduction.com</div>
   </div>
   <div style="text-align:right;font-family:Arial,sans-serif;font-size:9pt;color:#555">
@@ -172,17 +172,17 @@ const LH = (refSuffix: string) => `
 </div>`;
 
 const SIG = `
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;margin-top:60px;padding-top:24px;border-top:1px solid #ddd">
+<div class="sig-block" style="display:grid;grid-template-columns:1fr 1fr;gap:60px;margin-top:48px;padding-top:24px;border-top:1px solid #ddd">
   <div>
-    <div style="height:96px;display:flex;align-items:flex-end;margin-bottom:8px"><!--SIGN--></div>
-    <div style="border-top:1.5px solid #333;padding-top:8px">
+    <div class="contract-sign-slot" data-slot="sign" style="height:96px;min-height:96px;display:flex;align-items:flex-end;margin-bottom:8px"><!--SIGN--></div>
+    <div class="sig-line" style="border-top:1.5px solid #333;padding-top:8px">
       <div style="font-family:Arial,sans-serif;font-weight:700;font-size:10pt">Authorized Signatory</div>
       <div style="font-family:Arial,sans-serif;font-size:9pt;color:#555;margin-top:2px">Triple S Production</div>
     </div>
   </div>
   <div>
-    <div style="height:96px;display:flex;align-items:flex-end;margin-bottom:8px"></div>
-    <div style="border-top:1.5px solid #333;padding-top:8px">
+    <div style="height:96px;min-height:96px;display:flex;align-items:flex-end;margin-bottom:8px"></div>
+    <div class="sig-line" style="border-top:1.5px solid #333;padding-top:8px">
       <div style="font-family:Arial,sans-serif;font-weight:700;font-size:10pt">Candidate Signature</div>
       <div style="font-family:Arial,sans-serif;font-size:9pt;color:#555;margin-top:2px">[CANDIDATE NAME]</div>
       <div style="font-family:Arial,sans-serif;font-size:8pt;color:#999;margin-top:2px">Date: _______________</div>

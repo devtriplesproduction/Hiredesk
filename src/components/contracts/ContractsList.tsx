@@ -20,30 +20,33 @@ const CONTRACT_META: Record<string, { color: string; roles: string[] }> = {
 };
 
 export default function ContractsList() {
-  const { contracts } = useStore();
+  const { contracts, globalBrandAssets, setGlobalBrandAsset, deleteGlobalBrandAsset } = useStore();
   const [editing, setEditing] = useState<Contract | null>(null);
   const [generating, setGenerating] = useState<Contract | null>(null);
   const [preselectedCandidateId, setPreselectedCandidateId] = useState<string>("");
-  const [hasLogo, setHasLogo] = useState(false);
-  const [hasSign, setHasSign] = useState(false);
+
+  const hasLogo = !!globalBrandAssets?.logoUrl;
+  const hasSign = !!globalBrandAssets?.signUrl;
 
   const logoRef = useRef<HTMLInputElement>(null);
   const signRef = useRef<HTMLInputElement>(null);
 
-  async function handleUpload(file: File, key: string, setter: (b: boolean) => void) {
+  async function handleUpload(file: File, key: "tsp_logo" | "tsp_sign") {
     try {
       const { compressImage } = await import("@/lib/utils/image");
       const compressed = await compressImage(file, 400, 150);
-      await uploadBrandAsset(compressed, key as "tsp_logo" | "tsp_sign");
-      setter(true);
+      const url = await uploadBrandAsset(compressed, key);
+      if (key === "tsp_logo") setGlobalBrandAsset("logo", url);
+      else setGlobalBrandAsset("sign", url);
     } catch (err) {
       console.error("Compression or upload failed, falling back to raw data URL", err);
       const reader = new FileReader();
       reader.onload = async e => {
         const url = e.target?.result as string;
         try {
-          await uploadBrandAsset(url, key as "tsp_logo" | "tsp_sign");
-          setter(true);
+          const publicUrl = await uploadBrandAsset(url, key);
+          if (key === "tsp_logo") setGlobalBrandAsset("logo", publicUrl);
+          else setGlobalBrandAsset("sign", publicUrl);
         } catch (uploadErr) {
           console.error("Raw upload failed:", uploadErr);
         }
@@ -52,23 +55,14 @@ export default function ContractsList() {
     }
   }
 
-  async function handleClear(key: string, setter: (b: boolean) => void) {
-    await deleteBrandAsset(key as "tsp_logo" | "tsp_sign");
-    setter(false);
+  async function handleClear(key: "tsp_logo" | "tsp_sign") {
+    await deleteBrandAsset(key);
+    if (key === "tsp_logo") deleteGlobalBrandAsset("logo");
+    else deleteGlobalBrandAsset("sign");
   }
 
   const searchParams = useSearchParams();
   const router = useRouter();
-
-  useEffect(() => {
-    async function loadAssets() {
-      const logo = await getBrandAssetUrl("tsp_logo");
-      const sign = await getBrandAssetUrl("tsp_sign");
-      setHasLogo(!!logo);
-      setHasSign(!!sign);
-    }
-    loadAssets();
-  }, []);
 
   useEffect(() => {
     const candidateId = searchParams.get("candidateId");
@@ -261,7 +255,7 @@ export default function ContractsList() {
                   {hasLogo && (
                     <button
                       type="button"
-                      onClick={() => handleClear("tsp_logo", setHasLogo)}
+                      onClick={() => handleClear("tsp_logo")}
                       className="h-[38px] px-3 rounded-lg text-[12px] font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer inline-flex items-center justify-center gap-1 select-none outline-none bg-[#22252b] hover:bg-red-500/10 active:bg-[#1a1c20] text-[#8E949E] hover:text-[#EF4444] border-[#343842] hover:border-[#EF4444]/40 focus-visible:ring-1 focus-visible:ring-[#EF4444]/30 active:scale-[0.98]"
                       title="Remove uploaded logo"
                     >
@@ -276,7 +270,7 @@ export default function ContractsList() {
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], "tsp_logo", setHasLogo)}
+                  onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], "tsp_logo")}
                 />
               </div>
 
@@ -315,7 +309,7 @@ export default function ContractsList() {
                   {hasSign && (
                     <button
                       type="button"
-                      onClick={() => handleClear("tsp_sign", setHasSign)}
+                      onClick={() => handleClear("tsp_sign")}
                       className="h-[38px] px-3 rounded-lg text-[12px] font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer inline-flex items-center justify-center gap-1 select-none outline-none bg-[#22252b] hover:bg-red-500/10 active:bg-[#1a1c20] text-[#8E949E] hover:text-[#EF4444] border-[#343842] hover:border-[#EF4444]/40 focus-visible:ring-1 focus-visible:ring-[#EF4444]/30 active:scale-[0.98]"
                       title="Remove uploaded signature"
                     >
@@ -330,7 +324,7 @@ export default function ContractsList() {
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], "tsp_sign", setHasSign)}
+                  onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], "tsp_sign")}
                 />
               </div>
             </div>

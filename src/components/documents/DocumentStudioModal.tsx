@@ -77,40 +77,49 @@ const FIELD_GROUPS: Record<string, { key: keyof DocumentData, label: string }[]>
   ]
 };
 
+const DATE_FIELD_KEYS = new Set<string>([
+  "dateOfJoining",
+  "offerValidityDate",
+  "internshipEndDate",
+  "lastWorkingDay",
+  "resignationDate",
+]);
+
 export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candidate, offer, employee, employeeBond, employeeResignation, onClose, defaultStage, defaultDocType }) => {
   const { updateOffer } = useStore();
   const defaultOption = defaultDocType || DOC_OPTIONS.find(o => o.stage === defaultStage)?.value || "offer-fulltime";
   const [docType, setDocType] = useState<string>(defaultOption);
   const [isGenerating, setIsGenerating] = useState(false);
+  const previewContainerRef = useRef<HTMLDivElement>(null);
 
   const initialData: DocumentData = {
     candidateName: candidate.name || "",
     designation: candidate.roleName || "",
-    department: "",
-    officeLocation: candidate.city || "",
-    workingHours: "",
+    department: "Development",
+    officeLocation: candidate.city || "Satara Office",
+    workingHours: "10:00 AM – 8:00 PM",
     dateOfJoining: "",
     letterDate: format(new Date(), "dd MMM, yyyy"),
     offerValidityDate: "",
-    refNo: "",
-    probationPeriod: "",
+    refNo: "OFFER/2026/001",
+    probationPeriod: "3 Months",
     internshipEndDate: "",
     probationSalary: "",
     ctcAmount: "",
     monthlyGross: "",
-    proprietorName: "",
-    noticePeriod: "",
-    officeAddress: "",
-    hrEmail: "",
-    hrPhone: candidate.phone || "",
-    website: "",
+    proprietorName: "Triple S Production",
+    noticePeriod: "1 Month",
+    officeAddress: "Rajdhani Towers, Rajwada, Satara",
+    hrEmail: "hr@triplesproduction.com",
+    hrPhone: candidate.phone || "+91 98765 43210",
+    website: "www.triplesproduction.com",
     emergencyContact: "",
     bankName: "",
     accountNumber: "",
     ifsc: "",
     pan: "",
     bondAmount: employeeBond?.amount || "",
-    bondDurationMonths: employeeBond?.duration || "",
+    bondDurationMonths: employeeBond?.duration || "12",
     trainingDescription: "",
     lastWorkingDay: "",
     performanceNote: "",
@@ -118,16 +127,23 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
     keyResponsibilities: ""
   };
 
-  const [data, setData] = useState<DocumentData>(() => ({
-    ...initialData,
-    ...(offer?.documentData || {})
-  }));
+  const [data, setData] = useState<DocumentData>(() => {
+    const today = format(new Date(), "dd MMM, yyyy");
+    return {
+      ...initialData,
+      ...(offer?.documentData || {}),
+      candidateName: offer?.documentData?.candidateName || candidate.name || "",
+      designation: offer?.documentData?.designation || candidate.roleName || "",
+      officeLocation: offer?.documentData?.officeLocation || candidate.city || "Satara Office",
+      letterDate: offer?.documentData?.letterDate || today,
+    };
+  });
 
   useEffect(() => {
     if (!offer) return;
     const timer = setTimeout(() => {
       updateOffer(offer.id, { documentData: data });
-    }, 1000);
+    }, 800);
     return () => clearTimeout(timer);
   }, [data, offer, updateOffer]);
 
@@ -141,31 +157,114 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
   const handleDownload = async () => {
     setIsGenerating(true);
     try {
+      if (offer?.id) {
+        updateOffer(offer.id, { documentData: data });
+      }
+
+      if (typeof document !== "undefined" && document.fonts) {
+        await document.fonts.ready;
+      }
+
       const html2canvas = (await import("html2canvas")).default;
       const { jsPDF } = await import("jspdf");
 
-      const printArea = document.querySelector(".document-studio-wrapper") as HTMLElement;
-      if (!printArea) throw new Error("Document not found");
+      const container = previewContainerRef.current;
+      // Search specifically inside container, then document body fallback
+      let pages: HTMLElement[] = [];
+      if (container) {
+        const found = container.querySelectorAll<HTMLElement>(".page");
+        if (found.length > 0) pages = Array.from(found);
+      }
+      if (pages.length === 0) {
+        const fallbackPages = document.querySelectorAll<HTMLElement>(".document-studio-wrapper .page, .preview .page");
+        if (fallbackPages.length > 0) pages = Array.from(fallbackPages);
+      }
 
-      const pages = printArea.querySelectorAll(".page");
-      const pdf = new jsPDF("p", "mm", "a4");
+      if (pages.length === 0) {
+        throw new Error("No document pages found to export. Please ensure the document is rendered.");
+      }
+
+      // Pre-load / ensure all images inside the pages are completed
+      const allImages = Array.from(container?.querySelectorAll<HTMLImageElement>("img") || []);
+      await Promise.all(
+        allImages.map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise<void>((resolve) => {
+            img.onload = () => resolve();
+            img.onerror = () => resolve(); // don't block on broken images
+            setTimeout(resolve, 1500); // 1.5s max timeout
+          });
+        })
+      );
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+        compress: true,
+      });
+      const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
+      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
 
       for (let i = 0; i < pages.length; i++) {
-        const page = pages[i] as HTMLElement;
-        const canvas = await html2canvas(page, { scale: 2, useCORS: true });
+        const page = pages[i];
+        const isCover = page.classList.contains("cover");
+
+        const canvas = await html2canvas(page, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          backgroundColor: isCover ? "#111111" : "#ffffff",
+          windowWidth: 1200,
+          onclone: (clonedDoc) => {
+            const clonedPages = clonedDoc.querySelectorAll<HTMLElement>(".page");
+            clonedPages.forEach((p) => {
+              p.style.boxShadow = "none";
+              p.style.borderRadius = "0px";
+              p.style.margin = "0";
+              p.style.transform = "none";
+            });
+          }
+        });
+
         const imgData = canvas.toDataURL("image/png");
         
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        
-        if (i > 0) pdf.addPage();
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        if (i > 0) {
+          pdf.addPage("a4", "portrait");
+        }
+
+        // Calculate aspect ratio to fit A4 page cleanly without distortion
+        const canvasRatio = canvas.height / canvas.width;
+        const targetHeight = pdfWidth * canvasRatio;
+        const finalHeight = Math.min(targetHeight, pdfHeight);
+
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, finalHeight, undefined, "FAST");
       }
       
-      pdf.save(`${candidate.name}_${docType}.pdf`);
-    } catch (e) {
-      console.error(e);
-      dialog.error("Error generating PDF");
+      const safeName = (data.candidateName || candidate.name || "Candidate").replace(/[^a-zA-Z0-9_-]/g, "_");
+      const filename = `${safeName}_${docType}.pdf`;
+
+      // Trigger reliable browser download via Blob URL
+      try {
+        const pdfBlob = pdf.output("blob");
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 4000);
+      } catch (blobError) {
+        console.warn("Direct blob download failed, trying standard pdf.save:", blobError);
+        pdf.save(filename);
+      }
+
+      dialog.success(`Document PDF downloaded successfully! (${filename})`);
+    } catch (e: any) {
+      console.error("PDF generation failed:", e);
+      dialog.error(e?.message || "Error generating PDF. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -274,7 +373,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
 
                     <div className="flex flex-col gap-2.5">
                       {FIELD_GROUPS[group]?.map(field => {
-                        const isDateField = field.key.toLowerCase().includes("date") || field.key === "lastWorkingDay";
+                        const isDateField = DATE_FIELD_KEYS.has(field.key);
 
                         if (isDateField) {
                           return (
@@ -283,7 +382,8 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
                               <DateTimePicker
                                 value={(data as any)[field.key] || ""}
                                 onChange={(val) => setData({ ...data, [field.key]: val })}
-                                placeholder={`Select ${field.label.toLowerCase()}...`}
+                                placeholder={`📅 Select ${field.label.toLowerCase()}...`}
+                                dateOnly
                               />
                             </div>
                           );
@@ -314,6 +414,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
 
           {/* Right Document Workspace (Preview Area) */}
           <div
+            ref={previewContainerRef}
             className="flex-1 overflow-y-auto p-6 sm:p-10 relative flex flex-col items-center gap-5 select-text"
             style={{
               background: "radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px) 0 0 / 24px 24px, #08090B",

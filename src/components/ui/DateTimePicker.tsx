@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { format } from "date-fns";
 
 interface DateTimePickerProps {
   value: string; // ISO string or parsable date string
@@ -8,6 +9,7 @@ interface DateTimePickerProps {
   placeholder?: string;
   className?: string;
   hasError?: boolean;
+  dateOnly?: boolean;
 }
 
 const MONTH_NAMES = [
@@ -20,18 +22,37 @@ const DAYS_SHORT = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 export default function DateTimePicker({
   value,
   onChange,
-  placeholder = "📅 Select interview date & time...",
+  placeholder,
   className = "",
   hasError = false,
+  dateOnly = false,
 }: DateTimePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [coords, setCoords] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
+  const effectivePlaceholder = placeholder || (dateOnly ? "📅 Select date..." : "📅 Select interview date & time...");
+
   // Parse initial or current value
   const parsedDate = useMemo(() => {
-    if (!value) return null;
-    const d = new Date(value);
-    return isNaN(d.getTime()) ? null : d;
+    if (!value || typeof value !== "string") return null;
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const d = new Date(trimmed);
+    if (!isNaN(d.getTime())) return d;
+
+    // Handle DD/MM/YYYY or DD-MM-YYYY
+    const parts = trimmed.split(/[\/\-\.]/);
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+        const custom = new Date(year, month, day);
+        if (!isNaN(custom.getTime())) return custom;
+      }
+    }
+    return null;
   }, [value]);
 
   // Calendar navigation state (year & month)
@@ -75,7 +96,7 @@ export default function DateTimePicker({
     if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
     const popupWidth = 320;
-    const popupHeight = 390;
+    const popupHeight = dateOnly ? 295 : 390;
 
     // Upward opening by default
     let top = rect.top - popupHeight - 8;
@@ -169,8 +190,13 @@ export default function DateTimePicker({
   // When a day is clicked
   const handleSelectDay = (year: number, month: number, day: number) => {
     const targetDate = new Date(year, month, day);
-    const iso = assembleDateTime(targetDate, hour, minute, period);
-    onChange(iso);
+    if (dateOnly) {
+      onChange(format(targetDate, "dd MMM, yyyy"));
+      setIsOpen(false);
+    } else {
+      const iso = assembleDateTime(targetDate, hour, minute, period);
+      onChange(iso);
+    }
   };
 
   // When time components change
@@ -194,8 +220,13 @@ export default function DateTimePicker({
     const now = new Date();
     setViewYear(now.getFullYear());
     setViewMonth(now.getMonth());
-    const iso = assembleDateTime(now, hour, minute, period);
-    onChange(iso);
+    if (dateOnly) {
+      onChange(format(now, "dd MMM, yyyy"));
+      setIsOpen(false);
+    } else {
+      const iso = assembleDateTime(now, hour, minute, period);
+      onChange(iso);
+    }
   };
 
   // Calendar Grid Calculation
@@ -265,6 +296,9 @@ export default function DateTimePicker({
   // Formatted display string
   const displayString = useMemo(() => {
     if (!parsedDate) return null;
+    if (dateOnly) {
+      return format(parsedDate, "dd MMM, yyyy");
+    }
     const day = String(parsedDate.getDate()).padStart(2, "0");
     const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
     const year = parsedDate.getFullYear();
@@ -273,7 +307,7 @@ export default function DateTimePicker({
     const displayMin = String(parsedDate.getMinutes()).padStart(2, "0");
     const displayPeriod = h >= 12 ? "PM" : "AM";
     return `${day}/${month}/${year}  ${displayHour}:${displayMin} ${displayPeriod}`;
-  }, [parsedDate]);
+  }, [parsedDate, dateOnly]);
 
   return (
     <div className="relative flex-1">
@@ -291,7 +325,7 @@ export default function DateTimePicker({
         } ${className}`}
       >
         <span className={displayString ? "text-[#E6E8EB] font-medium" : "text-[var(--text-3)]"}>
-          {displayString ? `📅  ${displayString}` : placeholder}
+          {displayString ? `📅  ${displayString}` : effectivePlaceholder}
         </span>
         <span className="text-[10px] text-[var(--text-3)]">
           {isOpen ? "▲" : "▼"}
@@ -375,95 +409,99 @@ export default function DateTimePicker({
             })}
           </div>
 
-          {/* Divider */}
-          <div className="h-px bg-[#242424] -mx-4" />
+          {!dateOnly && (
+            <>
+              {/* Divider */}
+              <div className="h-px bg-[#242424] -mx-4" />
 
-          {/* Time Selector */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#8B919C]">
-                Time
-              </span>
-              <span className="text-[10px] font-mono text-[#A78BFA]">
-                {String(hour).padStart(2, "0")}:{String(minute).padStart(2, "0")} {period}
-              </span>
-            </div>
-
-            <div
-              className="p-2 rounded-xl flex items-center justify-between gap-2"
-              style={{ background: "#191919", border: "1px solid #292929" }}
-            >
-              {/* Hour Selector */}
-              <div className="flex items-center gap-1.5 flex-1 justify-center">
-                <button
-                  type="button"
-                  onClick={() => handleTimeChange(hour === 1 ? 12 : hour - 1, minute, period)}
-                  className="w-6 h-6 rounded flex items-center justify-center text-xs text-[#8B919C] hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  ▼
-                </button>
-                <div className="font-mono text-sm font-bold text-[#E6E8EB] w-7 text-center select-none">
-                  {String(hour).padStart(2, "0")}
+              {/* Time Selector */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#8B919C]">
+                    Time
+                  </span>
+                  <span className="text-[10px] font-mono text-[#A78BFA]">
+                    {String(hour).padStart(2, "0")}:{String(minute).padStart(2, "0")} {period}
+                  </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleTimeChange(hour === 12 ? 1 : hour + 1, minute, period)}
-                  className="w-6 h-6 rounded flex items-center justify-center text-xs text-[#8B919C] hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  ▲
-                </button>
-              </div>
 
-              <span className="text-sm font-bold text-[#8B919C] select-none">:</span>
-
-              {/* Minute Selector (15-min intervals or steppers) */}
-              <div className="flex items-center gap-1.5 flex-1 justify-center">
-                <button
-                  type="button"
-                  onClick={() => handleTimeChange(hour, (minute - 15 + 60) % 60, period)}
-                  className="w-6 h-6 rounded flex items-center justify-center text-xs text-[#8B919C] hover:text-white hover:bg-white/10 transition-colors"
+                <div
+                  className="p-2 rounded-xl flex items-center justify-between gap-2"
+                  style={{ background: "#191919", border: "1px solid #292929" }}
                 >
-                  ▼
-                </button>
-                <div className="font-mono text-sm font-bold text-[#E6E8EB] w-7 text-center select-none">
-                  {String(minute).padStart(2, "0")}
+                  {/* Hour Selector */}
+                  <div className="flex items-center gap-1.5 flex-1 justify-center">
+                    <button
+                      type="button"
+                      onClick={() => handleTimeChange(hour === 1 ? 12 : hour - 1, minute, period)}
+                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[#8B919C] hover:text-white hover:bg-white/10 transition-colors"
+                    >
+                      ▼
+                    </button>
+                    <div className="font-mono text-sm font-bold text-[#E6E8EB] w-7 text-center select-none">
+                      {String(hour).padStart(2, "0")}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleTimeChange(hour === 12 ? 1 : hour + 1, minute, period)}
+                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[#8B919C] hover:text-white hover:bg-white/10 transition-colors"
+                    >
+                      ▲
+                    </button>
+                  </div>
+
+                  <span className="text-sm font-bold text-[#8B919C] select-none">:</span>
+
+                  {/* Minute Selector (15-min intervals or steppers) */}
+                  <div className="flex items-center gap-1.5 flex-1 justify-center">
+                    <button
+                      type="button"
+                      onClick={() => handleTimeChange(hour, (minute - 15 + 60) % 60, period)}
+                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[#8B919C] hover:text-white hover:bg-white/10 transition-colors"
+                    >
+                      ▼
+                    </button>
+                    <div className="font-mono text-sm font-bold text-[#E6E8EB] w-7 text-center select-none">
+                      {String(minute).padStart(2, "0")}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleTimeChange(hour, (minute + 15) % 60, period)}
+                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[#8B919C] hover:text-white hover:bg-white/10 transition-colors"
+                    >
+                      ▲
+                    </button>
+                  </div>
+
+                  {/* AM / PM Toggle */}
+                  <div className="flex rounded-lg overflow-hidden border border-[#333333] p-0.5 bg-[#121212]">
+                    <button
+                      type="button"
+                      onClick={() => handleTimeChange(hour, minute, "AM")}
+                      className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition-all ${
+                        period === "AM"
+                          ? "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border border-[rgba(167,139,250,0.35)] shadow-sm"
+                          : "text-[#8B919C] hover:text-white border border-transparent"
+                      }`}
+                    >
+                      AM
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTimeChange(hour, minute, "PM")}
+                      className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition-all ${
+                        period === "PM"
+                          ? "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border border-[rgba(167,139,250,0.35)] shadow-sm"
+                          : "text-[#8B919C] hover:text-white border border-transparent"
+                      }`}
+                    >
+                      PM
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleTimeChange(hour, (minute + 15) % 60, period)}
-                  className="w-6 h-6 rounded flex items-center justify-center text-xs text-[#8B919C] hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  ▲
-                </button>
               </div>
-
-              {/* AM / PM Toggle */}
-              <div className="flex rounded-lg overflow-hidden border border-[#333333] p-0.5 bg-[#121212]">
-                <button
-                  type="button"
-                  onClick={() => handleTimeChange(hour, minute, "AM")}
-                  className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition-all ${
-                    period === "AM"
-                      ? "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border border-[rgba(167,139,250,0.35)] shadow-sm"
-                      : "text-[#8B919C] hover:text-white border border-transparent"
-                  }`}
-                >
-                  AM
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTimeChange(hour, minute, "PM")}
-                  className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition-all ${
-                    period === "PM"
-                      ? "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border border-[rgba(167,139,250,0.35)] shadow-sm"
-                      : "text-[#8B919C] hover:text-white border border-transparent"
-                  }`}
-                >
-                  PM
-                </button>
-              </div>
-            </div>
-          </div>
+            </>
+          )}
 
           {/* Footer Actions */}
           <div className="flex items-center justify-between pt-1">

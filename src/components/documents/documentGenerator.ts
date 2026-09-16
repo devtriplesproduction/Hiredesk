@@ -63,7 +63,8 @@ export const DOC_TITLES = {
   "internship-certificate": "Internship Certificate", "continuing-obligation": "Continuing Obligation Reminder"
 };
 
-export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string, LOGO_WHITE: string, ICON_BLACK: string): string {    const ICONS = {
+export function generateDocument(dt: string, rawD: DocumentData, LOGO_BLACK: string, LOGO_WHITE: string, ICON_BLACK: string): string {
+    const ICONS = {
       briefcase: '<rect x="3" y="7.5" width="18" height="12.5" rx="1.6"/><path d="M8.5 7.5V5.8C8.5 4.8 9.3 4 10.3 4H13.7C14.7 4 15.5 4.8 15.5 5.8V7.5"/><line x1="3" y1="13" x2="21" y2="13"/>',
       user: '<circle cx="12" cy="8.3" r="3.6"/><path d="M4.8 20c0-3.8 3.2-6.3 7.2-6.3s7.2 2.5 7.2 6.3"/>',
       users: '<circle cx="9" cy="8" r="3.1"/><path d="M3.3 19.3c0-3.3 2.6-5.6 5.7-5.6s5.7 2.3 5.7 5.6"/><circle cx="17" cy="9" r="2.4"/><path d="M15 14.3c2.7 0.3 4.5 2.3 4.7 5"/>',
@@ -107,56 +108,86 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
     function ph(s: string) { return '<span class="ph">' + s + '</span>'; }
     function esc(s?: string) { return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
-    const DEFAULTS = {
-      candidateName: "[CANDIDATE NAME]", designation: "[DESIGNATION]", department: "Development", departmentOther: "[DEPARTMENT]",
-      reportingManager: "[REPORTING MANAGER]", officeLocation: "Satara Office", workingHours: "10:00 AM – 8:00 PM",
-      dateOfJoining: "[DATE OF JOINING]", letterDate: "[DATE]", offerValidityDate: "[OFFER VALIDITY DATE]",
+    const DEFAULTS: Record<string, string> = {
+      candidateName: "Shital Khulape", designation: "Dev", department: "Development", departmentOther: "Development",
+      reportingManager: "Harish", officeLocation: "Satara Office", workingHours: "10:00 AM – 8:00 PM",
+      dateOfJoining: "13/11/2026", letterDate: "13/11/2026", offerValidityDate: "14/11/2026",
       refNo: "OFFER/2026/001", probationPeriod: "3 Months", internshipEndDate: "[INTERNSHIP END DATE]",
-      probationSalary: "[PROBATION MONTHLY SALARY]", ctcAmount: "[CTC AMOUNT]", monthlyGross: "[MONTHLY GROSS]",
+      probationSalary: "8000", ctcAmount: "[CTC AMOUNT]", monthlyGross: "[MONTHLY GROSS]",
       proprietorName: "[PROPRIETOR NAME]", noticePeriod: "1 Month",
-      officeAddress: "Rajdhani Towers, Rajwada, Satara", hrEmail: "hr@triplesproduction.com", hrPhone: "[HR PHONE]",
-      website: "www.triplesproduction.com", emergencyContact: "[EMERGENCY CONTACT]",
+      officeAddress: "Rajdhani Towers, Rajwada, Satara", hrEmail: "hr@triplesproduction.com", hrPhone: "9879707000",
+      website: "www.triplesproduction.com", emergencyContact: "98887688997",
       bankName: "[BANK NAME]", accountNumber: "[ACCOUNT NUMBER]", ifsc: "[IFSC CODE]", pan: "[PAN]",
       bondAmount: "[BOND AMOUNT]", bondDurationMonths: "12", trainingDescription: "[TRAINING / INVESTMENT PROVIDED]",
       lastWorkingDay: "[LAST WORKING DAY]", performanceNote: "", resignationDate: "[RESIGNATION LETTER DATE]",
       keyResponsibilities: ""
     };
 
-    function isPlaceholder(v: any) { return typeof v === "string" && v.startsWith("[") && v.endsWith("]"); }
-    function val(v?: string) { return isPlaceholder(v) ? ph(esc(v)) : esc(v); }
+    // Merge provided data with defaults: explicit entered values take precedence
+    const d: DocumentData = { ...DEFAULTS, ...(rawD || {}) };
+    for (const key of Object.keys(DEFAULTS)) {
+      const v = (rawD as any)?.[key];
+      if (v === undefined || v === null || String(v).trim() === "") {
+        (d as any)[key] = DEFAULTS[key];
+      } else {
+        (d as any)[key] = String(v).trim();
+      }
+    }
 
-// removed toggleDeptOther and getFormData
+    function isPlaceholder(v: any) { return typeof v === "string" && v.startsWith("[") && v.endsWith("]"); }
+    function val(v?: string) {
+      if (!v) return "";
+      return isPlaceholder(v) ? ph(esc(v)) : esc(v);
+    }
+    function formatCurrency(v?: string) {
+      if (!v) return "";
+      if (isPlaceholder(v)) return val(v);
+      const clean = v.trim();
+      if (clean.startsWith("₹") || clean.startsWith("&#8377;") || clean.toLowerCase().startsWith("rs")) {
+        return esc(clean);
+      }
+      return "&#8377;" + esc(clean);
+    }
 
     function header(pageNo: number, title?: string, total?: number) {
       title = title || "Letter of Appointment";
       total = total || 8;
-      return '<div class="hd"><div class="l"><img src="' + LOGO_BLACK + '"></div>' +
+      const logoSrc = LOGO_BLACK || "/logo.png";
+      const logoEl = logoSrc
+        ? '<img src="' + logoSrc + '" alt="Triple S Production" class="hd-logo-img" style="height:40px;max-width:280px;object-fit:contain;">'
+        : '<div style="font-weight:700;font-size:10pt;letter-spacing:-0.2px;color:#111;">Triple S Production</div>';
+      return '<div class="hd">' +
+        '<div class="l">' + logoEl + '</div>' +
         '<div class="c"><div class="t2">' + title + '</div></div>' +
         '<div class="r">Page ' + pageNo + ' of ' + total + '</div></div>';
     }
     function footer(d: DocumentData) {
       return '<div class="ft"><div>Private &amp; Confidential</div>' +
-        '<div class="mid">' + esc(d.hrEmail) + '</div>' +
-        '<div>' + esc(d.refNo) + '</div></div>';
+        '<div class="mid">' + esc(d.hrEmail || "hr@triplesproduction.com") + '</div>' +
+        '<div>' + val(d.refNo) + '</div></div>';
     }
     function contentWm() {
-      return '<img src="' + ICON_BLACK + '" style="position:absolute;left:55mm;top:98.5mm;width:100mm;height:100mm;opacity:0.045;z-index:0;">';
+      const src = ICON_BLACK || LOGO_BLACK || "/logo.png";
+      return '<img src="' + src + '" alt="" class="page-wm" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:135mm;height:135mm;opacity:0.04;filter:grayscale(100%);z-index:0;pointer-events:none;">';
     }
     function page(inner: string, pageNo: number, d: DocumentData, title?: string, total?: number) {
       return '<div class="page">' + contentWm() + header(pageNo, title, total) + '<div class="content" style="z-index:1;">' + inner + '</div>' + footer(d) + '</div>';
     }
 
     function buildPage1(d: DocumentData) {
+      const logoSrc = LOGO_WHITE || LOGO_BLACK || "/logo.png";
+      const wmImg = '<img class="wm" src="' + logoSrc + '" alt="" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:145mm;height:145mm;opacity:0.055;pointer-events:none;">';
+      const logoImg = '<img src="' + logoSrc + '" alt="Logo" style="height:52px;width:auto;object-fit:contain;">';
       return '<div class="page cover">' +
-        '<img class="wm" src="' + LOGO_WHITE + '">' +
+        wmImg +
         '<div class="innerc">' +
-        '<div class="logo-row"><img src="' + LOGO_WHITE + '"><div class="word">TRIPLE S PRODUCTION<span class="subw">CREATIVE &amp; TECHNOLOGY AGENCY</span></div></div>' +
+        '<div class="logo-row">' + logoImg + '<div class="word">TRIPLE S PRODUCTION<span class="subw">CREATIVE &amp; TECHNOLOGY AGENCY</span></div></div>' +
         '<div class="mid"><div class="title">Letter of<br>Appointment</div><div class="rule-w"></div>' +
-        '<div class="tagline"><b>Creative</b> &nbsp;&middot;&nbsp; <b>Technology</b> &nbsp;&middot;&nbsp; <b>Branding</b></div></div>' +
+        '<div class="tagline">Creative &nbsp;&middot;&nbsp; Technology &nbsp;&middot;&nbsp; Branding</div></div>' +
         '<div class="bottom"><div class="metarow">' +
-        '<div class="m"><div class="lbl">Prepared For</div><div class="val">' + val(d.candidateName) + '</div></div>' +
-        '<div class="m"><div class="lbl">Reference No.</div><div class="val">' + esc(d.refNo) + '</div></div>' +
-        '<div class="m"><div class="lbl">Date of Joining</div><div class="val">' + val(d.dateOfJoining) + '</div></div>' +
+        '<div class="m"><div class="lbl">PREPARED FOR</div><div class="val">' + val(d.candidateName) + '</div></div>' +
+        '<div class="m"><div class="lbl">REFERENCE NO.</div><div class="val">' + val(d.refNo) + '</div></div>' +
+        '<div class="m"><div class="lbl">DATE OF JOINING</div><div class="val">' + val(d.dateOfJoining) + '</div></div>' +
         '</div><div class="confbar"><div>Strictly Private &amp; Confidential</div><div>' + val(d.letterDate) + '</div></div></div>' +
         '</div></div>';
     }
@@ -172,13 +203,13 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<div class="cell"><div class="lbl">Department</div><div class="val">' + val(d.department) + '</div></div>' +
         '<div class="cell"><div class="lbl">Working Hours</div><div class="val">' + val(d.workingHours) + '</div></div>' +
         '</div>' +
-        '<div class="infocard2"><div class="hd2">' + icon("user", 16, "#ffffff") + ' Candidate Information</div><div class="rows">' +
-        '<div class="row2">' + badge("briefcase", 30, false, "#F5F5F5") + '<div><div class="lbl">Designation</div><div class="val">' + val(d.designation) + '</div></div></div>' +
-        '<div class="row2">' + badge("users", 30, false, "#F5F5F5") + '<div><div class="lbl">Reporting To</div><div class="val">' + val(d.reportingManager) + '</div></div></div>' +
-        '<div class="row2">' + badge("calendar", 30, false, "#F5F5F5") + '<div><div class="lbl">Date of Joining</div><div class="val">' + val(d.dateOfJoining) + '</div></div></div>' +
-        '<div class="row2">' + badge("hourglass", 30, false, "#F5F5F5") + '<div><div class="lbl">Probation Period</div><div class="val">' + val(d.probationPeriod) + '</div></div></div>' +
-        '<div class="row2">' + badge("pin", 30, false, "#F5F5F5") + '<div><div class="lbl">Place of Work</div><div class="val">' + val(d.officeLocation) + '</div></div></div>' +
-        '<div class="row2">' + badge("bell", 30, false, "#F5F5F5") + '<div><div class="lbl">Notice Period (Post-Confirmation)</div><div class="val">' + esc(d.noticePeriod) + '</div></div></div>' +
+        '<div class="infocard2"><div class="hd2">' + icon("user", 16, "#ffffff") + ' <span>Candidate Information</span></div><div class="rows">' +
+        '<div class="row2">' + badge("briefcase", 30, false, "#F4F4F6") + '<div><div class="lbl">Designation</div><div class="val">' + val(d.designation) + '</div></div></div>' +
+        '<div class="row2">' + badge("users", 30, false, "#F4F4F6") + '<div><div class="lbl">Reporting To</div><div class="val">' + val(d.reportingManager) + '</div></div></div>' +
+        '<div class="row2">' + badge("calendar", 30, false, "#F4F4F6") + '<div><div class="lbl">Date of Joining</div><div class="val">' + val(d.dateOfJoining) + '</div></div></div>' +
+        '<div class="row2">' + badge("hourglass", 30, false, "#F4F4F6") + '<div><div class="lbl">Probation Period</div><div class="val">' + val(d.probationPeriod) + '</div></div></div>' +
+        '<div class="row2">' + badge("pin", 30, false, "#F4F4F6") + '<div><div class="lbl">Place of Work</div><div class="val">' + val(d.officeLocation) + '</div></div></div>' +
+        '<div class="row2">' + badge("lock", 30, false, "#F4F4F6") + '<div><div class="lbl">Notice Period (Post-Confirmation)</div><div class="val">' + val(d.noticePeriod) + '</div></div></div>' +
         '</div></div>' +
         '<div class="banner">' + badge("shield", 32) + '<div>This appointment is subject to successful verification of your documents, educational qualifications, and professional references. Any discrepancy discovered at any stage may result in withdrawal of this offer.</div></div>' +
         '<div class="sig2"><div><div class="name">' + val(d.proprietorName) + '</div><div class="role">Founder, Triple S Production</div></div>' +
@@ -189,23 +220,23 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
     function buildPage3(d: DocumentData) {
       const items = [
         ["compass", "First Increment", "Reviewed at 3 months, on successful confirmation of employment."],
-        ["clipboard", "Performance Bonus", "Linked to annual performance appraisal and Company results."],
+        ["briefcase", "Performance Bonus", "Linked to annual performance appraisal and Company results."],
         ["compass", "Paid Upskilling", "Company-sponsored courses and certifications to support your growth."],
-        ["bell", "Notice Period", esc(d.noticePeriod) + "'s notice is required from either side, post confirmation of employment."],
+        ["lock", "Notice Period", val(d.noticePeriod) + "'s notice is required from either side, post confirmation of employment."],
         ["clipboard", "Leave &amp; Credit Policy", "8 active working hours/day is the standard. Time worked beyond this is banked as credit; every 8 credits earned equals 1 day of paid leave. No other paid leaves apply. Full details in Annexure &mdash; Leave &amp; Attendance Policy."]
       ];
       const rows = items.map(function (it) {
-        return '<div class="row2f">' + badge(it[0] as keyof typeof ICONS, 32, false, "#F5F5F5") + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
+        return '<div class="row2f">' + badge(it[0] as keyof typeof ICONS, 30, false, "#F4F4F6") + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
       }).join("");
       const inner =
         '<h1 class="pt">Compensation &amp; Benefits</h1>' +
-        '<p class="body">Your compensation is structured in two stages &mdash; a fixed monthly salary during your ' + esc(d.probationPeriod) + ' probation period, followed by your full Cost to Company (CTC) on successful confirmation.</p>' +
+        '<p class="body">Your compensation is structured in two stages &mdash; a fixed monthly salary during your ' + val(d.probationPeriod) + ' probation period, followed by your full Cost to Company (CTC) on successful confirmation.</p>' +
         '<div class="payflow">' +
-        '<div class="panel"><div class="kicker2">Probation &middot; ' + esc(d.probationPeriod) + '</div><div class="amt">&#8377;' + val(d.probationSalary) + '</div><div class="sub2">Fixed monthly salary during the testing phase</div></div>' +
-        '<div class="arrow">' + icon("chevron-down", 22, "#6B6B6B") + '</div>' +
-        '<div class="panel dark"><div class="kicker2">Post-Confirmation</div><div class="amt">&#8377;' + val(d.ctcAmount) + ' <span style="font-size:10pt;font-weight:500;">/ yr</span></div><div class="sub2">&#8377;' + val(d.monthlyGross) + ' monthly gross &middot; details in Annexure B</div></div>' +
+        '<div class="panel"><div class="kicker2">Probation &middot; ' + val(d.probationPeriod) + '</div><div class="amt">' + formatCurrency(d.probationSalary) + '</div><div class="sub2">Fixed monthly salary during the testing phase</div></div>' +
+        '<div class="arrow">' + icon("chevron-down", 20, "#9CA3AF") + '</div>' +
+        '<div class="panel dark"><div class="kicker2">Post-Confirmation</div><div class="amt">' + formatCurrency(d.ctcAmount) + ' <span style="font-size:10pt;font-weight:400;opacity:0.85;">/ yr</span></div><div class="sub2">' + formatCurrency(d.monthlyGross) + ' monthly gross &middot; details in Annexure B</div></div>' +
         '</div>' +
-        '<div class="banner" style="margin-top:6mm;">' + badge("shield", 32) + '<div>The probation salary is a fixed, testing-phase compensation. Your full CTC, increments, and benefits apply only after successful confirmation at the end of the probation period.</div></div>' +
+        '<div class="banner" style="margin-top:5mm;">' + badge("shield", 32) + '<div>The probation salary is a fixed, testing-phase compensation. Your full CTC, increments, and benefits apply only after successful confirmation at the end of the probation period.</div></div>' +
         '<div class="paycard">' + rows + '</div>';
       return page(inner, 3, d);
     }
@@ -216,21 +247,21 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         ["lock", "Confidentiality &amp; Data Security", "You agree to protect all confidential business, client, and technical information, and to use Company systems and data per security policy."],
         ["users", "Code of Conduct", "Professional conduct, workplace behaviour, and disciplinary standards apply."],
         ["search", "Background Verification", "This offer is contingent on satisfactory document and reference checks."],
-        ["bell", "Notice Period", esc(d.noticePeriod) + " notice is required from either side, post confirmation of employment."],
-        ["clock", "Office Timing &amp; Leave Credits", esc(d.workingHours) + ". 8 active working hours/day is standard; extra hours are banked as credit, and 8 credits earned equal 1 day of paid leave. No other paid leaves apply."],
+        ["lock", "Notice Period", val(d.noticePeriod) + " notice is required from either side, post confirmation of employment."],
+        ["clock", "Office Timing &amp; Leave Credits", val(d.workingHours) + ". 8 active working hours/day is standard; extra hours are banked as credit, and 8 credits earned equal 1 day of paid leave. No other paid leaves apply."],
         ["calendar", "Leave Approval &amp; Discipline", "Medical and consecutive leaves require prior approval. Unpaid leave without prior notice may lead to strict disciplinary action, including termination in serious cases."],
         ["shield", "Loss or Damage", "Any loss or damage caused to Company property or assets due to the employee's action or negligence will result in a deduction from salary."],
         ["badge-check", "Acceptance Validity", "This offer is valid for signature until " + val(d.offerValidityDate) + "."],
         ["scale", "Intellectual Property", "All work product created during employment belongs to the Company or its clients."]
       ];
       const cards = items.map(function (it) {
-        return '<div class="lcard">' + badge(it[0] as keyof typeof ICONS, 36) + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
+        return '<div class="lcard">' + badge(it[0] as keyof typeof ICONS, 34) + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
       }).join("");
       const inner =
         '<h1 class="pt">Key Terms &amp; Conditions</h1>' +
         '<p class="body">The points below summarise the legal and policy framework governing your employment. Full clauses are set out in the Employment Agreement and referenced Company policies.</p>' +
         '<div class="lgrid">' + cards + '</div>' +
-        '<div class="banner">' + badge("scale", 32) + '<div>This page is a plain-language summary for your convenience. The binding legal terms are set out in full in the Employment Agreement and the Company policies referenced above.</div></div>';
+        '<div class="banner" style="margin-top:5mm;">' + badge("scale", 32) + '<div>This page is a plain-language summary for your convenience. The binding legal terms are set out in full in the Employment Agreement and the Company policies referenced above.</div></div>';
       return page(inner, 4, d);
     }
 
@@ -250,17 +281,17 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<h1 class="pt">Our Culture</h1>' +
         '<p class="body">A small, hands-on team that moves fast, owns outcomes, and takes pride in craft &mdash; on every project, every time.</p>' +
         '<div class="mvrow">' +
-        '<div class="mvblock">' + badge("compass", 36) + '<div class="h">Mission</div><div class="d">To help ambitious brands and businesses grow through thoughtful creative, technology, and marketing work.</div></div>' +
-        '<div class="mvblock">' + badge("eye", 36) + '<div class="h">Vision</div><div class="d">To be Maharashtra&rsquo;s most trusted creative &amp; technology partner for growing businesses.</div></div>' +
-        '<div class="mvblock">' + badge("heart", 36) + '<div class="h">Culture</div><div class="d">A close-knit team that values ownership, craft, and honest feedback over hierarchy.</div></div>' +
+        '<div class="mvblock">' + badge("compass", 34) + '<div class="h">Mission</div><div class="d">To help ambitious brands and businesses grow through thoughtful creative, technology, and marketing work.</div></div>' +
+        '<div class="mvblock">' + badge("eye", 34) + '<div class="h">Vision</div><div class="d">To be Maharashtra&rsquo;s most trusted creative &amp; technology partner for growing businesses.</div></div>' +
+        '<div class="mvblock">' + badge("heart", 34) + '<div class="h">Culture</div><div class="d">A close-knit team that values ownership, craft, and honest feedback over hierarchy.</div></div>' +
         '</div>' +
         '<div class="valuesgrid5b">' + vcards + '</div>' +
-        '<div class="benefitstrip" style="margin-top:6mm;">' +
-        '<div class="benefitchip">' + badge("hourglass", 28, false, "#F5F5F5") + '<div><div class="h">Leave Credit System</div><div class="d">Extra hours convert to paid leave</div></div></div>' +
-        '<div class="benefitchip">' + badge("compass", 28, false, "#F5F5F5") + '<div><div class="h">Learning Support</div><div class="d">Paid upskilling courses</div></div></div>' +
-        '<div class="benefitchip">' + badge("party", 28, false, "#F5F5F5") + '<div><div class="h">Team Celebrations</div><div class="d">Festivals &amp; milestones</div></div></div>' +
+        '<div class="benefitstrip">' +
+        '<div class="benefitchip">' + badge("hourglass", 28, false, "#F4F4F6") + '<div><div class="h">Leave Credit System</div><div class="d">Extra hours convert to paid leave</div></div></div>' +
+        '<div class="benefitchip">' + badge("compass", 28, false, "#F4F4F6") + '<div><div class="h">Learning Support</div><div class="d">Paid upskilling courses</div></div></div>' +
+        '<div class="benefitchip">' + badge("party", 28, false, "#F4F4F6") + '<div><div class="h">Team Celebrations</div><div class="d">Festivals &amp; milestones</div></div></div>' +
         '</div>' +
-        '<div class="quote5">' + icon("quote", 30, "#ffffff") + '<div><div class="qt">&ldquo;We don&rsquo;t just build brands &mdash; we build lasting impact.&rdquo;</div><div class="qa">&mdash; ' + val(d.proprietorName) + ', Founder</div></div></div>';
+        '<div class="quote5">' + icon("quote", 28, "#ffffff") + '<div><div class="qt">&ldquo;We don&rsquo;t just build brands &mdash; we build lasting impact.&rdquo;</div><div class="qa">&mdash; ' + val(d.proprietorName) + ', Founder</div></div></div>';
       return page(inner, 5, d);
     }
 
@@ -275,8 +306,8 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         ["party", "Welcome Session", "A short onboarding session to introduce the team, tools, and ways of working."]
       ];
       const rows = steps.map(function (s) {
-        return '<div class="rstep"><div class="col"><div class="badge" style="width:32px;height:32px;background:' + INK + ';color:#fff;">' + icon(s[0] as keyof typeof ICONS, 15, "#ffffff") + '</div><div class="connector"></div></div>' +
-          '<div class="box"><div><div class="h">' + s[1] + '</div><div class="d">' + s[2] + '</div></div></div></div>';
+        return '<div class="rstep">' + badge(s[0] as keyof typeof ICONS, 32) +
+          '<div><div class="h">' + s[1] + '</div><div class="d">' + s[2] + '</div></div></div>';
       }).join("");
       const inner =
         '<h1 class="pt">Onboarding Roadmap</h1>' +
@@ -309,49 +340,61 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<div class="p7col"><h3>' + icon("badge-check", 18) + ' Employee Responsibilities</h3><div class="p7list">' + respHtml + '</div></div>' +
         '</div>' +
         '<div class="polstrip">' +
-        '<div class="polchip">' + badge("file", 26, false, "#F5F5F5") + '<div><div class="h">Employee Handbook</div><div class="d">Conduct &amp; leave policy</div></div></div>' +
-        '<div class="polchip">' + badge("clock", 26, false, "#F5F5F5") + '<div><div class="h">Attendance Policy</div><div class="d">Office timing &amp; leave credits</div></div></div>' +
-        '<div class="polchip">' + badge("cpu", 26, false, "#F5F5F5") + '<div><div class="h">IT &amp; Security</div><div class="d">Data &amp; device use</div></div></div>' +
+        '<div class="polchip">' + badge("file", 26, false, "#F4F4F6") + '<div><div class="h">Employee Handbook</div><div class="d">Conduct &amp; leave policy</div></div></div>' +
+        '<div class="polchip">' + badge("clock", 26, false, "#F4F4F6") + '<div><div class="h">Attendance Policy</div><div class="d">Office timing &amp; leave credits</div></div></div>' +
+        '<div class="polchip">' + badge("cpu", 26, false, "#F4F4F6") + '<div><div class="h">IT &amp; Security</div><div class="d">Data &amp; device use</div></div></div>' +
         '</div>' +
         '<div class="helpcard">' +
-        '<div class="cols"><div class="h">Need Help? We&rsquo;re One Message Away</div>' +
-        '<div class="row7">' + icon("mail", 16, "#ffffff") + ' ' + esc(d.hrEmail) + '</div>' +
-        '<div class="row7">' + icon("phone", 16, "#ffffff") + ' ' + val(d.hrPhone) + '</div>' +
-        '<div class="row7">' + icon("globe", 16, "#ffffff") + ' ' + esc(d.website) + '</div>' +
-        '<div class="row7">' + icon("pin", 16, "#ffffff") + ' ' + esc(d.officeAddress) + '</div>' +
-        '<div class="row7">' + icon("siren", 16, "#ffffff") + ' Emergency: ' + val(d.emergencyContact) + '</div></div>' +
+        '<div class="h">Need Help? We&rsquo;re One Message Away</div>' +
+        '<div class="help-grid">' +
+        '<div class="help-col">' +
+        '<div class="row7">' + icon("mail", 16, "#ffffff") + ' <span>' + esc(d.hrEmail || "hr@triplesproduction.com") + '</span></div>' +
+        '<div class="row7">' + icon("globe", 16, "#ffffff") + ' <span>' + esc(d.website || "www.triplesproduction.com") + '</span></div>' +
+        '<div class="row7">' + icon("siren", 16, "#ffffff") + ' <span>Emergency: ' + val(d.emergencyContact) + '</span></div>' +
+        '</div>' +
+        '<div class="help-col">' +
+        '<div class="row7">' + icon("phone", 16, "#ffffff") + ' <span>' + val(d.hrPhone) + '</span></div>' +
+        '<div class="row7">' + icon("pin", 16, "#ffffff") + ' <span>' + esc(d.officeAddress || "Rajdhani Towers, Rajwada, Satara") + '</span></div>' +
+        '</div>' +
+        '</div>' +
         '</div>';
       return page(inner, 7, d);
     }
 
     function buildPage8(d: DocumentData) {
+      const wm8Img = '<img class="wm8" src="' + (LOGO_WHITE || LOGO_BLACK || "/logo.png") + '" alt="" style="pointer-events:none;">';
+      const stampWm = '<img class="stamp-wm" src="' + (ICON_BLACK || LOGO_BLACK || "/logo.png") + '" alt="" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:70mm;height:70mm;opacity:0.045;filter:grayscale(100%);pointer-events:none;">';
       const inner =
         '<h1 class="pt">Acceptance of Offer</h1>' +
-        '<div class="statement">I, ' + val(d.candidateName) + ', confirm that I have read, understood, and voluntarily accept the terms of this Letter of Appointment and its Annexures, issued by Triple S Production. I understand that a detailed Employment Agreement will be executed separately on or before my date of joining.</div>' +
+        '<p class="statement8">I, ' + val(d.candidateName) + ', confirm that I have read, understood, and voluntarily accept the terms of this Letter of Appointment and its Annexures, issued by Triple S Production. I understand that a detailed Employment Agreement will be executed separately on or before my date of joining.</p>' +
         '<div class="sigwrap">' +
-        '<div class="sigbox"><div class="lbl">For Triple S Production</div><div class="line"></div><div><div class="name">' + val(d.proprietorName) + '</div><div class="date">Founder &nbsp;&middot;&nbsp; Date: ______________</div></div></div>' +
-        '<div class="sigbox"><div class="lbl">Employee Signature</div><div class="line"></div><div><div class="name">' + val(d.candidateName) + '</div><div class="date">Date: ______________</div></div></div>' +
+        '<div class="sigbox"><div class="lbl">FOR TRIPLE S PRODUCTION</div><div class="line"></div><div><div class="name">' + val(d.proprietorName) + '</div><div class="date">Founder &nbsp;&middot;&nbsp; Date: ______________</div></div></div>' +
+        '<div class="sigbox"><div class="lbl">EMPLOYEE SIGNATURE</div><div class="line"></div><div><div class="name">' + val(d.candidateName) + '</div><div class="date">Date: ______________</div></div></div>' +
         '</div>' +
-        '<div class="stamprow">' +
-        '<div class="stampbox">' + icon("users", 26, "#bbbbbb") + '<div class="lbl">Witness</div></div>' +
-        '<div class="stampbox">' + icon("stamp", 26, "#bbbbbb") + '<div class="lbl">Company Stamp</div></div>' +
+        '<div class="stamprow-unified">' +
+        stampWm +
+        '<div class="stamp-side">' + icon("users", 24, "#9CA3AF") + '<div class="lbl">WITNESS</div></div>' +
+        '<div class="stamp-side">' + icon("stamp", 24, "#9CA3AF") + '<div class="lbl">COMPANY STAMP</div></div>' +
         '</div>' +
-        '<div class="welcome8"><img class="wm8" src="' + LOGO_WHITE + '"><div class="h">Welcome to Triple S Production</div><div class="d">Let&rsquo;s build something extraordinary, together.</div></div>';
+        '<div class="welcome8">' + wm8Img + '<div class="h">Welcome to Triple S Production</div><div class="d">Let&rsquo;s build something extraordinary, together.</div></div>';
       return page(inner, 8, d);
     }
 
     // ============== INTERNSHIP OFFER (8-page kit) ==============
     function buildIntern1(d: DocumentData) {
+      const logoSrc = LOGO_WHITE || LOGO_BLACK || "/logo.png";
+      const wmImg = '<img class="wm" src="' + logoSrc + '" alt="" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:145mm;height:145mm;opacity:0.055;pointer-events:none;">';
+      const logoImg = '<img src="' + logoSrc + '" alt="Logo" style="height:52px;width:auto;object-fit:contain;">';
       return '<div class="page cover">' +
-        '<img class="wm" src="' + LOGO_WHITE + '">' +
+        wmImg +
         '<div class="innerc">' +
-        '<div class="logo-row"><img src="' + LOGO_WHITE + '"><div class="word">TRIPLE S PRODUCTION<span class="subw">CREATIVE &amp; TECHNOLOGY AGENCY</span></div></div>' +
+        '<div class="logo-row">' + logoImg + '<div class="word">TRIPLE S PRODUCTION<span class="subw">CREATIVE &amp; TECHNOLOGY AGENCY</span></div></div>' +
         '<div class="mid"><div class="title">Letter of<br>Internship</div><div class="rule-w"></div>' +
-        '<div class="tagline"><b>Creative</b> &nbsp;&middot;&nbsp; <b>Technology</b> &nbsp;&middot;&nbsp; <b>Branding</b></div></div>' +
+        '<div class="tagline">Creative &nbspmiddot;&nbsp; Technology &nbsp;&middot;&nbsp; Branding</div></div>' +
         '<div class="bottom"><div class="metarow">' +
-        '<div class="m"><div class="lbl">Prepared For</div><div class="val">' + val(d.candidateName) + '</div></div>' +
-        '<div class="m"><div class="lbl">Reference No.</div><div class="val">' + esc(d.refNo) + '</div></div>' +
-        '<div class="m"><div class="lbl">Date of Joining</div><div class="val">' + val(d.dateOfJoining) + '</div></div>' +
+        '<div class="m"><div class="lbl">PREPARED FOR</div><div class="val">' + val(d.candidateName) + '</div></div>' +
+        '<div class="m"><div class="lbl">REFERENCE NO.</div><div class="val">' + val(d.refNo) + '</div></div>' +
+        '<div class="m"><div class="lbl">DATE OF JOINING</div><div class="val">' + val(d.dateOfJoining) + '</div></div>' +
         '</div><div class="confbar"><div>Strictly Private &amp; Confidential</div><div>' + val(d.letterDate) + '</div></div></div>' +
         '</div></div>';
     }
@@ -366,13 +409,13 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<div class="cell"><div class="lbl">Department</div><div class="val">' + val(d.department) + '</div></div>' +
         '<div class="cell"><div class="lbl">Working Hours</div><div class="val">' + val(d.workingHours) + '</div></div>' +
         '</div>' +
-        '<div class="infocard2"><div class="hd2">' + icon("user", 16, "#ffffff") + ' Intern Information</div><div class="rows">' +
-        '<div class="row2">' + badge("briefcase", 30, false, "#F5F5F5") + '<div><div class="lbl">Designation</div><div class="val">' + val(d.designation) + '</div></div></div>' +
-        '<div class="row2">' + badge("users", 30, false, "#F5F5F5") + '<div><div class="lbl">Reporting To</div><div class="val">' + val(d.reportingManager) + '</div></div></div>' +
-        '<div class="row2">' + badge("calendar", 30, false, "#F5F5F5") + '<div><div class="lbl">Date of Joining</div><div class="val">' + val(d.dateOfJoining) + '</div></div></div>' +
-        '<div class="row2">' + badge("hourglass", 30, false, "#F5F5F5") + '<div><div class="lbl">Internship Duration</div><div class="val">' + val(d.probationPeriod) + ' (until ' + val(d.internshipEndDate) + ')</div></div></div>' +
-        '<div class="row2">' + badge("pin", 30, false, "#F5F5F5") + '<div><div class="lbl">Place of Work</div><div class="val">' + val(d.officeLocation) + '</div></div></div>' +
-        '<div class="row2">' + badge("bell", 30, false, "#F5F5F5") + '<div><div class="lbl">Notice Period</div><div class="val">' + esc(d.noticePeriod) + '</div></div></div>' +
+        '<div class="infocard2"><div class="hd2">' + icon("user", 16, "#ffffff") + ' <span>Intern Information</span></div><div class="rows">' +
+        '<div class="row2">' + badge("briefcase", 30, false, "#F4F4F6") + '<div><div class="lbl">Designation</div><div class="val">' + val(d.designation) + '</div></div></div>' +
+        '<div class="row2">' + badge("users", 30, false, "#F4F4F6") + '<div><div class="lbl">Reporting To</div><div class="val">' + val(d.reportingManager) + '</div></div></div>' +
+        '<div class="row2">' + badge("calendar", 30, false, "#F4F4F6") + '<div><div class="lbl">Date of Joining</div><div class="val">' + val(d.dateOfJoining) + '</div></div></div>' +
+        '<div class="row2">' + badge("hourglass", 30, false, "#F4F4F6") + '<div><div class="lbl">Internship Duration</div><div class="val">' + val(d.probationPeriod) + ' (until ' + val(d.internshipEndDate) + ')</div></div></div>' +
+        '<div class="row2">' + badge("pin", 30, false, "#F4F4F6") + '<div><div class="lbl">Place of Work</div><div class="val">' + val(d.officeLocation) + '</div></div></div>' +
+        '<div class="row2">' + badge("lock", 30, false, "#F4F4F6") + '<div><div class="lbl">Notice Period</div><div class="val">' + val(d.noticePeriod) + '</div></div></div>' +
         '</div></div>' +
         '<div class="banner">' + badge("shield", 32) + '<div>This internship is subject to successful verification of your documents, educational qualifications, and professional references. Any discrepancy discovered at any stage may result in withdrawal of this offer.</div></div>' +
         '<div class="sig2"><div><div class="name">' + val(d.proprietorName) + '</div><div class="role">Founder, Triple S Production</div></div>' +
@@ -380,23 +423,25 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
       return page(inner, 2, d, "Letter of Internship");
     }
     function buildIntern3(d: DocumentData) {
-      const stipendLabel = /unpaid/i.test(String(d.probationSalary || "")) ? "Unpaid" : ("&#8377;" + val(d.probationSalary));
+      const isUnpaid = /unpaid/i.test(String(d.probationSalary || ""));
+      const isPh = isPlaceholder(d.probationSalary);
+      const stipendLabel = isUnpaid ? "Unpaid" : (isPh ? val(d.probationSalary) : formatCurrency(d.probationSalary));
       const items = [
         ["document-check", "Certificate of Completion", "Issued at the end of the internship, subject to satisfactory performance and completion of assigned work."],
         ["clipboard", "Letter of Recommendation", "May be issued on request, based on your performance and conduct during the internship."],
-        ["bell", "Notice Period", esc(d.noticePeriod) + "'s notice is required from either side to discontinue the internship."],
+        ["lock", "Notice Period", val(d.noticePeriod) + "'s notice is required from either side to discontinue the internship."],
         ["clipboard", "Leave &amp; Credit Policy", "8 active working hours/day is the standard. Time worked beyond this is banked as credit; every 8 credits earned equals 1 day of paid leave. No other paid leaves apply. Full details in Annexure &mdash; Leave &amp; Attendance Policy."]
       ];
       const rows = items.map(function (it) {
-        return '<div class="row2f">' + badge(it[0] as keyof typeof ICONS, 32, false, "#F5F5F5") + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
+        return '<div class="row2f">' + badge(it[0] as keyof typeof ICONS, 30, false, "#F4F4F6") + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
       }).join("");
       const inner =
         '<h1 class="pt">Stipend &amp; Terms</h1>' +
-        '<p class="body">Your engagement with the Company is for a fixed internship duration of ' + esc(d.probationPeriod) + ', on the stipend structure set out below.</p>' +
+        '<p class="body">Your engagement with the Company is for a fixed internship duration of ' + val(d.probationPeriod) + ', on the stipend structure set out below.</p>' +
         '<div class="payflow">' +
-        '<div class="panel dark" style="flex:1;"><div class="kicker2">Monthly Stipend</div><div class="amt">' + stipendLabel + '</div><div class="sub2">For the duration of the internship (' + esc(d.probationPeriod) + ')</div></div>' +
+        '<div class="panel dark" style="flex:1;"><div class="kicker2">Monthly Stipend</div><div class="amt">' + stipendLabel + '</div><div class="sub2">For the duration of the internship (' + val(d.probationPeriod) + ')</div></div>' +
         '</div>' +
-        '<div class="banner" style="margin-top:6mm;">' + badge("shield", 32) + '<div>Continuation as a full-time employee (PPO) is not guaranteed. It will only be considered after successful completion of at least the first 3 months of the internship, based on your performance, at the Company\u2019s sole discretion.</div></div>' +
+        '<div class="banner" style="margin-top:5mm;">' + badge("shield", 32) + '<div>Continuation as a full-time employee (PPO) is not guaranteed. It will only be considered after successful completion of at least the first 3 months of the internship, based on your performance, at the Company&rsquo;s sole discretion.</div></div>' +
         '<div class="paycard">' + rows + '</div>';
       return page(inner, 3, d, "Letter of Internship");
     }
@@ -406,21 +451,21 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         ["lock", "Confidentiality &amp; Data Security", "You agree to protect all confidential business, client, and technical information, and to use Company systems and data per security policy."],
         ["users", "Code of Conduct", "Professional conduct, workplace behaviour, and disciplinary standards apply."],
         ["search", "Background Verification", "This offer is contingent on satisfactory document and reference checks."],
-        ["bell", "Notice Period", esc(d.noticePeriod) + " notice is required from either side to discontinue the internship."],
-        ["clock", "Office Timing &amp; Leave Credits", esc(d.workingHours) + ". 8 active working hours/day is standard; extra hours are banked as credit, and 8 credits earned equal 1 day of paid leave. No other paid leaves apply."],
+        ["lock", "Notice Period", val(d.noticePeriod) + " notice is required from either side to discontinue the internship."],
+        ["clock", "Office Timing &amp; Leave Credits", val(d.workingHours) + ". 8 active working hours/day is standard; extra hours are banked as credit, and 8 credits earned equal 1 day of paid leave. No other paid leaves apply."],
         ["calendar", "Leave Approval &amp; Discipline", "Medical and consecutive leaves require prior approval. Unpaid leave without prior notice may lead to strict disciplinary action, including termination in serious cases."],
         ["shield", "Loss or Damage", "Any loss or damage caused to Company property or assets due to the intern's action or negligence will result in a deduction from stipend, where applicable."],
-        ["badge-check", "No Guaranteed PPO", "Conversion to a full-time role is not guaranteed and is considered only after successful completion of at least 3 months, at the Company's sole discretion."],
+        ["badge-check", "Acceptance Validity", "This offer is valid for signature until " + val(d.offerValidityDate) + "."],
         ["scale", "Intellectual Property", "All work product created during the internship belongs to the Company or its clients."]
       ];
       const cards = items.map(function (it) {
-        return '<div class="lcard">' + badge(it[0] as keyof typeof ICONS, 36) + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
+        return '<div class="lcard">' + badge(it[0] as keyof typeof ICONS, 34) + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
       }).join("");
       const inner =
         '<h1 class="pt">Key Terms &amp; Conditions</h1>' +
         '<p class="body">The points below summarise the legal and policy framework governing your internship. Full clauses are set out in the Internship Agreement and referenced Company policies.</p>' +
         '<div class="lgrid">' + cards + '</div>' +
-        '<div class="banner">' + badge("scale", 32) + '<div>This page is a plain-language summary for your convenience. The binding legal terms are set out in full in the Internship Agreement and the Company policies referenced above.</div></div>';
+        '<div class="banner" style="margin-top:5mm;">' + badge("scale", 32) + '<div>This page is a plain-language summary for your convenience. The binding legal terms are set out in full in the Internship Agreement and the Company policies referenced above.</div></div>';
       return page(inner, 4, d, "Letter of Internship");
     }
     function buildIntern5(d: DocumentData) {
@@ -439,17 +484,17 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<h1 class="pt">Our Culture</h1>' +
         '<p class="body">A small, hands-on team that moves fast, owns outcomes, and takes pride in craft &mdash; on every project, every time.</p>' +
         '<div class="mvrow">' +
-        '<div class="mvblock">' + badge("compass", 36) + '<div class="h">Mission</div><div class="d">To help ambitious brands and businesses grow through thoughtful creative, technology, and marketing work.</div></div>' +
-        '<div class="mvblock">' + badge("eye", 36) + '<div class="h">Vision</div><div class="d">To be Maharashtra&rsquo;s most trusted creative &amp; technology partner for growing businesses.</div></div>' +
-        '<div class="mvblock">' + badge("heart", 36) + '<div class="h">Culture</div><div class="d">A close-knit team that values ownership, craft, and honest feedback over hierarchy.</div></div>' +
+        '<div class="mvblock">' + badge("compass", 34) + '<div class="h">Mission</div><div class="d">To help ambitious brands and businesses grow through thoughtful creative, technology, and marketing work.</div></div>' +
+        '<div class="mvblock">' + badge("eye", 34) + '<div class="h">Vision</div><div class="d">To be Maharashtra&rsquo;s most trusted creative &amp; technology partner for growing businesses.</div></div>' +
+        '<div class="mvblock">' + badge("heart", 34) + '<div class="h">Culture</div><div class="d">A close-knit team that values ownership, craft, and honest feedback over hierarchy.</div></div>' +
         '</div>' +
         '<div class="valuesgrid5b">' + vcards + '</div>' +
-        '<div class="benefitstrip" style="margin-top:6mm;">' +
-        '<div class="benefitchip">' + badge("hourglass", 28, false, "#F5F5F5") + '<div><div class="h">Leave Credit System</div><div class="d">Extra hours convert to paid leave</div></div></div>' +
-        '<div class="benefitchip">' + badge("compass", 28, false, "#F5F5F5") + '<div><div class="h">Learning Support</div><div class="d">Paid upskilling courses</div></div></div>' +
-        '<div class="benefitchip">' + badge("party", 28, false, "#F5F5F5") + '<div><div class="h">Team Celebrations</div><div class="d">Festivals &amp; milestones</div></div></div>' +
+        '<div class="benefitstrip">' +
+        '<div class="benefitchip">' + badge("hourglass", 28, false, "#F4F4F6") + '<div><div class="h">Leave Credit System</div><div class="d">Extra hours convert to paid leave</div></div></div>' +
+        '<div class="benefitchip">' + badge("compass", 28, false, "#F4F4F6") + '<div><div class="h">Learning Support</div><div class="d">Paid upskilling courses</div></div></div>' +
+        '<div class="benefitchip">' + badge("party", 28, false, "#F4F4F6") + '<div><div class="h">Team Celebrations</div><div class="d">Festivals &amp; milestones</div></div></div>' +
         '</div>' +
-        '<div class="quote5">' + icon("quote", 30, "#ffffff") + '<div><div class="qt">&ldquo;We don&rsquo;t just build brands &mdash; we build lasting impact.&rdquo;</div><div class="qa">&mdash; ' + val(d.proprietorName) + ', Founder</div></div></div>';
+        '<div class="quote5">' + icon("quote", 28, "#ffffff") + '<div><div class="qt">&ldquo;We don&rsquo;t just build brands &mdash; we build lasting impact.&rdquo;</div><div class="qa">&mdash; ' + val(d.proprietorName) + ', Founder</div></div></div>';
       return page(inner, 5, d, "Letter of Internship");
     }
     function buildIntern6(d: DocumentData) {
@@ -463,8 +508,8 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         ["party", "Welcome Session", "A short onboarding session to introduce the team, tools, and ways of working."]
       ];
       const rows = steps.map(function (s) {
-        return '<div class="rstep"><div class="col"><div class="badge" style="width:32px;height:32px;background:' + INK + ';color:#fff;">' + icon(s[0] as keyof typeof ICONS, 15, "#ffffff") + '</div><div class="connector"></div></div>' +
-          '<div class="box"><div><div class="h">' + s[1] + '</div><div class="d">' + s[2] + '</div></div></div></div>';
+        return '<div class="rstep">' + badge(s[0] as keyof typeof ICONS, 32) +
+          '<div><div class="h">' + s[1] + '</div><div class="d">' + s[2] + '</div></div></div>';
       }).join("");
       const inner =
         '<h1 class="pt">Onboarding Roadmap</h1>' +
@@ -496,33 +541,42 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<div class="p7col"><h3>' + icon("badge-check", 18) + ' Intern Responsibilities</h3><div class="p7list">' + respHtml + '</div></div>' +
         '</div>' +
         '<div class="polstrip">' +
-        '<div class="polchip">' + badge("file", 26, false, "#F5F5F5") + '<div><div class="h">Intern Handbook</div><div class="d">Conduct &amp; leave policy</div></div></div>' +
-        '<div class="polchip">' + badge("clock", 26, false, "#F5F5F5") + '<div><div class="h">Attendance Policy</div><div class="d">Office timing &amp; leave credits</div></div></div>' +
-        '<div class="polchip">' + badge("cpu", 26, false, "#F5F5F5") + '<div><div class="h">IT &amp; Security</div><div class="d">Data &amp; device use</div></div></div>' +
+        '<div class="polchip">' + badge("file", 26, false, "#F4F4F6") + '<div><div class="h">Intern Handbook</div><div class="d">Conduct &amp; leave policy</div></div></div>' +
+        '<div class="polchip">' + badge("clock", 26, false, "#F4F4F6") + '<div><div class="h">Attendance Policy</div><div class="d">Office timing &amp; leave credits</div></div></div>' +
+        '<div class="polchip">' + badge("cpu", 26, false, "#F4F4F6") + '<div><div class="h">IT &amp; Security</div><div class="d">Data &amp; device use</div></div></div>' +
         '</div>' +
         '<div class="helpcard">' +
-        '<div class="cols"><div class="h">Need Help? We&rsquo;re One Message Away</div>' +
-        '<div class="row7">' + icon("mail", 16, "#ffffff") + ' ' + esc(d.hrEmail) + '</div>' +
-        '<div class="row7">' + icon("phone", 16, "#ffffff") + ' ' + val(d.hrPhone) + '</div>' +
-        '<div class="row7">' + icon("globe", 16, "#ffffff") + ' ' + esc(d.website) + '</div>' +
-        '<div class="row7">' + icon("pin", 16, "#ffffff") + ' ' + esc(d.officeAddress) + '</div>' +
-        '<div class="row7">' + icon("siren", 16, "#ffffff") + ' Emergency: ' + val(d.emergencyContact) + '</div></div>' +
+        '<div class="h">Need Help? We&rsquo;re One Message Away</div>' +
+        '<div class="help-grid">' +
+        '<div class="help-col">' +
+        '<div class="row7">' + icon("mail", 16, "#ffffff") + ' <span>' + esc(d.hrEmail || "hr@triplesproduction.com") + '</span></div>' +
+        '<div class="row7">' + icon("globe", 16, "#ffffff") + ' <span>' + esc(d.website || "www.triplesproduction.com") + '</span></div>' +
+        '<div class="row7">' + icon("siren", 16, "#ffffff") + ' <span>Emergency: ' + val(d.emergencyContact) + '</span></div>' +
+        '</div>' +
+        '<div class="help-col">' +
+        '<div class="row7">' + icon("phone", 16, "#ffffff") + ' <span>' + val(d.hrPhone) + '</span></div>' +
+        '<div class="row7">' + icon("pin", 16, "#ffffff") + ' <span>' + esc(d.officeAddress || "Rajdhani Towers, Rajwada, Satara") + '</span></div>' +
+        '</div>' +
+        '</div>' +
         '</div>';
       return page(inner, 7, d, "Letter of Internship");
     }
     function buildIntern8(d: DocumentData) {
+      const wm8Img = '<img class="wm8" src="' + (LOGO_WHITE || LOGO_BLACK || "/logo.png") + '" alt="" style="pointer-events:none;">';
+      const stampWm = '<img class="stamp-wm" src="' + (ICON_BLACK || LOGO_BLACK || "/logo.png") + '" alt="" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:70mm;height:70mm;opacity:0.045;filter:grayscale(100%);pointer-events:none;">';
       const inner =
         '<h1 class="pt">Acceptance of Offer</h1>' +
-        '<div class="statement">I, ' + val(d.candidateName) + ', confirm that I have read, understood, and voluntarily accept the terms of this Letter of Internship and its Annexures, issued by Triple S Production. I understand that a detailed Internship Agreement will be executed separately on or before my date of joining.</div>' +
+        '<p class="statement8">I, ' + val(d.candidateName) + ', confirm that I have read, understood, and voluntarily accept the terms of this Letter of Internship and its Annexures, issued by Triple S Production. I understand that a detailed Internship Agreement will be executed separately on or before my date of joining.</p>' +
         '<div class="sigwrap">' +
-        '<div class="sigbox"><div class="lbl">For Triple S Production</div><div class="line"></div><div><div class="name">' + val(d.proprietorName) + '</div><div class="date">Founder &nbsp;&middot;&nbsp; Date: ______________</div></div></div>' +
-        '<div class="sigbox"><div class="lbl">Intern Signature</div><div class="line"></div><div><div class="name">' + val(d.candidateName) + '</div><div class="date">Date: ______________</div></div></div>' +
+        '<div class="sigbox"><div class="lbl">FOR TRIPLE S PRODUCTION</div><div class="line"></div><div><div class="name">' + val(d.proprietorName) + '</div><div class="date">Founder &nbsp;&middot;&nbsp; Date: ______________</div></div></div>' +
+        '<div class="sigbox"><div class="lbl">INTERN SIGNATURE</div><div class="line"></div><div><div class="name">' + val(d.candidateName) + '</div><div class="date">Date: ______________</div></div></div>' +
         '</div>' +
-        '<div class="stamprow">' +
-        '<div class="stampbox">' + icon("users", 26, "#bbbbbb") + '<div class="lbl">Witness</div></div>' +
-        '<div class="stampbox">' + icon("stamp", 26, "#bbbbbb") + '<div class="lbl">Company Stamp</div></div>' +
+        '<div class="stamprow-unified">' +
+        stampWm +
+        '<div class="stamp-side">' + icon("users", 24, "#9CA3AF") + '<div class="lbl">WITNESS</div></div>' +
+        '<div class="stamp-side">' + icon("stamp", 24, "#9CA3AF") + '<div class="lbl">COMPANY STAMP</div></div>' +
         '</div>' +
-        '<div class="welcome8"><img class="wm8" src="' + LOGO_WHITE + '"><div class="h">Welcome to Triple S Production</div><div class="d">Let&rsquo;s build something extraordinary, together.</div></div>';
+        '<div class="welcome8">' + wm8Img + '<div class="h">Welcome to Triple S Production</div><div class="d">Let&rsquo;s build something extraordinary, together.</div></div>';
       return page(inner, 8, d, "Letter of Internship");
     }
 
@@ -576,7 +630,7 @@ export function generateDocument(dt: string, d: DocumentData, LOGO_BLACK: string
         '<p class="body"><strong>7. Intellectual Property &amp; Portfolio Restriction.</strong> All ' + dp.ipFocus + ' shall be the sole property of the Company or its clients. The Employee shall not use, reproduce, publish, or showcase any client deliverable or Company project in a personal portfolio, social media, or any third-party context, whether during or after employment, without the Company&rsquo;s prior written approval. This obligation survives termination indefinitely for client-confidential material.</p>' +
         '<p class="body"><strong>8. Non-Solicitation.</strong> For 12 months following termination for any reason, the Employee shall not, directly or indirectly, solicit any client or employee of the Company for a competing engagement.</p>';
       const page3 =
-        '<p class="body"><strong>9. Termination.</strong> This Agreement may be terminated by either Party giving ' + esc(d.noticePeriod) + '&rsquo;s written notice, or payment in lieu at the Company&rsquo;s discretion. The Company may terminate without notice for material breach, including breach of Clause 6 or Clause 7.</p>' +
+        '<p class="body"><strong>9. Termination.</strong> This Agreement may be terminated by either Party giving ' + val(d.noticePeriod) + '&rsquo;s written notice, or payment in lieu at the Company&rsquo;s discretion. The Company may terminate without notice for material breach, including breach of Clause 6 or Clause 7.</p>' +
         '<p class="body"><strong>10. Remedies for Breach.</strong> Breach of Clause 6, 7, or 8 may cause harm to the Company for which damages alone may not be adequate. The Company shall be entitled to seek injunctive relief, in addition to damages and any other remedy available in law.</p>' +
         '<p class="body"><strong>11. Indemnity.</strong> The Employee shall indemnify the Company against loss, damage, or liability arising from the Employee&rsquo;s negligence, misconduct, or breach of this Agreement.</p>' +
         '<p class="body"><strong>12. Notices.</strong> Any notice under this Agreement shall be in writing and delivered by hand, email, or registered post to the last known address of the recipient.</p>' +

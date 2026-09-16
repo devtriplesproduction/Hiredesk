@@ -19,7 +19,12 @@ interface Store {
   deleteCandidates: (ids: string[]) => void;
   deleteBelowScore: (threshold: number) => number;
   addRole: (r: Role) => void;
-  updateContract: (id: string, body: string) => void;
+  updateContract: (id: string, update: string | Partial<Contract>) => void;
+  globalBrandAssets: { logoUrl: string; signUrl: string };
+  setGlobalBrandAsset: (type: "logo" | "sign", url: string) => void;
+  deleteGlobalBrandAsset: (type: "logo" | "sign") => void;
+  setContractAsset: (id: string, type: "logo" | "sign", url: string) => void;
+  deleteContractAsset: (id: string, type: "logo" | "sign") => void;
   setFilters: (f: Partial<Filters>) => void;
   clearFilters: () => void;
   toggleSelect: (id: string) => void;
@@ -79,7 +84,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [employeeBonds, setEmployeeBonds] = useState<EmployeeBond[]>([]);
   const [employeeResignations, setEmployeeResignations] = useState<EmployeeResignation[]>([]);
   const [roles, setRolesRaw] = useState<Role[]>(DEFAULT_ROLES);
-  const [contracts, setContracts] = useState<Contract[]>(getContractTemplates);
+  const [contracts, setContracts] = useState<Contract[]>(() => {
+    const defaultList = getContractTemplates();
+    if (typeof window === "undefined") return defaultList;
+    return defaultList.map(c => ({
+      ...c,
+      logoUrl: c.logoUrl || localStorage.getItem(`doc_${c.id}_logo`) || "",
+      signUrl: c.signUrl || localStorage.getItem(`doc_${c.id}_sign`) || "",
+    }));
+  });
+  const [globalBrandAssets, setGlobalBrandAssets] = useState<{ logoUrl: string; signUrl: string }>(() => {
+    if (typeof window === "undefined") return { logoUrl: "", signUrl: "" };
+    return {
+      logoUrl: localStorage.getItem("tsp_logo") || "",
+      signUrl: localStorage.getItem("tsp_sign") || "",
+    };
+  });
   const [filters, setFiltersRaw] = useState<Filters>(DEFAULT_FILTERS);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const initializedRef = useRef(false);
@@ -87,10 +107,35 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   // ─── Stable, Resilient State Hydration ───────────────────
   const loadInitialData = useCallback(async () => {
     try {
-      const { getDBCandidates, getDBRoles, getDBContracts, getDBInterviews, getDBOffers, getDBCandidateDocuments, getDBEmployees, getDBEmployeeBonds, getDBEmployeeResignations, insertDBRoles, insertDBContracts } = await import("@/lib/supabase");
+      const { getDBCandidates, getDBRoles, getDBContracts, getDBInterviews, getDBOffers, getDBCandidateDocuments, getDBEmployees, getDBEmployeeBonds, getDBEmployeeResignations, insertDBRoles, insertDBContracts, getBrandAssetUrl } = await import("@/lib/supabase");
       
       console.log("[HireDesk Store] Starting database hydration...");
       
+      // Hydrate Global Brand Assets
+      try {
+        const gLogo = await getBrandAssetUrl("tsp_logo");
+        const gSign = await getBrandAssetUrl("tsp_sign");
+        setGlobalBrandAssets({
+          logoUrl: gLogo || "",
+          signUrl: gSign || "",
+        });
+      } catch (assetErr) {
+        console.warn("[HireDesk Store] Failed to hydrate global brand assets:", assetErr);
+      }
+
+      // Helper to attach local document assets to contract list
+      const attachDocAssets = (list: Contract[]) => {
+        return list.map(c => {
+          const storedLogo = typeof window !== "undefined" ? localStorage.getItem(`doc_${c.id}_logo`) : "";
+          const storedSign = typeof window !== "undefined" ? localStorage.getItem(`doc_${c.id}_sign`) : "";
+          return {
+            ...c,
+            logoUrl: c.logoUrl || storedLogo || "",
+            signUrl: c.signUrl || storedSign || "",
+          };
+        });
+      };
+
       // 1. Resilient Candidates Hydration
       let dbCandidates: Candidate[] = [];
       try {
@@ -151,16 +196,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
       if (contractsLoaded) {
         if (dbContracts.length === 0) {
-          const defaultContracts = getContractTemplates();
+          const defaultContracts = attachDocAssets(getContractTemplates());
           setContracts(defaultContracts);
           insertDBContracts(defaultContracts).catch(err =>
             console.error("[HireDesk Store] Failed to seed default contracts to Supabase:", err)
           );
         } else {
-          setContracts(dbContracts);
+          setContracts(attachDocAssets(dbContracts));
         }
       } else {
-        setContracts(getContractTemplates());
+        setContracts(attachDocAssets(getContractTemplates()));
       }
 
       try {
@@ -338,9 +383,45 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     import("@/lib/supabase").then(db => db.insertDBRoles([r])).catch(console.error);
   }, []);
 
-  const updateContract = useCallback((id: string, body: string) => {
-    setContracts(prev => prev.map(c => c.id === id ? { ...c, body } : c));
-    import("@/lib/supabase").then(db => db.updateDBContract(id, { body })).catch(console.error);
+  const updateContract = useCallback((id: string, update: string | Partial<Contract>) => {
+    const patch = typeof update === "string" ? { body: update } : update;
+    setContracts(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
+    import("@/lib/supabase").then(db => db.updateDBContract(id, patch)).catch(console.error);
+  }, []);
+
+  const setGlobalBrandAsset = useCallback((type: "logo" | "sign", url: string) => {
+    setGlobalBrandAssets(prev => ({
+      ...prev,
+      [type === "logo" ? "logoUrl" : "signUrl"]: url,
+    }));
+  }, []);
+
+  const deleteGlobalBrandAsset = useCallback((type: "logo" | "sign") => {
+    setGlobalBrandAssets(prev => ({
+      ...prev,
+      [type === "logo" ? "logoUrl" : "signUrl"]: "",
+    }));
+  }, []);
+
+  const setContractAsset = useCallback((id: string, type: "logo" | "sign", url: string) => {
+    const prop = type === "logo" ? "logoUrl" : "signUrl";
+    setContracts(prev => prev.map(c => c.id === id ? { ...c, [prop]: url } : c));
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`doc_${id}_${type}`, url);
+    }
+    import("@/lib/supabase").then(db => db.updateDBContract(id, { [prop]: url })).catch(console.error);
+  }, []);
+
+  const deleteContractAsset = useCallback((id: string, type: "logo" | "sign") => {
+    const prop = type === "logo" ? "logoUrl" : "signUrl";
+    setContracts(prev => prev.map(c => c.id === id ? { ...c, [prop]: "" } : c));
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(`doc_${id}_${type}`);
+    }
+    import("@/lib/supabase").then(db => {
+      db.deleteDocumentAsset(id, type).catch(console.error);
+      db.updateDBContract(id, { [prop]: null }).catch(console.error);
+    }).catch(console.error);
   }, []);
 
   const setFilters = useCallback(
@@ -430,7 +511,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     candidates, roles, contracts, filters, selectedIds,
     setCandidates, setRoles, addCandidate, addCandidates,
     updateCandidate, deleteCandidate, deleteCandidates, deleteBelowScore,
-    addRole, updateContract, setFilters, clearFilters,
+    addRole, updateContract,
+    globalBrandAssets, setGlobalBrandAsset, deleteGlobalBrandAsset,
+    setContractAsset, deleteContractAsset,
+    setFilters, clearFilters,
     toggleSelect, toggleSelectAll, clearSelection, exportCSV,
     interviews, setInterviews, addInterview, updateInterview, offers, addOffer, updateOffer,
     documents, updateDocument, employees, addEmployee, updateEmployee,
@@ -439,7 +523,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     candidates, roles, contracts, filters, selectedIds,
     setCandidates, setRoles, addCandidate, addCandidates,
     updateCandidate, deleteCandidate, deleteCandidates, deleteBelowScore,
-    addRole, updateContract, setFilters, clearFilters,
+    addRole, updateContract,
+    globalBrandAssets, setGlobalBrandAsset, deleteGlobalBrandAsset,
+    setContractAsset, deleteContractAsset,
+    setFilters, clearFilters,
     toggleSelect, toggleSelectAll, clearSelection, exportCSV,
     interviews, setInterviews, addInterview, updateInterview, offers, addOffer, updateOffer,
     documents, updateDocument, employees, addEmployee, updateEmployee,

@@ -317,31 +317,32 @@ export default function UploadZone() {
 
           {/* Uploaded File Queue Section */}
           {queue.length > 0 && (
-            <div className="flex flex-col gap-3.5 animate-fade-in">
-              {/* Header Bar with Count and Batch Actions */}
+            <div className="flex flex-col gap-3.5 pt-1 animate-fade-in">
+              {/* Clean single-row header matching HireDesk visual density */}
               <div className="flex flex-wrap items-center justify-between gap-3 px-1">
                 <div className="flex items-center gap-2.5">
+                  <span className="w-2 h-2 rounded-full bg-[#00D9FF] shadow-[0_0_8px_rgba(0,217,255,0.6)]" />
                   <h2 className="text-sm sm:text-base font-bold text-white tracking-tight">
                     Uploaded Resumes
                   </h2>
-                  <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-[#16181D] text-[#9AA0AA] border border-[#262B33]">
+                  <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-md bg-[var(--glass-2)] text-[var(--text-2)] border border-[var(--border)]">
                     {queue.length} {queue.length === 1 ? "file" : "files"}
                   </span>
                   {doneCount > 0 && (
-                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                    <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 flex items-center gap-1.5">
                       <CheckCircle2 size={12} />
                       {doneCount} parsed
                     </span>
                   )}
                 </div>
 
-                {/* Queue Batch Controls */}
-                <div className="flex items-center gap-2.5">
+                {/* Queue Actions */}
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={clearAll}
                     disabled={processing}
-                    className="px-3.5 py-2 rounded-xl text-xs font-semibold text-[#8B919C] hover:text-white bg-[#15171B] hover:bg-[#1D2026] active:bg-[#131518] border border-[#262B33] hover:border-[#383E4B] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="h-9 px-3.5 rounded-xl text-xs font-semibold uppercase tracking-wider text-[var(--text-2)] hover:text-white bg-[var(--glass-2)] hover:bg-[var(--glass-3)] border border-[var(--border)] hover:border-[var(--border-2)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none"
                   >
                     Clear All
                   </button>
@@ -350,7 +351,7 @@ export default function UploadZone() {
                     type="button"
                     onClick={processAll}
                     disabled={processing || waitCount === 0}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-white hover:bg-zinc-200 active:bg-zinc-300 text-black shadow-lg hover:shadow-white/10 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
+                    className="h-9 inline-flex items-center gap-2 px-4 rounded-xl text-xs font-bold uppercase tracking-wider bg-white hover:bg-zinc-200 active:bg-zinc-300 text-black border border-white shadow-md hover:shadow-white/10 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] select-none"
                   >
                     {processing ? (
                       <>
@@ -369,67 +370,69 @@ export default function UploadZone() {
                 </div>
               </div>
 
-              {/* List of Files in Queue */}
-              <div className="flex flex-col gap-2.5">
+              {/* Single Clean Container for Resume Rows */}
+              <div className="rounded-2xl border border-[#23272F] bg-[#111316] divide-y divide-[#1D2127] overflow-hidden shadow-lg">
                 {queue.map((item, i) => (
                   <div
                     key={`${item.file.name}-${i}`}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl border border-[#22262D] bg-[#111316] hover:border-[#2C323B] transition-all shadow-sm"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 p-4 sm:p-5 hover:bg-[#13161B] hover:shadow-[inset_0_0_0_1px_rgba(0,217,255,0.18)] transition-all duration-200 group"
                   >
-                    {/* Left: Document Icon + Name + Parsed Result Info */}
-                    <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
-                      <div className="w-10 h-10 rounded-xl bg-[#16181D] border border-[#262B33] flex items-center justify-center text-rose-400 flex-shrink-0 shadow-inner">
-                        <FileText size={19} />
+                    {/* Left: PDF Icon + Prominent Filename + Muted Metadata */}
+                    <div className="flex items-start sm:items-center gap-4 min-w-0 flex-1">
+                      <div className="w-11 h-11 rounded-xl bg-rose-500/[0.07] border border-rose-500/20 text-rose-400 flex items-center justify-center flex-shrink-0 group-hover:border-rose-500/35 group-hover:bg-rose-500/10 transition-colors">
+                        <FileText size={20} className="text-rose-400/90 group-hover:text-rose-400 transition-colors" />
                       </div>
 
                       <div className="min-w-0 flex-1">
                         <div
-                          className="text-xs sm:text-sm font-semibold text-white truncate max-w-full"
+                          className="text-[13.5px] sm:text-sm font-semibold text-white group-hover:text-white transition-colors truncate max-w-full"
                           title={item.file.name}
                         >
                           {item.file.name}
                         </div>
 
-                        {/* Status detail string */}
+                        {/* Status detail string / Candidate result summary */}
                         {item.status === "wait" && (
-                          <div className="text-[11px] text-[#8A909B] font-medium mt-0.5">
-                            PDF • Ready to parse
+                          <div className="text-xs text-[var(--text-3)] font-normal mt-1 flex items-center gap-1.5">
+                            <span className="text-[var(--text-2)]">PDF document</span>
+                            <span className="text-[#3A3F48]">•</span>
+                            <span className="text-amber-400/80">Ready to parse</span>
                           </div>
                         )}
 
                         {item.status === "parsing" && (
-                          <div className="text-[11px] text-amber-400 font-medium mt-0.5 flex items-center gap-1.5">
+                          <div className="text-xs text-amber-400 font-normal mt-1 flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                            <span>Extracting text &amp; computing ATS score...</span>
+                            <span>Extracting candidate text &amp; computing ATS score...</span>
                           </div>
                         )}
 
                         {item.status === "done" && item.result && (
-                          <div className="text-[11.5px] text-[#9AA0AA] mt-1 flex flex-wrap items-center gap-1.5">
-                            <span className="font-semibold text-emerald-400">
+                          <div className="text-xs text-[var(--text-2)] mt-1 flex flex-wrap items-center gap-2">
+                            <span className="font-semibold text-[#E6E8EB]">
                               {item.result.name}
                             </span>
-                            <span className="text-[#4A505B]">•</span>
-                            <span className="text-[#C6CAD2] font-medium">
+                            <span className="text-[#3A3F48]">•</span>
+                            <span className="text-[var(--text-3)]">
                               {item.result.roleName}
                             </span>
-                            <span className="text-[#4A505B]">•</span>
+                            <span className="text-[#3A3F48]">•</span>
                             <span
                               className={clsx(
-                                "text-[10.5px] font-bold px-1.5 py-0.2 rounded border",
+                                "text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-[5px] border inline-flex items-center justify-center",
                                 item.result.score.total >= 70
-                                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25"
+                                  ? "score-hi"
                                   : item.result.score.total >= 45
-                                  ? "bg-amber-500/10 text-amber-400 border-amber-500/25"
-                                  : "bg-rose-500/10 text-rose-400 border-rose-500/25"
+                                  ? "score-mid"
+                                  : "score-lo"
                               )}
                             >
                               Score {item.result.score.total}
                             </span>
                             {item.result.email && (
                               <>
-                                <span className="text-[#4A505B]">•</span>
-                                <span className="text-[#7A818E] truncate max-w-[160px]">
+                                <span className="text-[#3A3F48]">•</span>
+                                <span className="text-[var(--text-3)] truncate max-w-[180px]">
                                   {item.result.email}
                                 </span>
                               </>
@@ -438,8 +441,8 @@ export default function UploadZone() {
                         )}
 
                         {item.status === "error" && (
-                          <div className="text-[11px] text-rose-400 font-medium mt-0.5 flex items-center gap-1">
-                            <AlertCircle size={12} />
+                          <div className="text-xs text-red-400 font-normal mt-1 flex items-center gap-1.5">
+                            <AlertCircle size={13} />
                             <span>{item.errorMsg || "Could not parse candidate PDF"}</span>
                           </div>
                         )}
@@ -447,29 +450,29 @@ export default function UploadZone() {
                     </div>
 
                     {/* Right: Badge Status + Remove Button */}
-                    <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#1C1F25]">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#1D2127]">
                       {item.status === "wait" && (
-                        <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-[#16181D] text-[#8A909B] border border-[#262B33]">
+                        <span className="text-[10.5px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-[6px] bg-amber-500/[0.08] text-amber-300/90 border border-amber-500/25">
                           QUEUED
                         </span>
                       )}
 
                       {item.status === "parsing" && (
-                        <span className="inline-flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/25">
+                        <span className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-[6px] bg-amber-500/10 text-amber-400 border border-amber-500/25">
                           <Loader2 size={11} className="animate-spin" />
                           PROCESSING
                         </span>
                       )}
 
                       {item.status === "done" && (
-                        <span className="inline-flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                        <span className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-[6px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
                           <CheckCircle2 size={12} />
                           COMPLETED
                         </span>
                       )}
 
                       {item.status === "error" && (
-                        <span className="inline-flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-rose-500/10 text-rose-400 border border-rose-500/25">
+                        <span className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-[6px] bg-red-500/10 text-red-400 border border-red-500/25">
                           <AlertCircle size={12} />
                           FAILED
                         </span>
@@ -479,9 +482,9 @@ export default function UploadZone() {
                         type="button"
                         onClick={() => remove(i)}
                         title="Remove file"
-                        className="w-7 h-7 rounded-lg bg-[#16181D] hover:bg-[#21242C] active:bg-[#131518] border border-[#262B33] hover:border-[#383E4B] text-[#7A818E] hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                        className="w-8 h-8 rounded-lg bg-[var(--glass-2)] hover:bg-rose-500/15 active:bg-rose-500/25 border border-[var(--border)] hover:border-rose-500/30 text-[var(--text-3)] hover:text-rose-400 flex items-center justify-center transition-all cursor-pointer"
                       >
-                        <X size={13} />
+                        <X size={14} />
                       </button>
                     </div>
                   </div>
@@ -490,7 +493,7 @@ export default function UploadZone() {
 
               {/* Success Banner when files are completed */}
               {doneCount > 0 && (
-                <div className="mt-2 p-4 rounded-xl flex items-start sm:items-center gap-3.5 border border-emerald-500/25 bg-emerald-500/[0.05] shadow-sm">
+                <div className="p-4 rounded-xl flex items-start sm:items-center gap-3.5 border border-emerald-500/25 bg-emerald-500/[0.05]">
                   <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0 mt-0.5 sm:mt-0">
                     <CheckCircle2 size={18} />
                   </div>
@@ -499,7 +502,7 @@ export default function UploadZone() {
                       {doneCount} {doneCount === 1 ? "resume" : "resumes"} successfully added to
                       the candidate pipeline
                     </div>
-                    <div className="text-[11px] sm:text-xs text-[#8A909B] mt-0.5">
+                    <div className="text-[11px] sm:text-xs text-[var(--text-2)] mt-0.5">
                       Review profile details, update hiring stages, and generate contracts in the
                       Candidates tab.
                     </div>

@@ -14,7 +14,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <TopBar onMenuClick={() => setSidebarOpen(prev => !prev)} />
         <div className="flex flex-1 relative lg:overflow-hidden">
           <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-          <main className="flex-1 overflow-y-auto p-4 md:p-5 lg:p-6 pb-8">
+          <main className="flex-1 overflow-y-auto p-4 md:p-5 lg:p-6 pb-8 bg-[#0A0A0C]">
             {children}
           </main>
         </div>

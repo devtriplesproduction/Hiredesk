@@ -201,31 +201,41 @@ const BRAND_BUCKET = "brand-assets";
  * @returns        Public URL of the uploaded asset
  */
 export async function uploadBrandAsset(dataUrl: string, key: "tsp_logo" | "tsp_sign"): Promise<string> {
-  // Convert base64 data URL to Blob
-  const res = await fetch(dataUrl);
-  const blob = await res.blob();
-  const mimeType = blob.type || "image/png";
-  const ext = mimeType.split("/")[1]?.split("+")[0] || "png";
-  
-  // Fixed path — always the same file name so upsert replaces in-place
-  const filePath = `${key}.${ext}`;
-
-  const { error } = await supabase.storage
-    .from(BRAND_BUCKET)
-    .upload(filePath, blob, {
-      contentType: mimeType,
-      cacheControl: "0",   // No cache — always fetch latest
-      upsert: true,        // Replace existing file
-    });
-
-  if (error) {
-    console.error(`Failed to upload brand asset ${key}:`, error);
-    throw error;
+  // Always cache in localStorage immediately for resilient instant access
+  if (typeof window !== "undefined") {
+    localStorage.setItem(key, dataUrl);
   }
 
-  const { data } = supabase.storage.from(BRAND_BUCKET).getPublicUrl(filePath);
-  // Append cache-buster so browsers always fetch the latest version
-  return `${data.publicUrl}?t=${Date.now()}`;
+  try {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const mimeType = blob.type || "image/png";
+    const ext = mimeType.split("/")[1]?.split("+")[0] || "png";
+    const filePath = `${key}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from(BRAND_BUCKET)
+      .upload(filePath, blob, {
+        contentType: mimeType,
+        cacheControl: "0",   // No cache — always fetch latest
+        upsert: true,        // Replace existing file
+      });
+
+    if (error) {
+      console.warn(`Supabase upload failed for ${key}, using local cache:`, error);
+      return dataUrl;
+    }
+
+    const { data } = supabase.storage.from(BRAND_BUCKET).getPublicUrl(filePath);
+    const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
+    if (typeof window !== "undefined") {
+      localStorage.setItem(key, publicUrl);
+    }
+    return publicUrl;
+  } catch (err) {
+    console.warn(`Exception during brand asset upload for ${key}:`, err);
+    return dataUrl;
+  }
 }
 
 /**
@@ -235,12 +245,18 @@ export async function uploadBrandAsset(dataUrl: string, key: "tsp_logo" | "tsp_s
  * @returns    Public URL string or empty string if not uploaded yet
  */
 export async function getBrandAssetUrl(key: "tsp_logo" | "tsp_sign"): Promise<string> {
+  // Fast path: localStorage
+  if (typeof window !== "undefined") {
+    const local = localStorage.getItem(key);
+    if (local) return local;
+  }
+
   // Try both .png and .jpg extensions
   for (const ext of ["png", "jpg", "jpeg", "webp"]) {
     const filePath = `${key}.${ext}`;
     const { data } = supabase.storage.from(BRAND_BUCKET).getPublicUrl(filePath);
     
-    // Check if the file actually exists by doing a HEAD request
+    // Check if the file actually exists by doing a listing check
     try {
       const { data: listData } = await supabase.storage
         .from(BRAND_BUCKET)
@@ -248,8 +264,9 @@ export async function getBrandAssetUrl(key: "tsp_logo" | "tsp_sign"): Promise<st
       
       if (listData && listData.length > 0) {
         const url = `${data.publicUrl}?t=${Date.now()}`;
-        // Cache in localStorage for offline/fast-load
-        localStorage.setItem(key, url);
+        if (typeof window !== "undefined") {
+          localStorage.setItem(key, url);
+        }
         return url;
       }
     } catch {
@@ -257,17 +274,120 @@ export async function getBrandAssetUrl(key: "tsp_logo" | "tsp_sign"): Promise<st
     }
   }
   
-  // Fallback: return localStorage cache if Supabase lookup fails
-  return localStorage.getItem(key) ?? "";
+  if (typeof window !== "undefined") {
+    return localStorage.getItem(key) ?? "";
+  }
+  return "";
 }
 
 /**
  * Delete a brand asset from Supabase Storage and localStorage.
  */
 export async function deleteBrandAsset(key: "tsp_logo" | "tsp_sign"): Promise<void> {
-  localStorage.removeItem(key);
-  for (const ext of ["png", "jpg", "jpeg", "webp"]) {
-    await supabase.storage.from(BRAND_BUCKET).remove([`${key}.${ext}`]);
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(key);
+  }
+  try {
+    for (const ext of ["png", "jpg", "jpeg", "webp"]) {
+      await supabase.storage.from(BRAND_BUCKET).remove([`${key}.${ext}`]);
+    }
+  } catch {
+    // Ignore storage removal errors
+  }
+}
+
+/**
+ * Upload a document-specific asset (scoped strictly to contractId).
+ * Does NOT affect global brand assets (tsp_logo / tsp_sign).
+ */
+export async function uploadDocumentAsset(contractId: string, dataUrl: string, type: "logo" | "sign"): Promise<string> {
+  const localKey = `doc_${contractId}_${type}`;
+  if (typeof window !== "undefined") {
+    localStorage.setItem(localKey, dataUrl);
+  }
+
+  try {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const mimeType = blob.type || "image/png";
+    const ext = mimeType.split("/")[1]?.split("+")[0] || "png";
+    const filePath = `contracts/${contractId}/${type}.${ext}`;
+
+    const { error } = await supabase.storage
+      .from(BRAND_BUCKET)
+      .upload(filePath, blob, {
+        contentType: mimeType,
+        cacheControl: "0",
+        upsert: true,
+      });
+
+    if (error) {
+      console.warn(`Supabase upload failed for document asset ${localKey}, using local storage:`, error);
+      return dataUrl;
+    }
+
+    const { data } = supabase.storage.from(BRAND_BUCKET).getPublicUrl(filePath);
+    const publicUrl = `${data.publicUrl}?t=${Date.now()}`;
+    if (typeof window !== "undefined") {
+      localStorage.setItem(localKey, publicUrl);
+    }
+    return publicUrl;
+  } catch (err) {
+    console.warn(`Exception during document asset upload for ${localKey}:`, err);
+    return dataUrl;
+  }
+}
+
+/**
+ * Fetch a document-specific asset URL (scoped strictly to contractId).
+ */
+export async function getDocumentAssetUrl(contractId: string, type: "logo" | "sign"): Promise<string> {
+  const localKey = `doc_${contractId}_${type}`;
+  if (typeof window !== "undefined") {
+    const local = localStorage.getItem(localKey);
+    if (local) return local;
+  }
+
+  try {
+    for (const ext of ["png", "jpg", "jpeg", "webp"]) {
+      const filePath = `contracts/${contractId}/${type}.${ext}`;
+      const { data: listData } = await supabase.storage
+        .from(BRAND_BUCKET)
+        .list(`contracts/${contractId}`, { search: `${type}.${ext}` });
+
+      if (listData && listData.length > 0) {
+        const { data } = supabase.storage.from(BRAND_BUCKET).getPublicUrl(filePath);
+        const url = `${data.publicUrl}?t=${Date.now()}`;
+        if (typeof window !== "undefined") {
+          localStorage.setItem(localKey, url);
+        }
+        return url;
+      }
+    }
+  } catch {
+    // Ignore storage check errors
+  }
+
+  if (typeof window !== "undefined") {
+    return localStorage.getItem(localKey) ?? "";
+  }
+  return "";
+}
+
+/**
+ * Delete a document-specific asset from Supabase Storage and localStorage.
+ */
+export async function deleteDocumentAsset(contractId: string, type: "logo" | "sign"): Promise<void> {
+  const localKey = `doc_${contractId}_${type}`;
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(localKey);
+  }
+  try {
+    for (const ext of ["png", "jpg", "jpeg", "webp"]) {
+      await supabase.storage.from(BRAND_BUCKET).remove([`contracts/${contractId}/${type}.${ext}`]);
+    }
+  } catch {
+    // Ignore storage deletion errors
   }
 }
 

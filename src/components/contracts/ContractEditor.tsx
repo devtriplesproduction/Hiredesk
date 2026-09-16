@@ -1,11 +1,17 @@
 "use client";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useStore } from "@/lib/store";
-import { uploadBrandAsset, getBrandAssetUrl, deleteBrandAsset } from "@/lib/supabase";
 import type { Contract } from "@/types";
 import { compressImage } from "@/lib/utils/image";
 import { Btn } from "@/components/ui";
 import { DOCUMENT_STUDIO_CSS } from "@/lib/document-utils";
+import {
+  resolveContractAssets,
+  renderContractHtml,
+  stripContractAssetsForStorage,
+  updateEditorDomAssets,
+  type ResolvedAssets,
+} from "@/lib/contract-assets";
 
 interface Props {
   contract: Contract;
@@ -47,28 +53,157 @@ function ensureA4Pages(content: string, contractId?: string): string {
   return `<div class="page a4-flow-page" data-page="1"><div class="a4-flow-content">${content}</div></div>`;
 }
 
-export default function ContractEditor({ contract, onBack }: Props) {
-  const { updateContract } = useStore();
-  const [body, setBody] = useState(() => ensureA4Pages(contract.body, contract.id));
-  const [zoom, setZoom] = useState<number>(1);
-  const [logoUrl, setLogoUrl] = useState<string>("");
-  const [signUrl, setSignUrl] = useState<string>("");
+/**
+ * Resolves a DOM Range from screen coordinates across browsers (WebKit/Blink and Gecko).
+ */
+function getCaretRangeFromPoint(x: number, y: number): Range | null {
+  if (typeof document === "undefined") return null;
 
-  // Load saved logo/sign on mount
-  useEffect(() => {
-    async function loadAssets() {
-      const logo = await getBrandAssetUrl("tsp_logo");
-      const sign = await getBrandAssetUrl("tsp_sign");
-      setLogoUrl(logo);
-      setSignUrl(sign);
+  if (document.caretRangeFromPoint) {
+    return document.caretRangeFromPoint(x, y);
+  }
+
+  if ((document as any).caretPositionFromPoint) {
+    const pos = (document as any).caretPositionFromPoint(x, y);
+    if (pos && pos.offsetNode) {
+      const range = document.createRange();
+      range.setStart(pos.offsetNode, pos.offset);
+      range.collapse(true);
+      return range;
     }
-    loadAssets();
+  }
+
+  return null;
+}
+
+/**
+ * Formats the current local date in standard document format, e.g. "16 September 2026".
+ */
+export function getLocalCurrentDate(): string {
+  return new Date().toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+/**
+ * Ensures document Date fields display today's current date by default,
+ * while strictly preserving any manually entered or edited dates.
+ */
+export function ensureCurrentDate(content: string): string {
+  if (!content) return "";
+  if (content.includes('data-manual-date="true"')) {
+    return content;
+  }
+
+  const todayStr = getLocalCurrentDate();
+
+  // 1. Replace header Date: field (e.g. "Date: 15 September 2026", "Date: [DATE]", etc.)
+  let updated = content.replace(
+    /(Date:\s*)(?:<span[^>]*class="[^"]*contract-date[^"]*"[^>]*>)?([0-9]{1,2}\s+[A-Za-z]+\s+[0-9]{4}|[A-Za-z]+\s+[0-9]{1,2},?\s+[0-9]{4}|\[DATE\]|\[TODAY\])(?:<\/span>)?/gi,
+    (match, prefix) => {
+      if (match.includes('data-manual-date="true"')) return match;
+      return `${prefix}<span class="contract-date" data-default-date="true">${todayStr}</span>`;
+    }
+  );
+
+  // 2. Replace preamble Date: "as of <strong>15 September 2026</strong>"
+  updated = updated.replace(
+    /(as of\s*<strong>)(?:<span[^>]*class="[^"]*contract-date[^"]*"[^>]*>)?([0-9]{1,2}\s+[A-Za-z]+\s+[0-9]{4}|[A-Za-z]+\s+[0-9]{1,2},?\s+[0-9]{4}|\[DATE\])(?:<\/span>)?(<\/strong>)/gi,
+    (match, prefix, oldDate, suffix) => {
+      if (match.includes('data-manual-date="true"')) return match;
+      return `${prefix}<span class="contract-date" data-default-date="true">${todayStr}</span>${suffix}`;
+    }
+  );
+
+  return updated;
+}
+
+export default function ContractEditor({ contract, onBack }: Props) {
+  const { contracts, updateContract, globalBrandAssets, setContractAsset, deleteContractAsset } = useStore();
+  const currentContract = contracts.find(c => c.id === contract.id) || contract;
+
+  const [zoom, setZoom] = useState<number>(1);
+  const [isSaved, setIsSaved] = useState(false);
+
+  // Asset priority: Specific document asset → Global Brand Asset → none ("")
+  const specificLogo = currentContract.logoUrl || (typeof window !== "undefined" ? localStorage.getItem(`doc_${contract.id}_logo`) : "") || "";
+  const specificSign = currentContract.signUrl || (typeof window !== "undefined" ? localStorage.getItem(`doc_${contract.id}_sign`) : "") || "";
+  const globalLogo = globalBrandAssets?.logoUrl || "";
+  const globalSign = globalBrandAssets?.signUrl || "";
+
+  const resolvedAssets: ResolvedAssets = useMemo(() => {
+    return resolveContractAssets(
+      { id: contract.id, logoUrl: specificLogo, signUrl: specificSign },
+      globalLogo,
+      globalSign
+    );
+  }, [contract.id, specificLogo, specificSign, globalLogo, globalSign]);
+
+  // Initial HTML with A4 normalization, current date, and injected resolved assets.
+  // Memoized strictly per contract.id so typing updates never cause React to overwrite innerHTML!
+  const initialHtml = useMemo(() => {
+    const fresh = ensureA4Pages(ensureCurrentDate(currentContract.body), currentContract.id);
+    return renderContractHtml(fresh, resolvedAssets);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contract.id]);
 
-  const logoRef = useRef<HTMLInputElement>(null);
-  const signRef = useRef<HTMLInputElement>(null);
+  const lastHtmlRef = useRef<string>(initialHtml);
+  const savedRangeRef = useRef<Range | null>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const workspaceRef = useRef<HTMLDivElement>(null);
+  const logoRef = useRef<HTMLInputElement>(null);
+  const signRef = useRef<HTMLInputElement>(null);
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentLoadedIdRef = useRef<string>(contract.id);
+
+  // Save the user's active cursor/selection Range within editorRef
+  const saveSelection = useCallback(() => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && editorRef.current) {
+      const range = sel.getRangeAt(0);
+      if (editorRef.current.contains(range.commonAncestorContainer)) {
+        savedRangeRef.current = range.cloneRange();
+      }
+    }
+  }, []);
+
+  // Listen to document selectionchange so we always have the freshest cursor position
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0 && editorRef.current) {
+        const range = sel.getRangeAt(0);
+        if (editorRef.current.contains(range.commonAncestorContainer)) {
+          savedRangeRef.current = range.cloneRange();
+        }
+      }
+    };
+    document.addEventListener("selectionchange", handleSelectionChange);
+    return () => document.removeEventListener("selectionchange", handleSelectionChange);
+  }, []);
+
+  // Reset editor HTML ONLY when switching to a different contract.
+  // Never reset while editing the current contract, which would destroy the user's cursor!
+  useEffect(() => {
+    if (!editorRef.current) return;
+    if (currentLoadedIdRef.current !== contract.id) {
+      currentLoadedIdRef.current = contract.id;
+      const fresh = ensureA4Pages(ensureCurrentDate(currentContract.body), currentContract.id);
+      const rendered = renderContractHtml(fresh, resolvedAssets);
+      editorRef.current.innerHTML = rendered;
+      lastHtmlRef.current = rendered;
+      savedRangeRef.current = null;
+    }
+  }, [contract.id, currentContract.body, resolvedAssets]);
+
+  // Dynamically update DOM asset slots when resolved assets change
+  useEffect(() => {
+    if (editorRef.current) {
+      updateEditorDomAssets(editorRef.current, resolvedAssets);
+    }
+  }, [resolvedAssets]);
 
   // Auto-fit zoom on initial load if screen is narrow
   useEffect(() => {
@@ -82,57 +217,249 @@ export default function ContractEditor({ contract, onBack }: Props) {
     }
   }, []);
 
-  async function uploadImage(file: File, key: "tsp_logo" | "tsp_sign", setter: (s: string) => void) {
+  async function handleUploadDocLogo(file: File) {
     try {
+      const { compressImage } = await import("@/lib/utils/image");
       const compressed = await compressImage(file, 400, 150);
-      const url = await uploadBrandAsset(compressed, key);
-      setter(url);
+      const { uploadDocumentAsset } = await import("@/lib/supabase");
+      const url = await uploadDocumentAsset(contract.id, compressed, "logo");
+      setContractAsset(contract.id, "logo", url);
     } catch (err) {
-      console.error("Image compression or upload failed, falling back to raw data URL", err);
+      console.error("Document logo upload failed, falling back to raw data URL", err);
       const reader = new FileReader();
       reader.onload = async e => {
-        const url = e.target?.result as string;
+        const rawUrl = e.target?.result as string;
         try {
-          const publicUrl = await uploadBrandAsset(url, key);
-          setter(publicUrl);
+          const { uploadDocumentAsset } = await import("@/lib/supabase");
+          const publicUrl = await uploadDocumentAsset(contract.id, rawUrl, "logo");
+          setContractAsset(contract.id, "logo", publicUrl);
         } catch (uploadErr) {
-          console.error("Raw upload failed:", uploadErr);
+          console.error("Raw document logo upload failed:", uploadErr);
         }
       };
       reader.readAsDataURL(file);
     }
   }
 
-  async function clearImage(key: "tsp_logo" | "tsp_sign", setter: (s: string) => void) {
-    await deleteBrandAsset(key);
-    setter("");
+  async function handleClearDocLogo() {
+    deleteContractAsset(contract.id, "logo");
   }
 
-  // Debounced sync: persist only after 400ms of inactivity
-  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  async function handleUploadDocSign(file: File) {
+    try {
+      const { compressImage } = await import("@/lib/utils/image");
+      const compressed = await compressImage(file, 400, 150);
+      const { uploadDocumentAsset } = await import("@/lib/supabase");
+      const url = await uploadDocumentAsset(contract.id, compressed, "sign");
+      setContractAsset(contract.id, "sign", url);
+    } catch (err) {
+      console.error("Document signature upload failed, falling back to raw data URL", err);
+      const reader = new FileReader();
+      reader.onload = async e => {
+        const rawUrl = e.target?.result as string;
+        try {
+          const { uploadDocumentAsset } = await import("@/lib/supabase");
+          const publicUrl = await uploadDocumentAsset(contract.id, rawUrl, "sign");
+          setContractAsset(contract.id, "sign", publicUrl);
+        } catch (uploadErr) {
+          console.error("Raw document signature upload failed:", uploadErr);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  }
 
-  const syncBody = useCallback(() => {
+  async function handleClearDocSign() {
+    deleteContractAsset(contract.id, "sign");
+  }
+
+  // Input handler that preserves cursor position and syncs to store without re-rendering DOM
+  const handleInput = useCallback(() => {
     if (!editorRef.current) return;
+    saveSelection();
+
+    // Check if user manually modified the date field
+    const todayStr = getLocalCurrentDate();
+    const dateEls = editorRef.current.querySelectorAll(".contract-date");
+    dateEls.forEach(el => {
+      const text = el.textContent?.trim();
+      if (text && text !== todayStr) {
+        el.setAttribute("data-manual-date", "true");
+        el.removeAttribute("data-default-date");
+      }
+    });
+
     const html = editorRef.current.innerHTML;
-    setBody(html);
+    lastHtmlRef.current = html;
+    const cleanStorageHtml = stripContractAssetsForStorage(html);
+
     if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
     syncTimerRef.current = setTimeout(() => {
-      updateContract(contract.id, html);
+      updateContract(contract.id, cleanStorageHtml);
     }, 400);
-  }, [contract.id, updateContract]);
+  }, [contract.id, updateContract, saveSelection]);
 
+  // Accurate mouse-position handling so clicking anywhere sets caret right at that position
+  const handleEditorMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+
+    // Ignore clicks on explicit form buttons or file inputs
+    if (target.closest("button") || target.closest("input")) return;
+
+    // Protected slots (logo / signature images) should not accept text caret
+    if (target.closest(".contract-logo-slot, .contract-sign-slot")) {
+      e.preventDefault();
+      return;
+    }
+
+    // Try resolving exact caret position from click point
+    const range = getCaretRangeFromPoint(e.clientX, e.clientY);
+    if (range && editorRef.current && editorRef.current.contains(range.commonAncestorContainer)) {
+      const container = range.commonAncestorContainer;
+      const el = container.nodeType === Node.ELEMENT_NODE ? (container as HTMLElement) : container.parentElement;
+      if (el?.closest(".contract-logo-slot, .contract-sign-slot")) {
+        return;
+      }
+
+      const sel = window.getSelection();
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(range);
+        savedRangeRef.current = range.cloneRange();
+      }
+    }
+  }, []);
+
+  const handleEditorMouseUp = useCallback(() => {
+    saveSelection();
+  }, [saveSelection]);
+
+  const handleEditorClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("button") || target.closest("input")) return;
+
+    // If target is inside protected slots, ignore
+    if (target.closest(".contract-logo-slot, .contract-sign-slot")) {
+      return;
+    }
+
+    // Verify selection after click. If browser defaulted selection to root container at offset 0,
+    // rectify it to target element or nearest caret
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && editorRef.current) {
+      const anchor = sel.anchorNode;
+      // If anchor is the editor root or .page container at offset 0 (the top-left header bug),
+      // redirect to the exact clicked element or point
+      if (
+        anchor === editorRef.current ||
+        (anchor && anchor.nodeType === Node.ELEMENT_NODE && (anchor as HTMLElement).classList.contains("page") && sel.anchorOffset === 0)
+      ) {
+        const range = getCaretRangeFromPoint(e.clientX, e.clientY);
+        if (range && editorRef.current.contains(range.commonAncestorContainer)) {
+          sel.removeAllRanges();
+          sel.addRange(range);
+          savedRangeRef.current = range.cloneRange();
+        } else if (target && editorRef.current.contains(target) && target !== editorRef.current) {
+          const r = document.createRange();
+          r.selectNodeContents(target);
+          r.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(r);
+          savedRangeRef.current = r.cloneRange();
+        }
+      } else {
+        saveSelection();
+      }
+    }
+  }, [saveSelection]);
+
+  const handleEditorKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    // If the selection is accidentally placed at editor root at offset 0,
+    // restore savedRangeRef if valid, so typing doesn't dump into header!
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0 && editorRef.current) {
+      const anchor = sel.anchorNode;
+      if (anchor === editorRef.current && sel.anchorOffset === 0) {
+        if (savedRangeRef.current && editorRef.current.contains(savedRangeRef.current.commonAncestorContainer)) {
+          sel.removeAllRanges();
+          sel.addRange(savedRangeRef.current);
+        }
+      }
+    }
+  }, []);
+
+  // Formatting helper (B, I, U) preserving selection
   const fmt = useCallback((cmd: string) => {
+    if (!editorRef.current) return;
+    const sel = window.getSelection();
+    const isInside = sel && sel.rangeCount > 0 && editorRef.current.contains(sel.getRangeAt(0).commonAncestorContainer);
+    if (!isInside && savedRangeRef.current) {
+      sel?.removeAllRanges();
+      sel?.addRange(savedRangeRef.current);
+    }
     document.execCommand(cmd, false, undefined);
-    syncBody();
-  }, [syncBody]);
+    saveSelection();
+    handleInput();
+  }, [saveSelection, handleInput]);
 
+  // Insert field at EXACT cursor position
   const insertField = useCallback((text: string) => {
-    if (editorRef.current) {
+    if (!editorRef.current) return;
+
+    let range: Range | null = null;
+    const sel = window.getSelection();
+
+    // 1. Check live selection
+    if (sel && sel.rangeCount > 0) {
+      const r = sel.getRangeAt(0);
+      if (editorRef.current.contains(r.commonAncestorContainer)) {
+        range = r;
+      }
+    }
+
+    // 2. Fall back to savedRangeRef if selection was blurred
+    if (!range && savedRangeRef.current && editorRef.current.contains(savedRangeRef.current.commonAncestorContainer)) {
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(savedRangeRef.current);
+        range = savedRangeRef.current;
+      }
+    }
+
+    if (range && sel) {
+      range.deleteContents();
+      const textNode = document.createTextNode(text);
+      range.insertNode(textNode);
+
+      // Move caret directly after the inserted text
+      const nextRange = document.createRange();
+      nextRange.setStartAfter(textNode);
+      nextRange.setEndAfter(textNode);
+      sel.removeAllRanges();
+      sel.addRange(nextRange);
+      savedRangeRef.current = nextRange.cloneRange();
+
+      editorRef.current.focus();
+      handleInput();
+    } else {
       editorRef.current.focus();
       document.execCommand("insertText", false, text);
-      syncBody();
+      saveSelection();
+      handleInput();
     }
-  }, [syncBody]);
+  }, [handleInput, saveSelection]);
+
+  // Save template explicitly
+  const handleSave = useCallback(() => {
+    if (editorRef.current) {
+      const html = editorRef.current.innerHTML;
+      lastHtmlRef.current = html;
+      const cleanStorageHtml = stripContractAssetsForStorage(html);
+      updateContract(contract.id, cleanStorageHtml);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+    }
+  }, [contract.id, updateContract]);
 
   function handleFitZoom() {
     if (workspaceRef.current) {
@@ -143,15 +470,8 @@ export default function ContractEditor({ contract, onBack }: Props) {
   }
 
   function handlePrint() {
-    const logo = logoUrl
-      ? `<img src="${logoUrl}" style="height:56px;object-fit:contain;" alt="Logo"/>`
-      : `<div style="font-family:Arial,sans-serif;font-size:22pt;font-weight:800;letter-spacing:-0.5px;color:#111;line-height:1">Triple S Production</div><div style="font-family:Arial,sans-serif;font-size:8pt;color:#666;text-transform:uppercase;letter-spacing:2px;margin-top:4px">Production · Marketing · Digital</div>`;
-    const sign = signUrl ? `<img src="${signUrl}" style="height:96px;object-fit:contain;" alt="Signature"/>` : "";
-    const content = editorRef.current?.innerHTML ?? body;
-
-    const finalContent = content
-      .replaceAll("<!--LOGO-->", logo)
-      .replaceAll("<!--SIGN-->", sign);
+    const rawContent = editorRef.current?.innerHTML ?? lastHtmlRef.current ?? initialHtml;
+    const finalContent = renderContractHtml(rawContent, resolvedAssets);
 
     const win = window.open("", "_blank", "width=920,height=720");
     if (!win) return;
@@ -168,14 +488,20 @@ export default function ContractEditor({ contract, onBack }: Props) {
         .letterhead { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2.5px solid #111; padding-bottom: 16px; margin-bottom: 24px; }
         .sig-block { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; margin-top: 48px; }
         .sig-line { border-top: 1.5px solid #333; padding-top: 8px; font-size: 10pt; }
+        .contract-logo-slot { height: 56px !important; max-height: 56px !important; display: flex !important; align-items: center !important; justify-content: flex-start !important; margin-bottom: 8px !important; }
+        .contract-logo-slot img { height: 56px !important; max-width: 240px !important; object-fit: contain !important; display: block !important; }
+        .contract-sign-slot { height: 96px !important; min-height: 96px !important; max-height: 96px !important; display: flex !important; align-items: flex-end !important; justify-content: flex-start !important; margin-bottom: 8px !important; }
+        .contract-sign-slot img { height: 86px !important; max-height: 86px !important; max-width: 200px !important; object-fit: contain !important; display: block !important; }
         .page { width: 210mm; min-height: 297mm; position: relative; margin: 0 auto; box-sizing: border-box; background: #fff; }
-        .page.a4-flow-page { padding: 20mm 25mm; height: auto; min-height: 297mm; }
+        .page.a4-flow-page { padding: 20mm 25mm; height: auto; min-height: 297mm; box-sizing: border-box; }
+        .page.a4-flow-page .a4-flow-content { width: 100%; box-sizing: border-box; }
         @media print {
           @page { size: A4; margin: 0mm; }
           body { margin: 0 !important; padding: 0 !important; }
           .page { page-break-after: always; box-shadow: none !important; margin: 0 !important; width: 210mm !important; }
           .page:last-child { page-break-after: auto; }
           .page.a4-flow-page { padding: 20mm 25mm !important; }
+          .page.a4-flow-page .a4-flow-content { width: 100% !important; }
           .no-print { display: none !important; }
         }
         ${DOCUMENT_STUDIO_CSS}
@@ -207,12 +533,13 @@ export default function ContractEditor({ contract, onBack }: Props) {
         }
 
         .a4-editor-canvas .page {
+          cursor: text !important;
           width: 210mm !important;
           min-height: 297mm !important;
           position: relative !important;
           background: #ffffff !important;
           color: #111111;
-          box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+          box-shadow: 0 16px 48px -8px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
           border-radius: 2px;
           margin: 0 auto 36px auto !important;
           box-sizing: border-box !important;
@@ -223,12 +550,12 @@ export default function ContractEditor({ contract, onBack }: Props) {
         .a4-editor-canvas .page::after {
           content: "PAGE " counter(a4page);
           position: absolute;
-          top: -20px;
+          top: -22px;
           right: 4px;
           font-size: 10px;
           font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
           font-weight: 600;
-          color: rgba(255, 255, 255, 0.65);
+          color: rgba(255, 255, 255, 0.5);
           letter-spacing: 1.5px;
           pointer-events: none;
         }
@@ -267,6 +594,12 @@ export default function ContractEditor({ contract, onBack }: Props) {
           font-size: 11pt !important;
           line-height: 1.85 !important;
           overflow: visible !important;
+          box-sizing: border-box !important;
+        }
+
+        .a4-editor-canvas .page.a4-flow-page .a4-flow-content {
+          width: 100% !important;
+          box-sizing: border-box !important;
         }
 
         .a4-editor-canvas .page.a4-flow-page p {
@@ -295,6 +628,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
           padding-bottom: 16px;
           margin-bottom: 24px;
           box-sizing: border-box;
+          width: 100%;
         }
 
         .a4-editor-canvas .page.a4-flow-page .sig-block {
@@ -312,6 +646,51 @@ export default function ContractEditor({ contract, onBack }: Props) {
           border-top: 1.5px solid #333;
           padding-top: 8px;
           font-size: 10pt;
+        }
+
+        /* ─── Contract Assets Fixed Placement ─────────────────────── */
+        .a4-editor-canvas .contract-logo-slot,
+        .document-studio-wrapper .contract-logo-slot {
+          height: 56px !important;
+          max-height: 56px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: flex-start !important;
+          margin-bottom: 8px !important;
+          user-select: none !important;
+          -webkit-user-select: none !important;
+        }
+
+        .a4-editor-canvas .contract-logo-slot img,
+        .document-studio-wrapper .contract-logo-slot img {
+          height: 56px !important;
+          max-width: 240px !important;
+          object-fit: contain !important;
+          display: block !important;
+          pointer-events: none !important;
+        }
+
+        .a4-editor-canvas .contract-sign-slot,
+        .document-studio-wrapper .contract-sign-slot {
+          height: 96px !important;
+          min-height: 96px !important;
+          max-height: 96px !important;
+          display: flex !important;
+          align-items: flex-end !important;
+          justify-content: flex-start !important;
+          margin-bottom: 8px !important;
+          user-select: none !important;
+          -webkit-user-select: none !important;
+        }
+
+        .a4-editor-canvas .contract-sign-slot img,
+        .document-studio-wrapper .contract-sign-slot img {
+          height: 86px !important;
+          max-height: 86px !important;
+          max-width: 200px !important;
+          object-fit: contain !important;
+          display: block !important;
+          pointer-events: none !important;
         }
 
         /* ─── Robust Table, Column & Grid Wrapping ──────────────── */
@@ -384,17 +763,19 @@ export default function ContractEditor({ contract, onBack }: Props) {
       `}} />
 
       {/* Back + title */}
-      <div className="flex items-center justify-between gap-4 pb-1">
+      <div className="flex items-center justify-between gap-4 pb-2 border-b border-white/[0.06]">
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer select-none outline-none flex-shrink-0 bg-[#151719] hover:bg-[#202328] active:bg-[#181B1F] text-[#E8EAED] hover:text-white active:text-white border-[#2E333B] hover:border-[#00D9FF] focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer select-none outline-none flex-shrink-0 bg-[#14161A] hover:bg-[#1D2128] active:bg-[#16181F] text-[#E8EAED] hover:text-white active:text-white border-[#2A2E36] hover:border-[#00D9FF]/60 focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
         >
-          <span className="text-sm leading-none">←</span>
+          <span className="text-sm leading-none text-[#00D9FF]">←</span>
           <span>BACK</span>
         </button>
-        <div className="text-base sm:text-lg font-bold tracking-tight leading-tight truncate text-[#FFFFFF]">
-          {contract.name}
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#121418] border border-[#23272F]">
+          <span className="w-2 h-2 rounded-full bg-[#00D9FF] shadow-[0_0_8px_rgba(0,217,255,0.6)]" />
+          <span className="text-xs text-[#8E95A2] font-semibold uppercase tracking-wider">Template:</span>
+          <span className="text-sm font-bold tracking-tight text-white">{contract.name}</span>
         </div>
       </div>
 
@@ -407,18 +788,39 @@ export default function ContractEditor({ contract, onBack }: Props) {
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-[#8A909B] mb-2.5 flex items-center justify-between">
                 <span>Company Logo</span>
-                {logoUrl && <span className="text-[10px] text-emerald-400 font-semibold tracking-normal">Loaded</span>}
+                {resolvedAssets.isSpecificLogo ? (
+                  <span className="text-[10px] text-emerald-400 font-semibold tracking-normal px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                    Doc Specific
+                  </span>
+                ) : resolvedAssets.logoUrl ? (
+                  <span className="text-[10px] text-[#00D9FF] font-semibold tracking-normal px-1.5 py-0.5 rounded bg-[#00D9FF]/10 border border-[#00D9FF]/20">
+                    Inherited Global
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-[#8E95A2] font-semibold tracking-normal">
+                    Default
+                  </span>
+                )}
               </div>
-              {logoUrl ? (
+              {resolvedAssets.logoUrl ? (
                 <div className="relative rounded-xl overflow-hidden border border-[#2A2F37] bg-white p-2.5 shadow-sm">
-                  <img src={logoUrl} alt="Logo" className="w-full h-14 object-contain" />
+                  <img src={resolvedAssets.logoUrl} alt="Logo" className="w-full h-14 object-contain" />
+                  {resolvedAssets.isSpecificLogo && (
+                    <button
+                      type="button"
+                      onClick={handleClearDocLogo}
+                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-black/80 hover:bg-red-600 text-white text-xs flex items-center justify-center transition-colors cursor-pointer"
+                      title="Remove document-specific logo (falls back to global)"
+                    >
+                      ✕
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => clearImage("tsp_logo", setLogoUrl)}
-                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-black/80 hover:bg-black text-white text-xs flex items-center justify-center transition-colors cursor-pointer"
-                    title="Remove Logo"
+                    onClick={() => logoRef.current?.click()}
+                    className="mt-2 w-full py-1.5 rounded-lg text-[11px] font-semibold text-[#8E949E] hover:text-white bg-[#15171B] hover:bg-[#1f2229] border border-[#2A2F37] transition-all text-center cursor-pointer"
                   >
-                    ✕
+                    {resolvedAssets.isSpecificLogo ? "Change Document Logo" : "Upload Custom for this Doc"}
                   </button>
                 </div>
               ) : (
@@ -435,7 +837,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0], "tsp_logo", setLogoUrl)}
+                onChange={e => e.target.files?.[0] && handleUploadDocLogo(e.target.files[0])}
               />
             </div>
 
@@ -443,18 +845,39 @@ export default function ContractEditor({ contract, onBack }: Props) {
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider text-[#8A909B] mb-2.5 flex items-center justify-between">
                 <span>Authorized Signature</span>
-                {signUrl && <span className="text-[10px] text-emerald-400 font-semibold tracking-normal">Loaded</span>}
+                {resolvedAssets.isSpecificSign ? (
+                  <span className="text-[10px] text-emerald-400 font-semibold tracking-normal px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                    Doc Specific
+                  </span>
+                ) : resolvedAssets.signUrl ? (
+                  <span className="text-[10px] text-[#00D9FF] font-semibold tracking-normal px-1.5 py-0.5 rounded bg-[#00D9FF]/10 border border-[#00D9FF]/20">
+                    Inherited Global
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-[#8E95A2] font-semibold tracking-normal">
+                    Empty
+                  </span>
+                )}
               </div>
-              {signUrl ? (
+              {resolvedAssets.signUrl ? (
                 <div className="relative rounded-xl overflow-hidden border border-[#2A2F37] bg-white p-2.5 shadow-sm">
-                  <img src={signUrl} alt="Sign" className="w-full h-12 object-contain" />
+                  <img src={resolvedAssets.signUrl} alt="Sign" className="w-full h-12 object-contain" />
+                  {resolvedAssets.isSpecificSign && (
+                    <button
+                      type="button"
+                      onClick={handleClearDocSign}
+                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-black/80 hover:bg-red-600 text-white text-xs flex items-center justify-center transition-colors cursor-pointer"
+                      title="Remove document-specific signature (falls back to global)"
+                    >
+                      ✕
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => clearImage("tsp_sign", setSignUrl)}
-                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-black/80 hover:bg-black text-white text-xs flex items-center justify-center transition-colors cursor-pointer"
-                    title="Remove Signature"
+                    onClick={() => signRef.current?.click()}
+                    className="mt-2 w-full py-1.5 rounded-lg text-[11px] font-semibold text-[#8E949E] hover:text-white bg-[#15171B] hover:bg-[#1f2229] border border-[#2A2F37] transition-all text-center cursor-pointer"
                   >
-                    ✕
+                    {resolvedAssets.isSpecificSign ? "Change Document Sign" : "Upload Custom for this Doc"}
                   </button>
                 </div>
               ) : (
@@ -471,7 +894,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={e => e.target.files?.[0] && uploadImage(e.target.files[0], "tsp_sign", setSignUrl)}
+                onChange={e => e.target.files?.[0] && handleUploadDocSign(e.target.files[0])}
               />
             </div>
 
@@ -489,6 +912,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                   <button
                     key={cmd}
                     type="button"
+                    onMouseDown={e => e.preventDefault()}
                     onClick={() => fmt(cmd)}
                     title={title}
                     className="w-10 h-10 rounded-xl bg-[#17191D] hover:bg-[#20242C] active:bg-[#131518] border border-[#2A2F37] hover:border-[#00D9FF]/50 text-[#E8EAED] hover:text-white transition-all font-bold text-sm flex items-center justify-center cursor-pointer active:scale-95 shadow-sm"
@@ -511,6 +935,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                   <button
                     key={f}
                     type="button"
+                    onMouseDown={e => e.preventDefault()}
                     onClick={() => insertField(f)}
                     className="text-left text-[11.5px] font-mono px-3 py-2 rounded-lg bg-[#16181C] hover:bg-[#1E222A] text-[#A6ADB8] hover:text-[#00D9FF] border border-[#262A32] hover:border-[#00D9FF]/40 transition-all duration-150 flex items-center justify-between group cursor-pointer"
                   >
@@ -533,11 +958,15 @@ export default function ContractEditor({ contract, onBack }: Props) {
               </button>
               <button
                 type="button"
-                onClick={syncBody}
-                className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider bg-[#17191D] hover:bg-[#20242C] text-[#E8EAED] hover:text-white border border-[#2A2F37] hover:border-[#00D9FF] transition-all text-center flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                onClick={handleSave}
+                className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider border transition-all text-center flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] ${
+                  isSaved
+                    ? "bg-emerald-600/20 text-emerald-400 border-emerald-500/50"
+                    : "bg-[#17191D] hover:bg-[#20242C] text-[#E8EAED] hover:text-white border-[#2A2F37] hover:border-[#00D9FF]"
+                }`}
               >
-                <span>💾</span>
-                <span>SAVE TEMPLATE</span>
+                <span>{isSaved ? "✅" : "💾"}</span>
+                <span>{isSaved ? "SAVED TO SYSTEM" : "SAVE TEMPLATE"}</span>
               </button>
             </div>
           </div>
@@ -580,18 +1009,18 @@ export default function ContractEditor({ contract, onBack }: Props) {
           </div>
 
           {/* Paper container with chrome window bar */}
-          <div className="rounded-2xl overflow-hidden shadow-2xl flex flex-col border border-[#262B33] bg-[#0E1013]">
+          <div className="rounded-2xl overflow-hidden shadow-2xl flex flex-col border border-[#232730] bg-[#0A0B0E]">
             {/* Paper chrome bar */}
-            <div className="px-4 py-3 flex items-center justify-between bg-[#14161A] border-b border-[#22262C]">
+            <div className="px-4 py-3 flex items-center justify-between bg-[#111317] border-b border-[#1F232B]">
               <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#EF4444]/70" />
-                <div className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]/70" />
-                <div className="w-2.5 h-2.5 rounded-full bg-[#10B981]/70" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#EF4444]/80" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]/80" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#10B981]/80" />
                 <span className="ml-2 text-xs font-medium text-[#A0A6B2]">
                   A4 · 210mm × 297mm · {contract.name}
                 </span>
               </div>
-              <div className="text-xs font-mono text-[#8E949E] bg-[#0D0E11] px-2.5 py-0.5 rounded-md border border-[#22262C]">
+              <div className="text-xs font-mono text-[#8E949E] bg-[#0B0D10] px-2.5 py-0.5 rounded-md border border-[#1F232B]">
                 {Math.round(zoom * 100)}% scale
               </div>
             </div>
@@ -601,7 +1030,10 @@ export default function ContractEditor({ contract, onBack }: Props) {
               ref={workspaceRef}
               className="w-full overflow-x-auto overflow-y-auto p-6 sm:p-10 flex flex-col items-center custom-scrollbar"
               style={{
-                background: "#090A0C",
+                backgroundColor: "#07080A",
+                backgroundImage: `radial-gradient(circle at 50% 25%, rgba(0, 217, 255, 0.02) 0%, transparent 60%),
+                  radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px)`,
+                backgroundSize: "100% 100%, 28px 28px",
                 minHeight: "750px",
                 maxHeight: "82vh",
               }}
@@ -616,23 +1048,45 @@ export default function ContractEditor({ contract, onBack }: Props) {
               >
                 {/* Editable A4 Document Root */}
                 <div
+                  key={contract.id}
                   ref={editorRef}
                   contentEditable
                   suppressContentEditableWarning
                   className="document-studio-wrapper a4-editor-canvas outline-none"
-                  dangerouslySetInnerHTML={{ __html: body }}
-                  onInput={syncBody}
+                  dangerouslySetInnerHTML={{ __html: initialHtml }}
+                  onMouseDown={handleEditorMouseDown}
+                  onMouseUp={handleEditorMouseUp}
+                  onClick={handleEditorClick}
+                  onKeyDown={handleEditorKeyDown}
+                  onInput={handleInput}
+                  onKeyUp={saveSelection}
+                  onSelect={saveSelection}
+                  onBlur={saveSelection}
                 />
               </div>
             </div>
           </div>
 
           {/* Logo/sign status */}
-          {(logoUrl || signUrl) && (
+          {(resolvedAssets.logoUrl || resolvedAssets.signUrl) && (
             <div className="mt-3 text-xs text-[#8A909B] font-medium px-1 flex items-center gap-2">
-              {logoUrl && <span>✅ Company Logo loaded</span>}
-              {logoUrl && signUrl && <span>·</span>}
-              {signUrl && <span>✅ Authorized Signature loaded</span>}
+              {resolvedAssets.logoUrl && (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span>
+                    Company Logo ({resolvedAssets.isSpecificLogo ? "Document Specific" : "Inherited Global"})
+                  </span>
+                </span>
+              )}
+              {resolvedAssets.logoUrl && resolvedAssets.signUrl && <span>·</span>}
+              {resolvedAssets.signUrl && (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                  <span>
+                    Authorized Signature ({resolvedAssets.isSpecificSign ? "Document Specific" : "Inherited Global"})
+                  </span>
+                </span>
+              )}
             </div>
           )}
         </div>

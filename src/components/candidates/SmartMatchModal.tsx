@@ -110,157 +110,255 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
   }, [candidates, roleId, minScore, prefExp, prefEdu, selectedSkills]);
 
   return (
-    <Modal open={open} onClose={onClose} className="max-w-[960px] w-full max-h-[90vh] md:max-h-[85vh] flex flex-col p-4 sm:p-6 overflow-y-auto md:overflow-hidden">
-      <div className="flex items-start justify-between pb-3 mb-4 border-b border-[var(--border)]">
-        <div>
-          <div className="text-[18px] font-bold tracking-tight">✨ Requirements Smart Matcher</div>
-          <div className="font-mono text-[10px] text-[var(--text-3)] uppercase tracking-widest mt-0.5">
-            Define job requirements to filter and rank candidates instantly
+    <Modal
+      open={open}
+      onClose={onClose}
+      className="max-w-[1100px] w-full max-h-[92vh] md:h-[86vh] flex flex-col p-0 overflow-hidden bg-[#0e1013] border-[#22272e] shadow-2xl rounded-2xl"
+    >
+      {/* Top Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f242b] bg-[#121519]/90 backdrop-blur-md flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-[#00D9FF]/10 border border-[#00D9FF]/30 flex items-center justify-center text-[#00D9FF] text-sm shadow-[0_0_12px_rgba(0,217,255,0.15)]">
+            ✨
           </div>
-        </div>
-        <Btn onClick={onClose} className="text-[var(--text-3)] hover:text-white transition-colors">✕</Btn>
-      </div>
-
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-6 min-h-0 md:overflow-hidden">
-        {/* Left Side: Filter Requirements */}
-        <div className="md:col-span-5 flex flex-col gap-4 md:overflow-y-auto pr-2 pb-4">
-          <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest border-b border-[var(--border)] pb-1 mb-1">
-            Job Requirements
-          </div>
-
-          {/* Job Profile Role */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[11px] font-semibold text-[var(--text-2)]">Preferred Job Role</label>
-            <select
-              value={roleId}
-              onChange={e => handleRoleChange(e.target.value)}
-              className="bg-[var(--glass-2)] border border-[var(--border)] rounded-xl text-white text-xs px-3 py-2 outline-none focus:border-[var(--border-3)]"
-            >
-              <option value="all">Any / All Profiles</option>
-              {DEFAULT_ROLES.map(r => (
-                <option key={r.id} value={r.id}>{r.name}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Experience and Education row */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-[var(--text-2)]">Required Experience</label>
-              <select
-                value={prefExp}
-                onChange={e => setPrefExp(e.target.value)}
-                className="bg-[var(--glass-2)] border border-[var(--border)] rounded-xl text-white text-xs px-3 py-2 outline-none focus:border-[var(--border-3)]"
-              >
-                <option value="all">Any Experience</option>
-                {EXP_LEVELS.map(x => (
-                  <option key={x} value={x}>{x}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[11px] font-semibold text-[var(--text-2)]">Required Education</label>
-              <select
-                value={prefEdu}
-                onChange={e => setPrefEdu(e.target.value)}
-                className="bg-[var(--glass-2)] border border-[var(--border)] rounded-xl text-white text-xs px-3 py-2 outline-none focus:border-[var(--border-3)]"
-              >
-                <option value="all">Any Education</option>
-                {EDU.map(e => (
-                  <option key={e} value={e}>{e}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Overall Score threshold */}
-          <div className="flex flex-col gap-1.5">
-            <div className="flex justify-between items-center">
-              <label className="text-[11px] font-semibold text-[var(--text-2)]">Min Overall ATS Score</label>
-              <span className="font-mono text-xs text-white bg-[var(--glass-2)] px-2 py-0.5 rounded border border-[var(--border)] font-bold">
-                {minScore}+
+          <div>
+            <div className="text-[16px] font-bold tracking-tight text-white flex items-center gap-2">
+              <span>Requirements Smart Matcher</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#00D9FF] bg-[#00D9FF]/10 border border-[#00D9FF]/25 px-2 py-0.5 rounded-md">
+                Live AI Match
               </span>
             </div>
-            <input
-              type="range" min={0} max={100} value={minScore}
-              onChange={e => setMinScore(Number(e.target.value))}
-              className="w-full h-1 bg-[var(--glass-3)] rounded-lg appearance-none cursor-pointer accent-white"
-            />
+            <div className="text-[11px] text-[#78808d] mt-0.5">
+              Specify target criteria to benchmark and instantly score candidates across your pool
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-[#737983] hover:text-white hover:bg-white/[0.06] border border-transparent hover:border-[#2b3038] transition-all"
+          aria-label="Close"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Main Grid: Left Panel (Requirements) & Right Panel (Candidate Matches) */}
+      <div className="flex-1 grid grid-cols-1 md:grid-cols-12 min-h-0 divide-y md:divide-y-0 md:divide-x divide-[#1f242b] overflow-hidden">
+        {/* Left Side: Filter Requirements */}
+        <div className="md:col-span-5 flex flex-col min-h-0 bg-[#0c0e11] overflow-hidden">
+          <div className="px-5 py-3 border-b border-[#1c2027] bg-[#111418]/60 flex items-center justify-between flex-shrink-0">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#8b93a0]">
+              Match Criteria
+            </span>
+            <button
+              onClick={clearAll}
+              className="text-[11px] text-[#717885] hover:text-[#00D9FF] transition-colors font-medium"
+            >
+              Reset All
+            </button>
           </div>
 
-          {/* Required Skills list */}
-          <div className="flex flex-col gap-1.5 flex-1 min-h-[150px]">
-            <div className="flex justify-between items-center">
-              <label className="text-[11px] font-semibold text-[var(--text-2)]">Select Required Skills ({selectedSkills.size})</label>
-              {selectedSkills.size > 0 && (
-                <Btn
-                  onClick={() => setSelectedSkills(new Set())}
-                  className="text-[9px] font-mono text-[var(--text-3)] hover:text-white uppercase tracking-wider"
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 pr-4">
+            {/* Job Profile Role */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11.5px] font-semibold text-[#a6adb9]">Target Role</label>
+              <div className="relative">
+                <select
+                  value={roleId}
+                  onChange={e => handleRoleChange(e.target.value)}
+                  className="w-full bg-[#15181d] border border-[#262c35] hover:border-[#38414e] focus:border-[#00D9FF] rounded-xl text-white text-[12.5px] px-3.5 py-2.5 outline-none transition-colors appearance-none cursor-pointer"
                 >
-                  Clear Skills
-                </Btn>
-              )}
+                  <option value="all">Any / All Roles</option>
+                  {DEFAULT_ROLES.map(r => (
+                    <option key={r.id} value={r.id} className="bg-[#15181d] text-white">
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#6e7683] text-[10px]">
+                  ▼
+                </div>
+              </div>
             </div>
-            <div
-              className="flex-1 p-3 rounded-xl border border-[var(--border)] overflow-y-auto max-h-[220px]"
-              style={{ background: "#0a0a0a" }}
-            >
-              <div className="flex flex-wrap gap-1.5">
-                {availableSkills.map(skill => {
-                  const active = selectedSkills.has(skill);
-                  return (
-                    <Btn
-                      key={skill}
-                      onClick={() => toggleSkill(skill)}
-                      className={clsx(
-                        "text-[10px] font-medium px-2.5 py-1 rounded-lg border transition-all",
-                        active
-                          ? "bg-white text-black border-white font-semibold"
-                          : "bg-[var(--glass)] border-[var(--border)] text-[var(--text-3)] hover:text-white hover:border-[var(--border-2)]"
-                      )}
-                    >
-                      {skill}
-                    </Btn>
-                  );
-                })}
+
+            {/* Experience and Education row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11.5px] font-semibold text-[#a6adb9]">Experience</label>
+                <div className="relative">
+                  <select
+                    value={prefExp}
+                    onChange={e => setPrefExp(e.target.value)}
+                    className="w-full bg-[#15181d] border border-[#262c35] hover:border-[#38414e] focus:border-[#00D9FF] rounded-xl text-white text-[12px] px-3 py-2 outline-none transition-colors appearance-none cursor-pointer"
+                  >
+                    <option value="all">Any Exp.</option>
+                    {EXP_LEVELS.map(x => (
+                      <option key={x} value={x} className="bg-[#15181d] text-white">
+                        {x}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#6e7683] text-[10px]">
+                    ▼
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11.5px] font-semibold text-[#a6adb9]">Education</label>
+                <div className="relative">
+                  <select
+                    value={prefEdu}
+                    onChange={e => setPrefEdu(e.target.value)}
+                    className="w-full bg-[#15181d] border border-[#262c35] hover:border-[#38414e] focus:border-[#00D9FF] rounded-xl text-white text-[12px] px-3 py-2 outline-none transition-colors appearance-none cursor-pointer"
+                  >
+                    <option value="all">Any Edu.</option>
+                    {EDU.map(e => (
+                      <option key={e} value={e} className="bg-[#15181d] text-white">
+                        {e}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#6e7683] text-[10px]">
+                    ▼
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Overall Score threshold */}
+            <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-[#13161b] border border-[#20252d]">
+              <div className="flex justify-between items-center">
+                <span className="text-[11.5px] font-semibold text-[#a6adb9]">Min ATS Score</span>
+                <span className="font-mono text-[12px] text-[#00D9FF] bg-[#00D9FF]/10 border border-[#00D9FF]/25 px-2 py-0.5 rounded-md font-bold">
+                  {minScore}+
+                </span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={minScore}
+                onChange={e => setMinScore(Number(e.target.value))}
+                className="w-full h-1.5 bg-[#20262f] rounded-lg appearance-none cursor-pointer accent-[#00D9FF]"
+              />
+              <div className="flex justify-between text-[10px] text-[#636c78] font-mono">
+                <span>0</span>
+                <span>50</span>
+                <span>100</span>
+              </div>
+            </div>
+
+            {/* Required Skills list */}
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-1.5">
+                  <label className="text-[11.5px] font-semibold text-[#a6adb9]">Key Skills</label>
+                  {selectedSkills.size > 0 && (
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#00D9FF]/15 text-[#00D9FF] font-semibold">
+                      {selectedSkills.size}
+                    </span>
+                  )}
+                </div>
+                {selectedSkills.size > 0 && (
+                  <button
+                    onClick={() => setSelectedSkills(new Set())}
+                    className="text-[10px] text-[#717885] hover:text-[#00D9FF] uppercase tracking-wider font-medium"
+                  >
+                    Clear Skills
+                  </button>
+                )}
+              </div>
+              <div className="p-3 rounded-xl border border-[#20252e] bg-[#12151a] max-h-[170px] overflow-y-auto">
+                <div className="flex flex-wrap gap-1.5">
+                  {availableSkills.map(skill => {
+                    const active = selectedSkills.has(skill);
+                    return (
+                      <button
+                        key={skill}
+                        type="button"
+                        onClick={() => toggleSkill(skill)}
+                        className={clsx(
+                          "text-[11px] font-medium px-2.5 py-1 rounded-lg border transition-all text-left flex items-center gap-1",
+                          active
+                            ? "bg-[#00D9FF]/15 text-[#00D9FF] border-[#00D9FF]/40 shadow-sm"
+                            : "bg-[#161a20] border-[#252a33] text-[#8e95a2] hover:text-white hover:border-[#373e4b]"
+                        )}
+                      >
+                        {active && <span className="text-[10px]">✓</span>}
+                        {skill}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
 
-          <Btn variant="outline" size="sm" onClick={clearAll} className="w-full text-center justify-center">
-            Reset Requirements
-          </Btn>
+          <div className="p-4 border-t border-[#1c2027] bg-[#0c0e11] flex-shrink-0">
+            <button
+              onClick={clearAll}
+              className="w-full py-2.5 rounded-xl border border-[#262c36] hover:border-[#38414e] bg-[#14171d] hover:bg-[#191d24] text-[#a6adb9] hover:text-white text-[12px] font-semibold transition-all"
+            >
+              Reset Requirements
+            </button>
+          </div>
         </div>
 
         {/* Right Side: Ranked Match Results */}
-        <div className="md:col-span-7 flex flex-col min-h-0 overflow-hidden">
-          <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest border-b border-[var(--border)] pb-1 mb-3 flex justify-between">
-            <span>Ranked Candidates ({matchedCandidates.length})</span>
-            <span className="font-mono text-[10px] text-[var(--text-3)] lowercase italic">highest match percentage first</span>
+        <div className="md:col-span-7 flex flex-col min-h-0 bg-[#090b0d] overflow-hidden">
+          <div className="px-6 py-3 border-b border-[#1c2027] bg-[#111418]/60 flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8b93a0]">
+                Ranked Matches
+              </span>
+              <span className="font-mono text-[11px] bg-[#1a1f26] text-[#a6adb9] px-2 py-0.5 rounded-full font-medium">
+                {matchedCandidates.length}
+              </span>
+            </div>
+            <span className="text-[11px] text-[#5e6673]">
+              Sorted by highest relevance
+            </span>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-2 pb-4">
+          <div className="flex-1 overflow-y-auto p-5 space-y-3 pr-4">
             {matchedCandidates.length === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center py-20 text-[var(--text-3)]">
-                <span className="text-3xl mb-2 opacity-30">🔍</span>
-                <span className="text-sm font-semibold">No candidates found</span>
-                <span className="text-xs max-w-xs mt-1">Upload resumes in the main table first.</span>
+              <div className="h-full flex flex-col items-center justify-center text-center py-20 text-[#606774]">
+                <div className="w-12 h-12 rounded-2xl bg-[#14171c] border border-[#20252e] flex items-center justify-center text-xl mb-3 text-[#7f8897]">
+                  🔍
+                </div>
+                <div className="text-[14px] font-semibold text-[#e1e4ea]">No candidates matched</div>
+                <div className="text-[12px] max-w-xs mt-1 text-[#6f7785]">
+                  Try loosening your ATS score threshold, role filter, or required skills criteria.
+                </div>
               </div>
             ) : (
               matchedCandidates.map(({ candidate: c, matchScore, matchedSkillsList, missingSkillsList }) => {
-                const badgeColor = matchScore >= 75 ? "text-[var(--green)] bg-green-500/10 border-green-500/20" : matchScore >= 45 ? "text-[var(--yellow)] bg-yellow-500/10 border-yellow-500/20" : "text-[var(--red)] bg-red-500/10 border-red-500/20";
+                const isTopTier = matchScore >= 75;
+                const isMidTier = matchScore >= 45;
+
+                const scoreColor = isTopTier
+                  ? "text-[#22c55e] bg-[#22c55e]/10 border-[#22c55e]/25"
+                  : isMidTier
+                  ? "text-[#f5c542] bg-[#f5c542]/10 border-[#f5c542]/25"
+                  : "text-[#ef4444] bg-[#ef4444]/10 border-[#ef4444]/25";
+
+                const barColor = isTopTier
+                  ? "bg-[#22c55e]"
+                  : isMidTier
+                  ? "bg-[#f5c542]"
+                  : "bg-[#ef4444]";
+
                 return (
                   <div
                     key={c.id}
-                    className="p-4 rounded-xl border border-[var(--border)] hover:border-[var(--border-3)] hover:bg-white/[0.01] transition-all flex flex-col gap-2.5"
-                    style={{ background: "var(--glass)" }}
+                    className="p-4 rounded-xl border border-[#1f242d] bg-[#111419] hover:border-[#2d3440] hover:bg-[#14181e] transition-all flex flex-col gap-3 group"
                   >
                     {/* Header */}
-                    <div className="flex items-start justify-between">
-                      <div>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
                         <div
-                          className="font-bold text-[14px] cursor-pointer hover:underline text-white"
+                          className="font-bold text-[14.5px] cursor-pointer text-white group-hover:text-[#00D9FF] transition-colors truncate"
                           onClick={() => {
                             onViewCandidate(c);
                             onClose();
@@ -268,84 +366,158 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                         >
                           {c.name}
                         </div>
-                        <div className="text-[11px] text-[var(--text-3)] font-medium mt-0.5">
-                          {c.roleName} · {c.exp} · {c.education} · {c.city}
+                        <div className="text-[11.5px] text-[#78808d] mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <span className="text-[#a6adb9] font-medium">{c.roleName}</span>
+                          <span>•</span>
+                          <span>{c.exp}</span>
+                          <span>•</span>
+                          <span>{c.education}</span>
+                          {c.city && (
+                            <>
+                              <span>•</span>
+                              <span>{c.city}</span>
+                            </>
+                          )}
                         </div>
                       </div>
 
                       {/* Match Score Badge */}
-                      <div className={clsx("font-mono text-xs font-extrabold px-3 py-1 rounded-lg border flex items-center gap-1.5", badgeColor)}>
-                        <span>✨</span>
-                        <span>{matchScore}% Match</span>
+                      <div
+                        className={clsx(
+                          "font-mono text-[12px] font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1.5 flex-shrink-0 shadow-sm",
+                          scoreColor
+                        )}
+                      >
+                        <span className="text-[10px]">✨</span>
+                        <span>{matchScore}%</span>
                       </div>
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="w-full h-1.5 rounded-full overflow-hidden bg-white/[0.04]">
+                    <div className="w-full h-1.5 rounded-full overflow-hidden bg-[#1a1f26]">
                       <div
-                        className={clsx(
-                          "h-full rounded-full transition-all duration-500",
-                          matchScore >= 75 ? "bg-[var(--green)]" : matchScore >= 45 ? "bg-[var(--yellow)]" : "bg-[var(--red)]"
-                        )}
+                        className={clsx("h-full rounded-full transition-all duration-500", barColor)}
                         style={{ width: `${matchScore}%` }}
                       />
                     </div>
 
-                    {/* Matching Breakdown details */}
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono text-[var(--text-3)] border-t border-white/[0.03] pt-2 mt-0.5">
-                      <div className="flex items-center gap-1">
-                        <span>{c.roleId === roleId || roleId === "all" ? "🟢" : "🔴"}</span>
-                        <span>Role</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span>{prefExp === "all" || c.exp === prefExp ? "🟢" : "🔴"}</span>
-                        <span>Exp ({c.exp})</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span>{prefEdu === "all" || c.education === prefEdu ? "🟢" : "🔴"}</span>
-                        <span>Edu ({c.education})</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span>{c.score.total >= minScore ? "🟢" : "🔴"}</span>
-                        <span>ATS Score ({c.score.total})</span>
-                      </div>
+                    {/* Criteria Pill Tags */}
+                    <div className="flex flex-wrap items-center gap-1.5 text-[10.5px] font-medium">
+                      {/* Role Match */}
+                      <span
+                        className={clsx(
+                          "px-2 py-0.5 rounded-md border flex items-center gap-1",
+                          c.roleId === roleId || roleId === "all"
+                            ? "bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20"
+                            : "bg-[#20252e] text-[#636c78] border-[#2b313d]"
+                        )}
+                      >
+                        <span className="text-[9px]">
+                          {c.roleId === roleId || roleId === "all" ? "✓" : "✕"}
+                        </span>
+                        Role
+                      </span>
+
+                      {/* Exp Match */}
+                      <span
+                        className={clsx(
+                          "px-2 py-0.5 rounded-md border flex items-center gap-1",
+                          prefExp === "all" || c.exp === prefExp
+                            ? "bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20"
+                            : "bg-[#20252e] text-[#636c78] border-[#2b313d]"
+                        )}
+                      >
+                        <span className="text-[9px]">
+                          {prefExp === "all" || c.exp === prefExp ? "✓" : "✕"}
+                        </span>
+                        Exp ({c.exp})
+                      </span>
+
+                      {/* Edu Match */}
+                      <span
+                        className={clsx(
+                          "px-2 py-0.5 rounded-md border flex items-center gap-1",
+                          prefEdu === "all" || c.education === prefEdu
+                            ? "bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20"
+                            : "bg-[#20252e] text-[#636c78] border-[#2b313d]"
+                        )}
+                      >
+                        <span className="text-[9px]">
+                          {prefEdu === "all" || c.education === prefEdu ? "✓" : "✕"}
+                        </span>
+                        Edu ({c.education})
+                      </span>
+
+                      {/* Score Match */}
+                      <span
+                        className={clsx(
+                          "px-2 py-0.5 rounded-md border flex items-center gap-1",
+                          c.score.total >= minScore
+                            ? "bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20"
+                            : "bg-[#20252e] text-[#636c78] border-[#2b313d]"
+                        )}
+                      >
+                        <span className="text-[9px]">
+                          {c.score.total >= minScore ? "✓" : "✕"}
+                        </span>
+                        ATS: {c.score.total}
+                      </span>
+
+                      {/* Skills count if any selected */}
                       {selectedSkills.size > 0 && (
-                        <div className="flex items-center gap-1">
-                          <span>{matchedSkillsList.length === selectedSkills.size ? "🟢" : matchedSkillsList.length > 0 ? "🟡" : "🔴"}</span>
-                          <span>Skills: {matchedSkillsList.length}/{selectedSkills.size} matched</span>
-                        </div>
+                        <span
+                          className={clsx(
+                            "px-2 py-0.5 rounded-md border flex items-center gap-1 font-mono",
+                            matchedSkillsList.length === selectedSkills.size
+                              ? "bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20"
+                              : matchedSkillsList.length > 0
+                              ? "bg-[#f5c542]/10 text-[#f5c542] border-[#f5c542]/20"
+                              : "bg-[#ef4444]/10 text-[#ef4444] border-[#ef4444]/20"
+                          )}
+                        >
+                          Skills: {matchedSkillsList.length}/{selectedSkills.size}
+                        </span>
                       )}
                     </div>
 
-                    {/* Skills list tags */}
+                    {/* Skill Badges if selected */}
                     {selectedSkills.size > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-1 border-t border-white/[0.03] pt-2">
+                      <div className="flex flex-wrap gap-1.5 pt-1">
                         {matchedSkillsList.map(s => (
-                          <span key={s} className="text-[9px] bg-green-500/10 text-[var(--green)] font-semibold border border-green-500/20 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                          <span
+                            key={s}
+                            className="text-[10px] bg-[#22c55e]/10 text-[#22c55e] font-medium border border-[#22c55e]/20 px-2 py-0.5 rounded-md flex items-center gap-1"
+                          >
                             ✓ {s}
                           </span>
                         ))}
                         {missingSkillsList.map(s => (
-                          <span key={s} className="text-[9px] bg-red-500/10 text-red-400 font-semibold border border-red-500/20 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                          <span
+                            key={s}
+                            className="text-[10px] bg-[#ef4444]/10 text-[#ef4444] font-medium border border-[#ef4444]/20 px-2 py-0.5 rounded-md flex items-center gap-1 opacity-80"
+                          >
                             ✕ {s}
                           </span>
                         ))}
                       </div>
                     )}
 
-                    {/* Quick Profile Viewer action */}
-                    <div className="flex justify-end pt-1">
-                      <Btn
-                        variant="ghost"
-                        size="sm"
+                    {/* Footer Action */}
+                    <div className="flex items-center justify-between pt-1 border-t border-[#1a1f26]">
+                      <span className="text-[11px] text-[#555d6b]">
+                        ID: <span className="font-mono text-[#78808d]">{c.id.slice(0, 8)}</span>
+                      </span>
+                      <button
+                        type="button"
                         onClick={() => {
                           onViewCandidate(c);
                           onClose();
                         }}
-                        className="text-[10px] font-bold"
+                        className="text-[11.5px] font-semibold text-[#8b93a0] hover:text-[#00D9FF] flex items-center gap-1.5 transition-colors group/btn py-0.5"
                       >
-                        Inspect Candidate Profile →
-                      </Btn>
+                        <span>Inspect Candidate Profile</span>
+                        <span className="transition-transform group-hover/btn:translate-x-0.5">→</span>
+                      </button>
                     </div>
                   </div>
                 );
@@ -357,3 +529,4 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
     </Modal>
   );
 }
+

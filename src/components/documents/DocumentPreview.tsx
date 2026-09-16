@@ -12,7 +12,7 @@ interface DocumentPreviewProps {
 export const DocumentPreview: React.FC<DocumentPreviewProps> = ({ documentType, data }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   
-  const [logoUrl, setLogoUrl] = useState<string>("");
+  const [logoUrl, setLogoUrl] = useState<string>("/logo.png");
 
   useEffect(() => {
     async function fetchAssets() {
@@ -28,12 +28,13 @@ export const DocumentPreview: React.FC<DocumentPreviewProps> = ({ documentType, 
 
   useEffect(() => {
     if (containerRef.current) {
+      const activeLogo = logoUrl || "/logo.png";
       const html = generateDocument(
         documentType,
         data,
-        logoUrl,
-        logoUrl,
-        logoUrl
+        activeLogo,
+        activeLogo,
+        activeLogo
       );
       containerRef.current.innerHTML = html;
     }
