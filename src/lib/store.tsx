@@ -533,6 +533,56 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     employeeBonds, updateEmployeeBond, employeeResignations, addEmployeeResignation
   ]);
 
+  // ─── Auto-sync: create employee records for HIRED candidates without one ─────
+  const syncingRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!initializedRef.current) return;
+
+    const hiredWithoutEmployee = candidates.filter(
+      c => c.status === "hired" && !employees.some(e => e.candidateId === c.id) && !syncingRef.current.has(c.id)
+    );
+
+    if (hiredWithoutEmployee.length === 0) return;
+
+    hiredWithoutEmployee.forEach(c => {
+      syncingRef.current.add(c.id);
+
+      // Determine employment type from the role
+      const role = roles.find(r => r.id === c.roleId);
+      const employmentType = role?.type || "Full-time";
+
+      fetch("/api/employees", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          candidateId: c.id,
+          offerId: offers.find(o => o.candidateId === c.id)?.id || null,
+          name: c.name,
+          email: c.email,
+          phone: c.phone,
+          employmentType,
+        }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.employee) {
+            // Only add if not already in state
+            setEmployees(prev => {
+              if (prev.some(e => e.candidateId === c.id)) return prev;
+              return [...prev, data.employee];
+            });
+          }
+        })
+        .catch(err => {
+          console.error("[HireDesk Store] Auto-sync employee failed for", c.id, err);
+        })
+        .finally(() => {
+          syncingRef.current.delete(c.id);
+        });
+    });
+  }, [candidates, employees, roles, offers]);
+
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;
 }
 

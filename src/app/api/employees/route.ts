@@ -19,6 +19,30 @@ export async function POST(req: NextRequest) {
     const { data: candidate } = await supabaseAdmin.from("candidates").select("id").eq("id", candidateId).single();
     if (!candidate) return NextResponse.json({ error: "Candidate not found" }, { status: 404 });
 
+    // Check if employee already exists for this candidate (idempotent)
+    const { data: existing } = await supabaseAdmin
+      .from("employees")
+      .select("*")
+      .eq("candidate_id", candidateId)
+      .maybeSingle();
+
+    if (existing) {
+      // Return existing employee — map snake_case to camelCase
+      const mapped = {
+        id: existing.id,
+        candidateId: existing.candidate_id,
+        offerId: existing.offer_id,
+        name: existing.name,
+        email: existing.email,
+        phone: existing.phone,
+        employmentType: existing.employment_type,
+        bondRequirement: existing.bond_requirement,
+        status: existing.status,
+        createdAt: existing.created_at,
+      };
+      return NextResponse.json({ success: true, employee: mapped });
+    }
+
     // Insert employee record
     const { data: employee, error: dbError } = await supabaseAdmin
       .from("employees")

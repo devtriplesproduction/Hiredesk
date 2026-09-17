@@ -1,6 +1,17 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Btn } from "@/components/ui";
+import { FilterSelect, type FilterOption } from "@/components/candidates/FilterSelect";
+
+const DOC_TYPE_OPTIONS: FilterOption[] = [
+  { value: "Aadhaar Card", label: "Aadhaar Card" },
+  { value: "PAN Card", label: "PAN Card" },
+  { value: "Most Recent Resume", label: "Most Recent Resume" },
+  { value: "Latest Experience Letter (if applicable)", label: "Latest Experience Letter (if applicable)" },
+  { value: "Relieving Letter from Previous Employer (if applicable)", label: "Relieving Letter from Previous Employer (if applicable)" },
+  { value: "Most Recent Education Certificate", label: "Most Recent Education Certificate" },
+  { value: "GitHub / Portfolio Profile Link", label: "GitHub / Portfolio Profile Link" },
+];
 
 export default function OnboardingPage({ params }: { params: { candidateId: string } }) {
   const { candidateId } = params;
@@ -64,20 +75,16 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
         <div className="bg-[var(--glass)] border border-[var(--border)] rounded-2xl p-6 mb-8">
           <h2 className="text-lg font-semibold mb-4">Upload New Document</h2>
           <div className="flex flex-col gap-4">
-            <div>
-              <label className="text-xs text-[var(--text-2)] uppercase font-semibold mb-1 block">Document Type</label>
-              <select 
-                value={docType} onChange={e => setDocType(e.target.value)}
-                className="w-full bg-[var(--glass-2)] border border-[var(--border)] rounded-lg p-3 text-sm outline-none"
-              >
-                <option>Aadhaar Card</option>
-                <option>PAN Card</option>
-                <option>Most Recent Resume</option>
-                <option>Latest Experience Letter (if applicable)</option>
-                <option>Relieving Letter from Previous Employer (if applicable)</option>
-                <option>Most Recent Education Certificate</option>
-                <option>GitHub / Portfolio Profile Link</option>
-              </select>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-[#A8A8A8] uppercase tracking-wider">Document Type</label>
+              <FilterSelect
+                options={DOC_TYPE_OPTIONS}
+                value={docType}
+                onChange={val => setDocType(val)}
+                placeholder="Select Document Type"
+                containerClassName="w-full"
+                menuClassName="w-full max-w-none"
+              />
             </div>
             
             <div className="relative">

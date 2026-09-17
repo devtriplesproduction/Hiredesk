@@ -8,6 +8,7 @@ import { Btn } from "@/components/ui";
 const NAV = [
   { label: "Dashboard", href: "/" },
   { label: "Candidates", href: "/candidates" },
+  { label: "Employees", href: "/employees" },
   { label: "Upload", href: "/upload" },
   { label: "Contracts", href: "/contracts" },
   { label: "Roles", href: "/roles" },

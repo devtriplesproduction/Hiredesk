@@ -5,6 +5,20 @@ import { useParams, useRouter } from "next/navigation";
 import { Btn } from "@/components/ui";
 import { DocumentPreview } from "@/components/documents/DocumentPreview";
 import { DocumentData } from "@/components/documents/documentGenerator";
+import { 
+  Sparkles, 
+  CheckCircle2, 
+  FileText, 
+  Briefcase, 
+  Building2, 
+  Clock, 
+  XCircle, 
+  ShieldCheck, 
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw
+} from "lucide-react";
 
 export default function CandidateOfferPage() {
   const params = useParams();
@@ -21,6 +35,7 @@ export default function CandidateOfferPage() {
   const [verifying, setVerifying] = useState(false);
   
   const [submitting, setSubmitting] = useState(false);
+  const [zoomScale, setZoomScale] = useState<number>(100);
 
   const loadData = async () => {
     try {
@@ -47,6 +62,30 @@ export default function CandidateOfferPage() {
   useEffect(() => {
     loadData();
   }, [candidateId]);
+
+  // Ensure full page vertical scrolling on Candidate Offer portal (overrides global html/body overflow:hidden on desktop)
+  useEffect(() => {
+    const origHtmlOverflow = document.documentElement.style.overflow;
+    const origBodyOverflow = document.body.style.overflow;
+    const origHtmlHeight = document.documentElement.style.height;
+    const origBodyHeight = document.body.style.height;
+
+    document.documentElement.style.overflow = "auto";
+    document.documentElement.style.overflowX = "hidden";
+    document.documentElement.style.height = "auto";
+    document.body.style.overflow = "auto";
+    document.body.style.overflowX = "hidden";
+    document.body.style.height = "auto";
+
+    return () => {
+      document.documentElement.style.overflow = origHtmlOverflow;
+      document.documentElement.style.overflowX = "";
+      document.documentElement.style.height = origHtmlHeight;
+      document.body.style.overflow = origBodyOverflow;
+      document.body.style.overflowX = "";
+      document.body.style.height = origBodyHeight;
+    };
+  }, []);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,97 +215,158 @@ export default function CandidateOfferPage() {
   const displayRole = documentData.designation || candidate.roleName;
 
   return (
-    <div className="min-h-screen p-4 bg-[#080808] text-white flex flex-col items-center">
-      <div className="max-w-4xl w-full flex flex-col gap-8 py-8">
+    <div className="min-h-screen bg-[#080808] text-white flex flex-col items-center relative selection:bg-emerald-500/20 selection:text-white">
+      {/* Ambient background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-gradient-to-b from-emerald-500/5 via-cyan-500/5 to-transparent blur-3xl pointer-events-none -z-10" />
+
+      <div className="max-w-5xl w-full flex flex-col gap-6 px-4 py-8 md:py-12">
         
-        {/* Header / Intro */}
-        <div className="bg-[var(--glass)] border border-[var(--border)] rounded-2xl p-8 shadow-2xl animate-fade-in text-center">
-          <h1 className="text-3xl font-bold mb-2">Job Offer</h1>
-          <div className="text-lg text-[var(--text-2)]">
-            Congratulations {candidate.name}! Triple S Production has extended you an offer for the <strong className="text-white">{displayRole}</strong> position.
+        {/* Top Branding / Breadcrumb */}
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2 text-xs font-medium text-[var(--text-3)] tracking-wider uppercase">
+            <span className="flex items-center gap-1.5 text-emerald-400">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
+              HireDesk
+            </span>
+            <ChevronRight size={13} className="text-white/20" />
+            <span className="text-[var(--text-2)]">Offer Portal</span>
           </div>
-
-          {offer.status === "accepted" && (
-            <div className="mt-8 p-6 rounded-xl bg-[var(--green)]/10 border border-[var(--green)]/20 text-[var(--green)] flex flex-col items-center gap-4">
-              <div>
-                <span className="text-4xl block mb-2">🎉</span>
-                <h3 className="font-bold text-lg">Offer Accepted!</h3>
-                <p className="text-sm mt-2 opacity-80">Your offer letter will be provided after you join the company. You can also download a copy now.</p>
-              </div>
-              <div className="flex gap-4">
-                <Btn 
-                  onClick={() => router.push(`/onboarding/${candidateId}`)}
-                  className="mt-2 px-6 py-3 bg-[var(--green)] text-black rounded-xl font-bold hover:brightness-110">
-                  Go to Onboarding
-                </Btn>
-                <Btn 
-                  onClick={async () => {
-                    try {
-                      const html2canvas = (await import("html2canvas")).default;
-                      const { jsPDF } = await import("jspdf");
-
-                      const printArea = document.querySelector(".document-studio-wrapper") as HTMLElement;
-                      if (!printArea) throw new Error("Document not found");
-
-                      const pages = printArea.querySelectorAll(".page");
-                      const pdf = new jsPDF("p", "mm", "a4");
-
-                      for (let i = 0; i < pages.length; i++) {
-                        const page = pages[i] as HTMLElement;
-                        const canvas = await html2canvas(page, { scale: 2, useCORS: true });
-                        const imgData = canvas.toDataURL("image/png");
-                        
-                        const pdfWidth = pdf.internal.pageSize.getWidth();
-                        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                        
-                        if (i > 0) pdf.addPage();
-                        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-                      }
-                      
-                      pdf.save(`${candidate.name}_Offer_Letter.pdf`);
-                    } catch (e) {
-                      console.error("Download error", e);
-                      alert("Error generating PDF");
-                    }
-                  }}
-                  className="mt-2 px-6 py-3 bg-white text-black rounded-xl font-bold hover:bg-gray-200">
-                  Download Offer Letter
-                </Btn>
-              </div>
-            </div>
-          )}
-
-          {offer.status === "rejected" && (
-            <div className="mt-8 p-6 rounded-xl bg-[var(--red)]/10 border border-[var(--red)]/20 text-[var(--red)]">
-              <span className="text-4xl block mb-2">🚫</span>
-              <h3 className="font-bold text-lg">Offer Rejected</h3>
-              <p className="text-sm mt-2 opacity-80">Thank you for your time. We wish you the best in your future endeavors.</p>
-            </div>
-          )}
+          <div className="flex items-center gap-1.5 text-xs text-[var(--text-3)] bg-white/[0.03] px-3 py-1 rounded-full border border-white/[0.06]">
+            <ShieldCheck size={13} className="text-emerald-400" />
+            <span>Secure Candidate Access</span>
+          </div>
         </div>
 
-        {/* Offer Document Preview */}
-        <div className="w-full flex justify-center overflow-auto p-4 md:p-8 rounded-2xl border border-white/10 bg-[#0a0a0a] shadow-inner max-h-[70vh] custom-scrollbar">
-          <div className="w-max origin-top transform scale-75 sm:scale-90 md:scale-100 transition-transform">
-            <DocumentPreview documentType={docType} data={documentData} />
+        {/* Hero Card */}
+        <div className="relative overflow-hidden bg-gradient-to-b from-[#141414] to-[#0d0d0d] border border-white/[0.08] rounded-3xl p-6 sm:p-10 shadow-2xl backdrop-blur-xl">
+          {/* Subtle top inner highlight */}
+          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
+
+          <div className="flex flex-col items-center text-center">
+            {/* Pill Header */}
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-4 shadow-sm">
+              <Sparkles size={13} className="text-emerald-400 animate-pulse" />
+              <span>Official Employment Offer</span>
+            </div>
+
+            {/* Main Title */}
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-3">
+              Job Offer Letter
+            </h1>
+
+            {/* Candidate Greeting & Role Badge */}
+            <div className="max-w-xl text-sm sm:text-base text-[var(--text-2)] leading-relaxed">
+              Congratulations <span className="font-semibold text-white">{candidate.name}</span>! Triple S Production is excited to extend you an offer for
+              <div className="inline-flex items-center gap-1.5 mx-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-white font-medium text-sm">
+                <Briefcase size={13} className="text-emerald-400 shrink-0" />
+                <span>{displayRole}</span>
+              </div>
+            </div>
+
+            {/* Offer Accepted Card */}
+            {offer.status === "accepted" && (
+              <div className="mt-8 w-full max-w-xl p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/25 via-[#0e1713] to-emerald-950/20 border border-emerald-500/30 shadow-[0_4px_24px_rgba(16,185,129,0.08)] flex items-center gap-4 text-left transition-all">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 text-2xl shadow-inner">
+                  🎉
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2.5">
+                    <h3 className="font-bold text-base text-emerald-400 tracking-tight">Offer Accepted!</h3>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Confirmed
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-[var(--text-2)] mt-1 font-normal leading-relaxed">
+                    Your offer letter will be provided after you join the company.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Offer Rejected Card */}
+            {offer.status === "rejected" && (
+              <div className="mt-8 w-full max-w-xl p-4 sm:p-5 rounded-2xl bg-red-950/20 border border-red-500/30 shadow-[0_4px_24px_rgba(239,68,68,0.08)] flex items-center gap-4 text-left">
+                <div className="w-12 h-12 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center shrink-0 text-2xl">
+                  🚫
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2.5">
+                    <h3 className="font-bold text-base text-red-400 tracking-tight">Offer Rejected</h3>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-500/15 text-red-400 border border-red-500/25">
+                      Declined
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-[var(--text-2)] mt-1 font-normal leading-relaxed">
+                    Thank you for your time. We wish you the best in your future endeavors.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Document Workspace Container */}
+        <div className="w-full flex flex-col rounded-3xl border border-white/[0.08] bg-[#0c0c0c] shadow-2xl overflow-hidden mt-2">
+          {/* Document Header Bar */}
+          <div className="px-5 py-3.5 bg-[#121212] border-b border-white/[0.06] flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-xs font-semibold text-[var(--text-2)] uppercase tracking-wider">
+              <FileText size={15} className="text-emerald-400" />
+              <span>Document Preview</span>
+              <span className="text-[11px] font-normal normal-case text-[var(--text-3)]">· Letter of Appointment</span>
+            </div>
+
+            {/* Zoom Controls */}
+            <div className="flex items-center gap-1.5 bg-white/[0.04] p-1 rounded-xl border border-white/[0.06]">
+              <button 
+                onClick={() => setZoomScale(prev => Math.max(prev - 10, 60))}
+                title="Zoom out"
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-white hover:bg-white/10 transition-colors">
+                <ZoomOut size={14} />
+              </button>
+              <span className="text-[11px] font-mono px-2 text-[var(--text-2)] select-none">
+                {zoomScale}%
+              </span>
+              <button 
+                onClick={() => setZoomScale(prev => Math.min(prev + 10, 130))}
+                title="Zoom in"
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-white hover:bg-white/10 transition-colors">
+                <ZoomIn size={14} />
+              </button>
+              <button 
+                onClick={() => setZoomScale(100)}
+                title="Reset zoom"
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-white hover:bg-white/10 transition-colors ml-0.5">
+                <RotateCcw size={12} />
+              </button>
+            </div>
+          </div>
+
+          {/* Document Viewing Area - smoothly accessible with natural scroll and horizontal overflow when zoomed */}
+          <div className="w-full flex justify-center overflow-x-auto p-4 sm:p-8 md:p-12 bg-[#090909] custom-scrollbar">
+            <div 
+              style={{ transform: `scale(${zoomScale / 100})`, transformOrigin: "top center" }}
+              className="w-max transition-transform duration-150 drop-shadow-[0_16px_40px_rgba(0,0,0,0.85)] my-2">
+              <DocumentPreview documentType={docType} data={documentData} />
+            </div>
           </div>
         </div>
 
         {/* Actions for Pending Offer */}
         {offer.status === "sent" && (
-          <div className="bg-[#111111]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] sticky bottom-4 z-50 flex flex-col items-center">
+          <div className="bg-[#111111]/95 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] sticky bottom-4 z-50 flex flex-col items-center">
             <p className="text-sm text-gray-400 mb-4 font-medium">Please review the details above and provide your response below.</p>
             <div className="flex w-full md:w-3/4 gap-4">
               <Btn 
                 onClick={() => handleRespond("accepted")}
                 disabled={submitting}
-                className="flex-1 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold shadow-lg shadow-green-900/50 hover:shadow-green-500/30 hover:-translate-y-1 disabled:opacity-50 transition-all text-base tracking-wide border border-green-400/30">
+                className="flex-1 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-bold shadow-lg shadow-green-900/50 hover:shadow-green-500/30 hover:-translate-y-0.5 disabled:opacity-50 transition-all text-base tracking-wide border border-green-400/30">
                 {submitting ? "Processing..." : "Accept Offer"}
               </Btn>
               <Btn 
                 onClick={() => handleRespond("rejected")}
                 disabled={submitting}
-                className="flex-1 py-4 rounded-xl bg-[#222222] text-gray-300 font-bold hover:bg-[#333333] hover:text-white shadow-lg shadow-black/50 hover:shadow-red-900/20 hover:-translate-y-1 disabled:opacity-50 transition-all text-base tracking-wide border border-gray-700 hover:border-red-500/50">
+                className="flex-1 py-4 rounded-xl bg-[#1c1c1c] text-gray-300 font-bold hover:bg-[#252525] hover:text-white shadow-lg shadow-black/50 hover:shadow-red-900/20 hover:-translate-y-0.5 disabled:opacity-50 transition-all text-base tracking-wide border border-white/10 hover:border-red-500/40">
                 Reject Offer
               </Btn>
             </div>

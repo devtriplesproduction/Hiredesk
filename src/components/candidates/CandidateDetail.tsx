@@ -7,13 +7,13 @@ import { getEmploymentStatusMeta } from "@/lib/data";
 import { clsx } from "clsx";
 import { useRouter } from "next/navigation";
 import { getPublicBaseUrl } from "@/lib/url";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import PDFViewer from "@/components/candidates/PDFViewer";
 import WhatsAppModal from "@/components/candidates/WhatsAppModal";
 import EmailModal from "@/components/candidates/EmailModal";
 import { DocumentStudioModal } from "@/components/documents/DocumentStudioModal";
 import DateTimePicker from "@/components/ui/DateTimePicker";
-import { Check, X, User, BarChart2, FileText, CheckCircle2, Clock, Calendar, Briefcase, GitBranch, ExternalLink, Copy, AlertCircle, Lock, ArrowRight } from "lucide-react";
+import { Check, X, User, BarChart2, FileText, CheckCircle2, Clock, Calendar, Briefcase, GitBranch, ExternalLink, Copy, AlertCircle, Lock, ArrowRight, UserCheck, Loader2, Activity, Sparkles, Send, Edit3, MessageSquare, History, CheckCheck, Award } from "lucide-react";
 
 interface Props { candidate: Candidate; onClose: () => void; }
 
@@ -89,6 +89,254 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
   const isR2Scheduled = r2?.status === "scheduled";
   const isR2Available = isR1Passed && !r2 && c.status !== "rejected";
   const isR2Locked = !isR1Passed;
+
+  // Timeline Tab state ("all" | "timeline" | "notes")
+  const [timelineTab, setTimelineTab] = useState<"all" | "timeline" | "notes">("all");
+
+  // Computed Candidate Activity Events
+  const timelineEvents = useMemo(() => {
+    interface TimelineEvent {
+      id: string;
+      title: string;
+      description: string;
+      timestamp: string | null;
+      icon: string;
+      color: string;
+      sortTime: number;
+    }
+
+    const events: TimelineEvent[] = [];
+
+    // 1. Application Received & Resume parsed
+    if (c.appliedAt || c.createdAt) {
+      const appTime = c.appliedAt || c.createdAt;
+      events.push({
+        id: `app-received-${c.id}`,
+        title: "Application Received",
+        description: `Candidate profile created for ${c.roleName || "open role"}${c.city ? ` in ${c.city}` : ""}.`,
+        timestamp: appTime,
+        icon: "📥",
+        color: "#60A5FA", // blue
+        sortTime: new Date(appTime).getTime() || 0,
+      });
+    }
+
+    if (c.resumeFile) {
+      const parseTime = c.createdAt || c.appliedAt;
+      events.push({
+        id: `resume-parsed-${c.id}`,
+        title: "Resume Uploaded & Parsed",
+        description: `Uploaded "${c.resumeFile}" (Score: ${c.score?.total ?? 0}/100, Skills: ${c.skills?.length || 0} detected).`,
+        timestamp: parseTime,
+        icon: "📄",
+        color: "#A78BFA", // purple
+        sortTime: (new Date(parseTime).getTime() || 0) + 1000,
+      });
+    }
+
+    // 2. Shortlisted & Screening status changes
+    if (["shortlisted", "interview_1", "interview_2", "approved", "offer", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected", "hired"].includes(c.status)) {
+      const shortlistTime = r1?.createdAt || c.createdAt;
+      events.push({
+        id: `candidate-shortlisted-${c.id}`,
+        title: "Candidate Shortlisted",
+        description: "Candidate screening approved and marked eligible for technical evaluation.",
+        timestamp: shortlistTime,
+        icon: "⭐",
+        color: "#00D9FF", // cyan
+        sortTime: (new Date(shortlistTime).getTime() || 0) + 2000,
+      });
+    }
+
+    // 3. Round 1 Interviews
+    if (r1) {
+      if (r1.scheduledAt) {
+        events.push({
+          id: `r1-scheduled-${r1.id}`,
+          title: "Round 1 Scheduled",
+          description: `Technical evaluation round scheduled for ${new Date(r1.scheduledAt).toLocaleString()}.`,
+          timestamp: r1.createdAt || r1.scheduledAt,
+          icon: "📅",
+          color: "#818CF8", // indigo
+          sortTime: new Date(r1.createdAt || r1.scheduledAt).getTime() || 0,
+        });
+      }
+
+      if (r1.status === "completed") {
+        const isPassed = r1.decision === "select";
+        events.push({
+          id: `r1-completed-${r1.id}`,
+          title: isPassed ? "Round 1 Completed · Selected" : "Round 1 Completed · Rejected",
+          description: isPassed
+            ? `Candidate passed Round 1 evaluation.${r1.notes ? ` Notes: "${r1.notes}"` : ""}`
+            : `Candidate was rejected in Round 1.${r1.notes ? ` Notes: "${r1.notes}"` : ""}`,
+          timestamp: r1.scheduledAt || r1.createdAt,
+          icon: isPassed ? "✅" : "❌",
+          color: isPassed ? "#22C55E" : "#EF4444",
+          sortTime: (new Date(r1.scheduledAt || r1.createdAt).getTime() || 0) + 3600000,
+        });
+      }
+    }
+
+    // 4. Round 2 Interviews
+    if (r2) {
+      if (r2.scheduledAt) {
+        events.push({
+          id: `r2-scheduled-${r2.id}`,
+          title: "Round 2 Scheduled",
+          description: `Final interview round scheduled for ${new Date(r2.scheduledAt).toLocaleString()}.`,
+          timestamp: r2.createdAt || r2.scheduledAt,
+          icon: "📅",
+          color: "#C084FC", // violet
+          sortTime: new Date(r2.createdAt || r2.scheduledAt).getTime() || 0,
+        });
+      }
+
+      if (r2.status === "completed") {
+        const isPassed = r2.decision === "select";
+        events.push({
+          id: `r2-completed-${r2.id}`,
+          title: isPassed ? "Round 2 Completed · Approved" : "Round 2 Completed · Rejected",
+          description: isPassed
+            ? `Candidate approved in final interview.${r2.notes ? ` Notes: "${r2.notes}"` : ""}`
+            : `Candidate was rejected in Round 2.${r2.notes ? ` Notes: "${r2.notes}"` : ""}`,
+          timestamp: r2.scheduledAt || r2.createdAt,
+          icon: isPassed ? "🎉" : "❌",
+          color: isPassed ? "#22C55E" : "#EF4444",
+          sortTime: (new Date(r2.scheduledAt || r2.createdAt).getTime() || 0) + 3600000,
+        });
+      }
+    }
+
+    // 5. Offer Management
+    if (candidateOffer) {
+      events.push({
+        id: `offer-draft-${candidateOffer.id}`,
+        title: "Offer Letter Generated",
+        description: `Official offer package drafted for ${c.name} (${c.roleName || "Position"}).`,
+        timestamp: candidateOffer.createdAt,
+        icon: "📝",
+        color: "#F59E0B", // amber
+        sortTime: new Date(candidateOffer.createdAt).getTime() || 0,
+      });
+
+      if (candidateOffer.sentAt || candidateOffer.status === "sent" || c.status === "offer_sent") {
+        events.push({
+          id: `offer-sent-${candidateOffer.id}`,
+          title: "Offer Dispatched to Candidate",
+          description: "Candidate offer link generated and dispatched for electronic review & acceptance.",
+          timestamp: candidateOffer.sentAt || candidateOffer.createdAt,
+          icon: "📤",
+          color: "#00D9FF", // cyan
+          sortTime: new Date(candidateOffer.sentAt || candidateOffer.createdAt).getTime() || 0,
+        });
+      }
+
+      if (candidateOffer.status === "accepted" || c.status === "offer_accepted") {
+        events.push({
+          id: `offer-accepted-${candidateOffer.id}`,
+          title: "Offer Accepted by Candidate",
+          description: `Candidate accepted employment terms.${candidateOffer.respondedAt ? ` Verified at ${new Date(candidateOffer.respondedAt).toLocaleString()}.` : ""}`,
+          timestamp: candidateOffer.respondedAt || candidateOffer.sentAt || candidateOffer.createdAt,
+          icon: "🤝",
+          color: "#22C55E", // green
+          sortTime: new Date(candidateOffer.respondedAt || candidateOffer.sentAt || candidateOffer.createdAt).getTime() || 0,
+        });
+      }
+
+      if (candidateOffer.status === "rejected" || c.status === "offer_rejected") {
+        events.push({
+          id: `offer-rejected-${candidateOffer.id}`,
+          title: "Offer Declined by Candidate",
+          description: `Candidate declined the extended offer.${candidateOffer.respondedAt ? ` Logged at ${new Date(candidateOffer.respondedAt).toLocaleString()}.` : ""}`,
+          timestamp: candidateOffer.respondedAt || candidateOffer.sentAt || candidateOffer.createdAt,
+          icon: "⚠️",
+          color: "#EF4444", // red
+          sortTime: new Date(candidateOffer.respondedAt || candidateOffer.sentAt || candidateOffer.createdAt).getTime() || 0,
+        });
+      }
+    }
+
+    // 6. Onboarding Lifecycle & Documents
+    if (c.status.startsWith("onboarding_") || candidateDocs.length > 0 || c.status === "hired") {
+      events.push({
+        id: `onboarding-initiated-${c.id}`,
+        title: "Onboarding Initiated",
+        description: "Document collection upload portal opened for candidate submission.",
+        timestamp: candidateDocs[0]?.createdAt || candidateOffer?.respondedAt || c.createdAt,
+        icon: "🚀",
+        color: "#A78BFA",
+        sortTime: new Date(candidateDocs[0]?.createdAt || candidateOffer?.respondedAt || c.createdAt).getTime() || 0,
+      });
+    }
+
+    // Documents Uploaded / Verified / Rejected
+    candidateDocs.forEach(doc => {
+      // Document Uploaded
+      events.push({
+        id: `doc-uploaded-${doc.id}`,
+        title: `Document Uploaded: ${doc.type || "File"}`,
+        description: `Uploaded file "${doc.fileName}" submitted by candidate.`,
+        timestamp: doc.createdAt,
+        icon: "📎",
+        color: "#38BDF8", // sky
+        sortTime: new Date(doc.createdAt).getTime() || 0,
+      });
+
+      // Verification / Rejection status
+      if (doc.status === "verified") {
+        events.push({
+          id: `doc-verified-${doc.id}`,
+          title: `Document Verified: ${doc.type || doc.fileName}`,
+          description: `Admin successfully inspected and verified compliance for "${doc.fileName}".`,
+          timestamp: doc.updatedAt || doc.createdAt,
+          icon: "✅",
+          color: "#22C55E",
+          sortTime: (new Date(doc.updatedAt || doc.createdAt).getTime() || 0) + 1000,
+        });
+      } else if (doc.status === "rejected") {
+        events.push({
+          id: `doc-rejected-${doc.id}`,
+          title: `Document Rejected: ${doc.type || doc.fileName}`,
+          description: `Compliance rejected for "${doc.fileName}". Candidate must re-submit.`,
+          timestamp: doc.updatedAt || doc.createdAt,
+          icon: "❌",
+          color: "#EF4444",
+          sortTime: (new Date(doc.updatedAt || doc.createdAt).getTime() || 0) + 1000,
+        });
+      }
+    });
+
+    // 7. Converted to Employee / Hired
+    if (candidateEmployee || c.status === "hired") {
+      const hireTime = candidateEmployee?.createdAt || new Date().toISOString();
+      events.push({
+        id: `employee-converted-${c.id}`,
+        title: "Converted to Employee",
+        description: `Candidate successfully onboarded as official employee (${candidateEmployee?.employmentType || "Full-time"}).`,
+        timestamp: hireTime,
+        icon: "🎓",
+        color: "#10B981", // emerald
+        sortTime: new Date(hireTime).getTime() || 0,
+      });
+    }
+
+    // 8. Resignation / Separation
+    if (employeeResignation) {
+      events.push({
+        id: `employee-resigned-${employeeResignation.id}`,
+        title: employeeResignation.isBreach ? "Employee Separation · Bond Breach" : "Employee Resignation Processed",
+        description: `Reason: ${employeeResignation.resignationReason}${employeeResignation.breachReason ? ` · Breach: ${employeeResignation.breachReason}` : ""}`,
+        timestamp: employeeResignation.createdAt,
+        icon: "⚠️",
+        color: "#EF4444",
+        sortTime: new Date(employeeResignation.createdAt).getTime() || 0,
+      });
+    }
+
+    // Sort chronologically descending (newest event first)
+    return events.sort((a, b) => b.sortTime - a.sortTime);
+  }, [c, r1, r2, candidateOffer, candidateDocs, candidateEmployee, employeeResignation]);
 
   // Inline Editing States
   const [isEditing, setIsEditing] = useState(false);
@@ -613,27 +861,151 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                 </div>
               </div>
 
-              {/* Note */}
-              <div className="bg-zinc-900/40 p-6 rounded-2xl border border-white/5 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)]">
-                <div className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <span>📝</span> Admin Note
+              {/* Candidate Activity Timeline & Admin Note */}
+              <div className="bg-[#111214] p-5 sm:p-6 rounded-2xl border border-[#24272D] shadow-[0_4px_24px_rgba(0,0,0,0.4)] flex flex-col gap-5">
+                {/* Header & Tabs */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                      <Activity className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+                        <span>Candidate Activity & Notes</span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.05] text-[#9A9DA6] border border-white/[0.08]">
+                          {timelineEvents.length} events
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#7E8492]">Automatic workflow audit trail with private admin notes</p>
+                    </div>
+                  </div>
+
+                  {/* View Filter Switcher */}
+                  <div className="flex items-center gap-1 bg-[#16171B] p-1 rounded-lg border border-[#24272D] self-start sm:self-auto">
+                    {(["all", "timeline", "notes"] as const).map(tabKey => (
+                      <button
+                        key={tabKey}
+                        type="button"
+                        onClick={() => setTimelineTab(tabKey)}
+                        className={clsx(
+                          "px-2.5 py-1 rounded-md text-xs font-semibold capitalize transition-all cursor-pointer",
+                          timelineTab === tabKey
+                            ? "bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-sm"
+                            : "text-[#8E929E] hover:text-white hover:bg-white/[0.04] border border-transparent"
+                        )}
+                      >
+                        {tabKey === "all" ? "All Activity" : tabKey === "timeline" ? "Timeline" : "Notes Only"}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <textarea rows={4} placeholder="Add a private note about this candidate…" 
-                  value={isEditing ? (editState.note || "") : (c.note || "")}
-                  onChange={e => {
-                    if (isEditing) {
-                      setEditState(prev => ({ ...prev, note: e.target.value }));
-                    } else {
-                      updateCandidate(c.id, { note: e.target.value });
-                    }
-                  }}
-                  onBlur={e => {
-                    if (!isEditing) {
-                      updateCandidate(c.id, { note: e.target.value });
-                    }
-                  }}
-                  className="w-full rounded-xl text-sm px-5 py-4 resize-none outline-none transition-all duration-300 bg-black/50 border border-white/10 text-zinc-200 focus:border-zinc-500 focus:shadow-[0_0_15px_rgba(255,255,255,0.05)] custom-scrollbar"
-                />
+
+                {/* Main Content Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                  {/* Left Column: Interactive Timeline List */}
+                  {(timelineTab === "all" || timelineTab === "timeline") && (
+                    <div className={clsx(
+                      "flex flex-col gap-3.5",
+                      timelineTab === "timeline" ? "lg:col-span-12" : "lg:col-span-7"
+                    )}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#8E929E] flex items-center gap-1.5">
+                          <History className="w-3.5 h-3.5 text-purple-400" />
+                          <span>Activity Timeline ({timelineEvents.length})</span>
+                        </span>
+                        <span className="text-[11px] text-[#606573]">Auto-recorded</span>
+                      </div>
+
+                      <div className="flex flex-col gap-0 relative pl-4 sm:pl-5 before:absolute before:left-[11px] sm:before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-white/[0.08] max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
+                        {timelineEvents.length === 0 ? (
+                          <div className="py-8 text-center text-xs text-[#707580] bg-[#16171B] rounded-xl border border-dashed border-[#24272D] my-2">
+                            No workflow activity recorded yet.
+                          </div>
+                        ) : (
+                          timelineEvents.map((evt, idx) => (
+                            <div key={evt.id} className="relative flex items-start gap-3.5 py-3 group">
+                              {/* Dot / Icon */}
+                              <div
+                                className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 z-10 text-[11px] transition-transform group-hover:scale-110"
+                                style={{
+                                  background: evt.color ? `${evt.color}20` : "rgba(167, 139, 250, 0.15)",
+                                  border: `1px solid ${evt.color ? `${evt.color}55` : "rgba(167, 139, 250, 0.4)"}`,
+                                  color: evt.color || "#A78BFA",
+                                  boxShadow: `0 0 8px ${evt.color ? `${evt.color}30` : "rgba(167, 139, 250, 0.2)"}`
+                                }}
+                              >
+                                {evt.icon || "•"}
+                              </div>
+
+                              {/* Card Content */}
+                              <div className="flex-1 bg-[#16171B] hover:bg-[#1A1B20] border border-[#24272D] rounded-xl p-3 transition-colors flex flex-col gap-1">
+                                <div className="flex items-center justify-between gap-2 flex-wrap">
+                                  <span className="text-xs font-semibold text-[#E7E9ED] tracking-tight">
+                                    {evt.title}
+                                  </span>
+                                  <span className="text-[10px] font-mono text-[#7E8492]">
+                                    {evt.timestamp ? new Date(evt.timestamp).toLocaleString(undefined, {
+                                      month: "short",
+                                      day: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit"
+                                    }) : "Pending"}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-[#9A9DA6] leading-relaxed">
+                                  {evt.description}
+                                </p>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Right Column: Admin Note (Editable) */}
+                  {(timelineTab === "all" || timelineTab === "notes") && (
+                    <div className={clsx(
+                      "flex flex-col gap-3.5",
+                      timelineTab === "notes" ? "lg:col-span-12" : "lg:col-span-5"
+                    )}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#8E929E] flex items-center gap-1.5">
+                          <Edit3 className="w-3.5 h-3.5 text-blue-400" />
+                          <span>Admin Private Note</span>
+                        </span>
+                        <span className="text-[10px] font-mono text-emerald-400/80 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                          Auto-saved
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-2.5">
+                        <textarea
+                          rows={timelineTab === "notes" ? 8 : 6}
+                          placeholder="Add private feedback, interviewer comments, or notes about this candidate… (Preserved automatically)"
+                          value={isEditing ? (editState.note || "") : (c.note || "")}
+                          onChange={e => {
+                            if (isEditing) {
+                              setEditState(prev => ({ ...prev, note: e.target.value }));
+                            } else {
+                              updateCandidate(c.id, { note: e.target.value });
+                            }
+                          }}
+                          onBlur={e => {
+                            if (!isEditing) {
+                              updateCandidate(c.id, { note: e.target.value });
+                            }
+                          }}
+                          className="w-full rounded-xl text-xs sm:text-sm p-4 resize-none outline-none transition-all duration-200 bg-[#0E0F12] border border-[#24272D] text-zinc-200 focus:border-purple-500/60 focus:shadow-[0_0_15px_rgba(167,139,250,0.12)] custom-scrollbar placeholder:text-zinc-600 leading-relaxed"
+                        />
+                        <div className="flex items-center justify-between text-[11px] text-[#6E7380] px-1">
+                          <span>💡 Stored in candidate profile record</span>
+                          <span>{(isEditing ? (editState.note || "") : (c.note || "")).length} chars</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Collapsible Diagnostic Panel */}
@@ -1585,141 +1957,162 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
             </div>
           )}
 
-          {/* Offer Management */}
-          {["approved", "offer", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected", "hired"].includes(c.status) && (
-            <div
-              className="mt-6 flex flex-col gap-3.5 rounded-[12px] p-5"
-              style={{
-                background: "#111214",
-                border: "1px solid #24272D",
-              }}
-            >
-              {/* Section Header */}
-              <div className="flex items-center gap-2">
-                <Briefcase
-                  className="w-3.5 h-3.5"
-                  style={{ color: candidateOffer?.status === "accepted" ? "#22C55E" : "#A78BFA" }}
-                />
-                <span
-                  className="text-[12px] font-semibold uppercase tracking-[0.08em]"
-                  style={{ color: candidateOffer?.status === "accepted" ? "#22C55E" : "#A78BFA" }}
-                >
-                  Offer Management
-                </span>
-              </div>
-              
+          {/* Offer & Onboarding Row */}
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+            {/* Offer Management */}
+            {["approved", "offer", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected", "hired"].includes(c.status) ? (
               <div
-                className="p-4 rounded-[10px] flex flex-col gap-3"
-                style={{ background: "#16171B", border: "1px solid #24272D" }}
-              >
-                {!candidateOffer ? (
-                  c.status === "approved" ? (
-                  <div className="flex flex-col gap-2">
-                    <div className="text-xs text-[#9A9DA6] mb-1">Ready to extend an offer? You can generate a contract first or proceed directly.</div>
-                    <Btn className="bg-[var(--primary)] text-black text-xs font-bold px-4 py-2 rounded-lg self-start"
-                      onClick={() => {
-                        addOffer({
-                          id: crypto.randomUUID(), candidateId: c.id, contractTemplateId: null,
-                          status: "draft", sentAt: null, respondedAt: null, createdAt: new Date().toISOString()
-                        });
-                        updateCandidate(c.id, { status: "offer" });
-                      }}>Prepare Offer</Btn>
-                  </div>
-                  ) : (
-                    <div className="text-xs text-[#777B84]">No offer prepared.</div>
-                  )
-                ) : (
-                  <div className="flex flex-col gap-2.5">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-[#9A9DA6]" />
-                        <span className="font-semibold text-sm text-[#E7E9ED]">
-                          Offer Status: <span className="uppercase" style={{
-                            color: candidateOffer.status === "accepted" ? "#22C55E"
-                              : candidateOffer.status === "sent" ? "#00D9FF"
-                              : candidateOffer.status === "rejected" ? "#EF4444"
-                              : "#F5C542"
-                          }}>{candidateOffer.status}</span>
-                        </span>
-                      </div>
-                      <span
-                        className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px]"
-                        style={{
-                          background: candidateOffer.status === "accepted" ? "rgba(34, 197, 94, 0.08)"
-                            : candidateOffer.status === "sent" ? "rgba(0, 217, 255, 0.08)"
-                            : candidateOffer.status === "rejected" ? "rgba(239, 68, 68, 0.08)"
-                            : "rgba(245, 197, 66, 0.08)",
-                          border: candidateOffer.status === "accepted" ? "1px solid rgba(34, 197, 94, 0.30)"
-                            : candidateOffer.status === "sent" ? "1px solid rgba(0, 217, 255, 0.30)"
-                            : candidateOffer.status === "rejected" ? "1px solid rgba(239, 68, 68, 0.30)"
-                            : "1px solid rgba(245, 197, 66, 0.30)",
-                          color: candidateOffer.status === "accepted" ? "#22C55E"
-                            : candidateOffer.status === "sent" ? "#00D9FF"
-                            : candidateOffer.status === "rejected" ? "#EF4444"
-                            : "#F5C542",
-                        }}
-                      >
-                        {candidateOffer.status === "accepted" ? "Offer Accepted"
-                          : candidateOffer.status === "sent" ? "Offer Sent"
-                          : candidateOffer.status === "rejected" ? "Offer Rejected"
-                          : "Offer Draft"}
-                      </span>
-                    </div>
-
-                    {candidateOffer.status === "draft" && c.status === "offer" && (
-                      <div className="flex gap-2 mt-1">
-                        <Btn className="bg-[var(--glass-3)] text-white text-xs font-semibold px-4 py-2 rounded-lg flex-1 border border-[var(--border)] hover:bg-[var(--glass-4)] transition-all" 
-                          onClick={() => {
-                            updateOffer(candidateOffer.id, { status: "sent", sentAt: new Date().toISOString() });
-                            updateCandidate(c.id, { status: "offer_sent" });
-                          }}>Mark as Sent</Btn>
-                        <Btn className="bg-[var(--glass-3)] text-[var(--primary)] text-xs font-semibold px-4 py-2 rounded-lg flex-1 border border-[var(--primary)] hover:bg-[var(--glass-4)] transition-all" 
-                          onClick={() => {
-                            setDocStudioType(c.roleName?.toLowerCase().includes("intern") ? "offer-internship" : "offer-fulltime");
-                            setIsDocStudioOpen(true);
-                          }}>📄 Studio Offer</Btn>
-                      </div>
-                    )}
-                    {candidateOffer.status === "sent" && c.status === "offer_sent" && (
-                      <div className="text-xs text-[#9A9DA6] p-3 bg-[#0E0F12] rounded-lg border border-[#24272D] mt-1">
-                        <p>Waiting for candidate response. The candidate can review and respond via:</p>
-                        <a href={`/offer/${c.id}`} target="_blank" rel="noreferrer" className="text-[#00D9FF] underline block mt-1.5 font-semibold hover:text-[#00D9FF]/80">Open Candidate Offer Page</a>
-                      </div>
-                    )}
-                    {(candidateOffer.status === "accepted" || candidateOffer.status === "rejected") && (
-                      <div className="flex flex-col gap-2 mt-1">
-                        <div className="text-xs text-[#777B84]">
-                          Responded at: {new Date(candidateOffer.respondedAt!).toLocaleString()}
-                        </div>
-                        {candidateOffer.status === "accepted" && (
-                          <div className="flex gap-2">
-                            <Btn className="bg-[var(--glass-3)] text-white text-xs font-semibold px-4 py-2 rounded-lg border border-[var(--border)] hover:bg-[var(--glass-4)] transition-all" 
-                              onClick={() => {
-                                setDocStudioType(c.roleName?.toLowerCase().includes("intern") ? "offer-internship" : "offer-fulltime");
-                                setIsDocStudioOpen(true);
-                              }}>📄 Download / View Offer</Btn>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Onboarding Management */}
-          {(c.status === "offer_accepted" || c.status.startsWith("onboarding_")) && (
-            <div className="mt-5 pt-4 flex flex-col gap-3" style={{ borderTop: "1px solid var(--border)" }}>
-              <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest">Onboarding Management</div>
-              
-              <div
-                className="rounded-[12px] p-4 sm:p-5 flex flex-col gap-3.5 transition-all"
+                className="flex flex-col gap-3.5 rounded-[12px] p-5 h-full"
                 style={{
                   background: "#111214",
                   border: "1px solid #24272D",
                 }}
               >
+                {/* Section Header */}
+                <div className="flex items-center gap-2">
+                  <Briefcase
+                    className="w-3.5 h-3.5"
+                    style={{ color: candidateOffer?.status === "accepted" ? "#22C55E" : "#A78BFA" }}
+                  />
+                  <span
+                    className="text-[12px] font-semibold uppercase tracking-[0.08em]"
+                    style={{ color: candidateOffer?.status === "accepted" ? "#22C55E" : "#A78BFA" }}
+                  >
+                    Offer Management
+                  </span>
+                </div>
+                
+                <div
+                  className="p-4 rounded-[10px] flex flex-col gap-3 flex-1"
+                  style={{ background: "#16171B", border: "1px solid #24272D" }}
+                >
+                  {!candidateOffer ? (
+                    c.status === "approved" ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="text-xs text-[#9A9DA6] mb-1">Ready to extend an offer? You can generate a contract first or proceed directly.</div>
+                      <Btn className="bg-[var(--primary)] text-black text-xs font-bold px-4 py-2 rounded-lg self-start"
+                        onClick={() => {
+                          addOffer({
+                            id: crypto.randomUUID(), candidateId: c.id, contractTemplateId: null,
+                            status: "draft", sentAt: null, respondedAt: null, createdAt: new Date().toISOString()
+                          });
+                          updateCandidate(c.id, { status: "offer" });
+                        }}>Prepare Offer</Btn>
+                    </div>
+                    ) : (
+                      <div className="text-xs text-[#777B84]">No offer prepared.</div>
+                    )
+                  ) : (
+                    <div className="flex flex-col gap-2.5">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-[#9A9DA6]" />
+                          <span className="font-semibold text-sm text-[#E7E9ED]">
+                            Offer Status: <span className="uppercase" style={{
+                              color: candidateOffer.status === "accepted" ? "#22C55E"
+                                : candidateOffer.status === "sent" ? "#00D9FF"
+                                : candidateOffer.status === "rejected" ? "#EF4444"
+                                : "#F5C542"
+                            }}>{candidateOffer.status}</span>
+                          </span>
+                        </div>
+                        <span
+                          className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px]"
+                          style={{
+                            background: candidateOffer.status === "accepted" ? "rgba(34, 197, 94, 0.08)"
+                              : candidateOffer.status === "sent" ? "rgba(0, 217, 255, 0.08)"
+                              : candidateOffer.status === "rejected" ? "rgba(239, 68, 68, 0.08)"
+                              : "rgba(245, 197, 66, 0.08)",
+                            border: candidateOffer.status === "accepted" ? "1px solid rgba(34, 197, 94, 0.30)"
+                              : candidateOffer.status === "sent" ? "1px solid rgba(0, 217, 255, 0.30)"
+                              : candidateOffer.status === "rejected" ? "1px solid rgba(239, 68, 68, 0.30)"
+                              : "1px solid rgba(245, 197, 66, 0.30)",
+                            color: candidateOffer.status === "accepted" ? "#22C55E"
+                              : candidateOffer.status === "sent" ? "#00D9FF"
+                              : candidateOffer.status === "rejected" ? "#EF4444"
+                              : "#F5C542",
+                          }}
+                        >
+                          {candidateOffer.status === "accepted" ? "Offer Accepted"
+                            : candidateOffer.status === "sent" ? "Offer Sent"
+                            : candidateOffer.status === "rejected" ? "Offer Rejected"
+                            : "Offer Draft"}
+                        </span>
+                      </div>
+
+                      {candidateOffer.status === "draft" && c.status === "offer" && (
+                        <div className="flex gap-2 mt-1">
+                          <Btn className="bg-[var(--glass-3)] text-white text-xs font-semibold px-4 py-2 rounded-lg flex-1 border border-[var(--border)] hover:bg-[var(--glass-4)] transition-all" 
+                            onClick={() => {
+                              updateOffer(candidateOffer.id, { status: "sent", sentAt: new Date().toISOString() });
+                              updateCandidate(c.id, { status: "offer_sent" });
+                            }}>Mark as Sent</Btn>
+                          <Btn className="bg-[var(--glass-3)] text-[var(--primary)] text-xs font-semibold px-4 py-2 rounded-lg flex-1 border border-[var(--primary)] hover:bg-[var(--glass-4)] transition-all" 
+                            onClick={() => {
+                              setDocStudioType(c.roleName?.toLowerCase().includes("intern") ? "offer-internship" : "offer-fulltime");
+                              setIsDocStudioOpen(true);
+                            }}>📄 Studio Offer</Btn>
+                        </div>
+                      )}
+                      {candidateOffer.status === "sent" && c.status === "offer_sent" && (
+                        <div className="text-xs text-[#9A9DA6] p-3 bg-[#0E0F12] rounded-lg border border-[#24272D] mt-1">
+                          <p>Waiting for candidate response. The candidate can review and respond via:</p>
+                          <a href={`/offer/${c.id}`} target="_blank" rel="noreferrer" className="text-[#00D9FF] underline block mt-1.5 font-semibold hover:text-[#00D9FF]/80">Open Candidate Offer Page</a>
+                        </div>
+                      )}
+                      {(candidateOffer.status === "accepted" || candidateOffer.status === "rejected") && (
+                        <div className="flex flex-col gap-2 mt-1">
+                          <div className="text-xs text-[#777B84]">
+                            Responded at: {new Date(candidateOffer.respondedAt!).toLocaleString()}
+                          </div>
+                          {candidateOffer.status === "accepted" && (
+                            <div className="flex gap-2">
+                              <Btn className="bg-[var(--glass-3)] text-white text-xs font-semibold px-4 py-2 rounded-lg border border-[var(--border)] hover:bg-[var(--glass-4)] transition-all" 
+                                onClick={() => {
+                                  setDocStudioType(c.roleName?.toLowerCase().includes("intern") ? "offer-internship" : "offer-fulltime");
+                                  setIsDocStudioOpen(true);
+                                }}>📄 Download / View Offer</Btn>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div
+                className="flex flex-col gap-3.5 rounded-[12px] p-5 h-full"
+                style={{
+                  background: "#111214",
+                  border: "1px solid #24272D",
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-3.5 h-3.5 text-[#777B84]" />
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#777B84]">
+                    Offer Management
+                  </span>
+                </div>
+                <div
+                  className="p-4 rounded-[10px] flex flex-col gap-3 flex-1 items-center justify-center text-center"
+                  style={{ background: "#16171B", border: "1px dashed #24272D" }}
+                >
+                  <Briefcase className="w-6 h-6 text-white/20 mb-1" />
+                  <div className="text-xs font-medium text-[#9A9DA6]">Candidate not yet in offer stage.</div>
+                  <div className="text-[11px] text-[var(--text-3)]">Move candidate to Approved or Offer to manage offer letters.</div>
+                </div>
+              </div>
+            )}
+
+            {/* Onboarding Management */}
+            <div className="flex flex-col gap-3.5 rounded-[12px] p-5 h-full" style={{ background: "#111214", border: "1px solid #24272D" }}>
+              <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#A78BFA] flex items-center gap-2">
+                <FileText className="w-3.5 h-3.5 text-[#A78BFA]" />
+                <span>Onboarding Management</span>
+              </div>
+              
+              <div className="flex flex-col gap-3.5">
                 {/* Header */}
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-2.5">
@@ -1737,18 +2130,6 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDocStudioType("employee-agreement");
-                        setIsDocStudioOpen(true);
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-blue-600/20 hover:bg-blue-600/35 border border-blue-500/30 hover:border-blue-500/50 active:scale-95 transition-all cursor-pointer shadow-[0_0_12px_rgba(59,130,246,0.12)]"
-                    >
-                      <FileText className="w-3.5 h-3.5 text-blue-400" />
-                      <span>Generate Docs</span>
-                    </button>
-
                     <button
                       type="button"
                       onClick={() => {
@@ -1948,14 +2329,27 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
               </div>
               
               {!candidateEmployee && (
-                <Btn className="w-full py-2 rounded font-bold text-sm bg-[var(--primary)] text-black disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale"
+                <button
+                  type="button"
                   onClick={() => {
                     handleConvertToEmployee();
                     updateCandidate(c.id, { status: "hired" });
                   }}
-                  disabled={convertingToEmployee || candidateDocs.length === 0 || !candidateDocs.every(d => d.status === "verified")}>
-                  {convertingToEmployee ? "Converting..." : "🎉 Convert to Employee"}
-                </Btn>
+                  disabled={convertingToEmployee || candidateDocs.length === 0 || !candidateDocs.every(d => d.status === "verified")}
+                  className="w-full h-11 px-4 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2.5 text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-[0.99] border border-emerald-400/30 hover:border-emerald-300/50 shadow-[0_0_20px_rgba(16,185,129,0.22)] hover:shadow-[0_0_25px_rgba(16,185,129,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111] disabled:opacity-45 disabled:pointer-events-none disabled:shadow-none transition-all duration-150 cursor-pointer"
+                >
+                  {convertingToEmployee ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-emerald-100" />
+                      <span className="tracking-wide">Converting to Employee...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserCheck className="w-4 h-4 text-emerald-200" />
+                      <span className="tracking-wide">Convert to Employee</span>
+                    </>
+                  )}
+                </button>
               )}
               {candidateEmployee && (
                 <div className="p-3 rounded-lg border border-[var(--green)] bg-[var(--green)]/10">
@@ -2046,7 +2440,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                 </div>
               )}
             </div>
-          )}
+          </div>
 
           {/* Status row removed to enforce strict workflow */}
 
