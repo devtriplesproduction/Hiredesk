@@ -7,6 +7,7 @@ export interface FilterOption {
   value: string;
   label: string;
   icon?: React.ReactNode;
+  group?: string;
 }
 
 export interface FilterSelectProps {
@@ -101,7 +102,7 @@ export function FilterSelect({
   return (
     <div
       ref={containerRef}
-      className={clsx("relative", isOpen ? "z-30" : "z-10", containerClassName)}
+      className={clsx("relative", isOpen ? "z-50" : "z-10", containerClassName)}
       title={title}
     >
       <button
@@ -153,7 +154,7 @@ export function FilterSelect({
         <div
           role="listbox"
           className={clsx(
-            "absolute top-[calc(100%+5px)] py-1 bg-[#151719] border border-[#303238] rounded-[10px] shadow-2xl shadow-black/80 max-h-[280px] overflow-y-auto z-50",
+            "absolute top-[calc(100%+5px)] py-1.5 bg-[#151719] border border-[#303238] rounded-[10px] shadow-2xl shadow-black/80 max-h-[300px] overflow-y-auto z-50",
             align === "right" ? "right-0" : "left-0",
             menuClassName ? menuClassName : "min-w-full w-max max-w-[300px]"
           )}
@@ -161,31 +162,44 @@ export function FilterSelect({
           {options.map((opt, idx) => {
             const isSelected = opt.value === value;
             const isFocused = idx === focusedIndex;
+            const showGroupHeader = opt.group && (idx === 0 || options[idx - 1]?.group !== opt.group);
+
             return (
-              <div
-                key={opt.value}
-                role="option"
-                aria-selected={isSelected}
-                onClick={() => {
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-                onMouseEnter={() => setFocusedIndex(idx)}
-                className={clsx(
-                  "px-3 py-2 mx-1 text-[12.5px] cursor-pointer flex items-center justify-between gap-3 rounded-[6px] transition-colors select-none",
-                  isSelected
-                    ? "bg-[rgba(0,217,255,0.08)] text-[#00D9FF] font-semibold"
-                    : isFocused
-                    ? "bg-[#1C2025] text-[#00D9FF]"
-                    : "text-[#E8E8E8] hover:bg-[#1C2025] hover:text-[#00D9FF]"
+              <React.Fragment key={opt.value}>
+                {showGroupHeader && (
+                  <div
+                    className={clsx(
+                      "px-3 pb-1 text-[10.5px] font-bold uppercase tracking-wider text-[#8A8F98] select-none",
+                      idx === 0 ? "pt-1" : "pt-2.5 border-t border-[#26282E] mt-1"
+                    )}
+                  >
+                    {opt.group}
+                  </div>
                 )}
-              >
-                <div className="flex items-center gap-2 truncate">
-                  {opt.icon && <span className="flex-shrink-0">{opt.icon}</span>}
-                  <span className="truncate">{opt.label}</span>
+                <div
+                  role="option"
+                  aria-selected={isSelected}
+                  onClick={() => {
+                    onChange(opt.value);
+                    setIsOpen(false);
+                  }}
+                  onMouseEnter={() => setFocusedIndex(idx)}
+                  className={clsx(
+                    "px-3 py-2 mx-1 text-[12.5px] cursor-pointer flex items-center justify-between gap-3 rounded-[6px] transition-colors select-none",
+                    isSelected
+                      ? "bg-[rgba(0,217,255,0.08)] text-[#00D9FF] font-semibold"
+                      : isFocused
+                      ? "bg-[#1C2025] text-[#00D9FF]"
+                      : "text-[#E8E8E8] hover:bg-[#1C2025] hover:text-[#00D9FF]"
+                  )}
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    {opt.icon && <span className="flex-shrink-0">{opt.icon}</span>}
+                    <span className="truncate">{opt.label}</span>
+                  </div>
+                  {isSelected && <span className="text-[#00D9FF] text-xs font-bold flex-shrink-0">✓</span>}
                 </div>
-                {isSelected && <span className="text-[#00D9FF] text-xs font-bold flex-shrink-0">✓</span>}
-              </div>
+              </React.Fragment>
             );
           })}
         </div>

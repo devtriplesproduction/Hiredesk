@@ -13,34 +13,16 @@ import WhatsAppModal from "@/components/candidates/WhatsAppModal";
 import EmailModal from "@/components/candidates/EmailModal";
 import { DocumentStudioModal } from "@/components/documents/DocumentStudioModal";
 import DateTimePicker from "@/components/ui/DateTimePicker";
-import { Check, X, User, BarChart2, FileText, CheckCircle2, Clock, Calendar, Briefcase, GitBranch, ExternalLink, Copy, AlertCircle, Lock, ArrowRight, UserCheck, Loader2, Activity, Sparkles, Send, Edit3, MessageSquare, History, CheckCheck, Award } from "lucide-react";
+import { Check, X, User, BarChart2, FileText, CheckCircle2, Clock, Calendar, Briefcase, GitBranch, ExternalLink, Copy, AlertCircle, Lock, ArrowRight, UserCheck, Loader2, Activity, Sparkles, Send, Edit3, MessageSquare, History, CheckCheck, Award, Mail, Phone as PhoneIcon, MapPin, GraduationCap, Building2, ChevronRight, ChevronDown, ChevronUp, LayoutGrid } from "lucide-react";
 
 interface Props { candidate: Candidate; onClose: () => void; }
 
 const STATUSES: Candidate["status"][] = ["new", "review", "shortlisted", "interview_1", "interview_2", "approved", "offer", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected", "hired", "rejected"];
 
-interface InfoField {
-  key: keyof Candidate;
-  label: string;
-  icon: string;
-  suffix?: string;
-}
-
-const INFO_FIELDS: InfoField[] = [
-  { key: "email", label: "Email", icon: "✉" },
-  { key: "phone", label: "Phone", icon: "📞" },
-  { key: "city", label: "City", icon: "📍" },
-  { key: "gender", label: "Gender", icon: "👤" },
-  { key: "employmentStatus", label: "Employment Status", icon: "💼" },
-  { key: "exp", label: "Experience", icon: "💼" },
-  { key: "education", label: "Education", icon: "🎓" },
-  { key: "appliedAt", label: "Applied", icon: "📅" },
-];
-
 export default function CandidateDetail({ candidate: c, onClose }: Props) {
   const { updateCandidate, deleteCandidate, interviews, addInterview, updateInterview, offers, addOffer, updateOffer, documents, updateDocument, employees, addEmployee, updateEmployee, employeeBonds, updateEmployeeBond, employeeResignations, addEmployeeResignation, roles } = useStore();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"profile" | "score" | "resume">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "pipeline" | "score" | "resume">("profile");
   const [resumeMode, setResumeMode] = useState<"pdf" | "text">(c.resumeUrl ? "pdf" : "text");
   const [isWhatsAppOpen, setIsWhatsAppOpen] = useState(false);
   const [isEmailOpen, setIsEmailOpen] = useState(false);
@@ -90,8 +72,43 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
   const isR2Available = isR1Passed && !r2 && c.status !== "rejected";
   const isR2Locked = !isR1Passed;
 
+  // Cleaned and filtered skills (excluding dates and noise)
+  const cleanSkills = useMemo(() => {
+    if (!c.skills || !Array.isArray(c.skills)) return [];
+    return c.skills.filter(s => {
+      if (!s || typeof s !== "string") return false;
+      const trimmed = s.trim();
+      if (trimmed.length < 2) return false;
+      // Exclude date ranges like "July2025 - July2026", "2024-2025", etc.
+      if (/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|\d{4})\s*[-–—to]\s*(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|\d{4}|present)/i.test(trimmed)) {
+        return false;
+      }
+      if (/^[\d\s\-.,/]+$/.test(trimmed)) return false;
+      return true;
+    });
+  }, [c.skills]);
+
   // Timeline Tab state ("all" | "timeline" | "notes")
   const [timelineTab, setTimelineTab] = useState<"all" | "timeline" | "notes">("all");
+  // Collapsible Activity & Notes state (collapsed by default)
+  const [isActivityOpen, setIsActivityOpen] = useState(false);
+  // Profile Sub-tab state ("overview" | "skills" | "activity" | "stage" | "all")
+  const [profileSubTab, setProfileSubTab] = useState<"overview" | "skills" | "activity" | "stage" | "all">("overview");
+
+  // Safe date parser for DD/MM/YYYY or standard dates
+  function parseSafeDate(dateStr?: string | null): Date | null {
+    if (!dateStr) return null;
+    const str = String(dateStr).trim();
+    const dmy = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+    if (dmy) {
+      const [, d, m, y] = dmy;
+      const date = new Date(Number(y), Number(m) - 1, Number(d));
+      if (!isNaN(date.getTime())) return date;
+    }
+    const date = new Date(str);
+    if (!isNaN(date.getTime())) return date;
+    return null;
+  }
 
   // Computed Candidate Activity Events
   const timelineEvents = useMemo(() => {
@@ -110,6 +127,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
     // 1. Application Received & Resume parsed
     if (c.appliedAt || c.createdAt) {
       const appTime = c.appliedAt || c.createdAt;
+      const d = parseSafeDate(appTime);
       events.push({
         id: `app-received-${c.id}`,
         title: "Application Received",
@@ -117,7 +135,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
         timestamp: appTime,
         icon: "📥",
         color: "#60A5FA", // blue
-        sortTime: new Date(appTime).getTime() || 0,
+        sortTime: d ? d.getTime() : 0,
       });
     }
 
@@ -513,7 +531,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
         }}>
 
         {/* Top strip */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 sm:p-8 pb-5 gap-6" style={{ borderBottom: "1px solid var(--border)", background: "linear-gradient(to bottom, rgba(255,255,255,0.03), transparent)" }}>
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between p-6 sm:p-8 pb-5 gap-5" style={{ borderBottom: "1px solid var(--border)", background: "linear-gradient(to bottom, rgba(255,255,255,0.03), transparent)" }}>
           <div className="flex items-center gap-5 flex-1">
             {/* Avatar */}
             <div className={clsx(
@@ -579,42 +597,44 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
             </div>
           </div>
 
-          <div className="flex flex-col sm:items-end gap-3 self-end sm:self-center flex-shrink-0">
-            <div className="flex items-center gap-2">
-              {isEditing ? (
-                <Btn
-                  onClick={handleSave}
-                  className="text-xs font-semibold px-4 py-2 rounded-lg transition-all text-black bg-white hover:bg-zinc-200 active:scale-95 shadow-lg"
-                >
-                  💾 Save
-                </Btn>
-              ) : !isLowConfidence && (
-                <Btn
-                  onClick={() => setIsEditing(true)}
-                  className="text-xs font-semibold px-4 py-2 rounded-lg transition-all text-white bg-[var(--glass-2)] hover:bg-[var(--glass-3)] border border-[var(--border)] active:scale-95"
-                >
-                  ✍️ Edit Profile
-                </Btn>
-              )}
-
+          {/* Single-line toolbar: Actions + Tabs + Cancel */}
+          <div className="flex items-center gap-2 flex-wrap lg:flex-nowrap overflow-x-auto no-scrollbar self-start lg:self-center flex-shrink-0">
+            {/* 1. Edit Profile / Save */}
+            {isEditing ? (
               <Btn
-                onClick={() => setIsDocStudioOpen(true)}
-                className="text-xs font-semibold px-4 py-2 rounded-lg transition-all text-white bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 active:scale-95"
+                onClick={handleSave}
+                className="h-[38px] text-xs font-semibold px-4 rounded-[10px] transition-all text-black bg-white hover:bg-zinc-200 active:scale-95 shadow-lg inline-flex items-center gap-1.5 flex-shrink-0"
               >
-                📄 Document Studio
+                <Check className="w-3.5 h-3.5" />
+                <span>Save</span>
               </Btn>
-
-              <Btn onClick={onClose}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-white transition-colors"
-                style={{ background: "var(--glass-2)", border: "1px solid var(--border)" }}>
-                ✕
+            ) : !isLowConfidence && (
+              <Btn
+                onClick={() => setIsEditing(true)}
+                className="h-[38px] text-xs font-semibold px-3.5 rounded-[10px] transition-all text-zinc-200 hover:text-white bg-[#181818] hover:bg-[#222222] border border-[#2D2D2D] hover:border-zinc-500 active:scale-95 inline-flex items-center gap-1.5 flex-shrink-0"
+              >
+                <Edit3 className="w-3.5 h-3.5 text-zinc-400" />
+                <span>Edit Profile</span>
               </Btn>
-            </div>
+            )}
 
-            {/* Profile / Score / Resume Tabs */}
-            <div className="flex items-center gap-[6px] overflow-x-auto no-scrollbar select-none">
+            {/* 2. Document Studio */}
+            <Btn
+              onClick={() => setIsDocStudioOpen(true)}
+              className="h-[38px] text-xs font-semibold px-3.5 rounded-[10px] transition-all text-blue-300 hover:text-blue-200 bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/30 hover:border-blue-500/50 active:scale-95 inline-flex items-center gap-1.5 flex-shrink-0"
+            >
+              <FileText className="w-3.5 h-3.5 text-blue-400" />
+              <span>Document Studio</span>
+            </Btn>
+
+            {/* Divider */}
+            <div className="w-[1px] h-6 bg-white/10 mx-0.5 hidden sm:block flex-shrink-0" />
+
+            {/* 3. Profile / Pipeline / Score / Resume Tabs */}
+            <div className="flex items-center gap-[5px] flex-shrink-0 select-none">
               {([
                 { id: "profile", label: "Profile", icon: User, accent: "#A78BFA", activeBg: "rgba(167, 139, 250, 0.10)", activeBorder: "rgba(167, 139, 250, 0.45)", activeHoverBg: "rgba(167, 139, 250, 0.16)", hoverBorder: "rgba(167, 139, 250, 0.30)" },
+                { id: "pipeline", label: "Pipeline", icon: GitBranch, accent: "#00D9FF", activeBg: "rgba(0, 217, 255, 0.10)", activeBorder: "rgba(0, 217, 255, 0.45)", activeHoverBg: "rgba(0, 217, 255, 0.16)", hoverBorder: "rgba(0, 217, 255, 0.30)" },
                 { id: "score", label: "Score", icon: BarChart2, accent: "#A78BFA", activeBg: "rgba(167, 139, 250, 0.10)", activeBorder: "rgba(167, 139, 250, 0.45)", activeHoverBg: "rgba(167, 139, 250, 0.16)", hoverBorder: "rgba(167, 139, 250, 0.30)" },
                 { id: "resume", label: "Resume", icon: FileText, accent: "#00D9FF", activeBg: "rgba(0, 217, 255, 0.10)", activeBorder: "rgba(0, 217, 255, 0.45)", activeHoverBg: "rgba(0, 217, 255, 0.16)", hoverBorder: "rgba(0, 217, 255, 0.30)" },
               ] as const).map(t => {
@@ -625,12 +645,11 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     key={t.id}
                     type="button"
                     onClick={() => setActiveTab(t.id)}
-                    className="inline-flex items-center justify-center gap-[6px] h-[40px] px-5 rounded-[10px] text-[13px] font-semibold tracking-normal flex-shrink-0 cursor-pointer outline-none select-none"
+                    className="inline-flex items-center justify-center gap-[6px] h-[38px] px-3 sm:px-4 rounded-[10px] text-[13px] font-semibold tracking-normal flex-shrink-0 cursor-pointer outline-none select-none transition-all"
                     style={{
                       background: isActive ? t.activeBg : "#181818",
                       border: isActive ? `1px solid ${t.activeBorder}` : "1px solid #2D2D2D",
                       color: isActive ? t.accent : "#8F939D",
-                      transition: "background-color 160ms ease, border-color 160ms ease, color 160ms ease",
                     }}
                     onMouseEnter={e => {
                       if (isActive) {
@@ -653,12 +672,27 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       }
                     }}
                   >
-                    <IconComponent className="w-[15px] h-[15px]" style={{ color: "inherit" }} />
+                    <IconComponent className="w-[14px] h-[14px]" style={{ color: "inherit" }} />
                     <span>{t.label}</span>
                   </button>
                 );
               })}
             </div>
+
+            {/* Divider */}
+            <div className="w-[1px] h-6 bg-white/10 mx-0.5 hidden sm:block flex-shrink-0" />
+
+            {/* 4. Clearly visible Close / Cancel button */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-[38px] px-3 rounded-[10px] flex items-center justify-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-[#181818] hover:bg-[#262626] border border-[#2D2D2D] hover:border-zinc-400 active:scale-95 transition-all cursor-pointer flex-shrink-0 shadow-sm"
+              title="Close (Cancel)"
+              aria-label="Cancel and close"
+            >
+              <X className="w-4 h-4 text-zinc-300 hover:text-white" strokeWidth={2.2} />
+              <span className="hidden sm:inline text-zinc-300">Close</span>
+            </button>
           </div>
         </div>
 
@@ -666,350 +700,580 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
           {activeTab === "profile" && (
             <div className="flex flex-col gap-6 w-full">
 
-              {/* Extraction & Employment Diagnostics */}
-              {(c.extractionConfidence !== undefined || c.employmentStatusSource) && (
-                <div className="w-full flex flex-col gap-3">
-                  {/* Alert panel for Low Confidence */}
-                  {isLowConfidence && (
-                    <div className="w-full flex items-start gap-3 p-4 rounded-2xl text-xs font-semibold leading-relaxed border"
-                      style={{ background: "rgba(245,158,11,0.06)", borderColor: "rgba(245,158,11,0.28)", color: "#f59e0b" }}>
-                      <span className="text-lg leading-none mt-0.5">⚠️</span>
-                      <div className="flex-1">
-                        <div className="font-extrabold text-[13px] uppercase tracking-wide">Low Confidence Name Detection ({c.extractionConfidence}%)</div>
-                        <div className="text-zinc-400 mt-1 leading-normal font-medium">
-                          The parser resolved this suggested name via <strong>{c.extractionSource}</strong> with low confidence. Please verify or correct the candidate name using the form input field above.
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Diagnostic Badge Strip */}
-                  <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-4 py-3 rounded-xl text-xs font-medium"
-                    style={{ background: "var(--glass)", border: "1px solid var(--border)" }}>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                      {c.extractionSource && (
-                        <span className="text-[var(--text-3)] font-semibold flex items-center gap-1.5">
-                          🔍 Name Method: <strong className="text-zinc-300 font-bold">{c.extractionSource}</strong>
-                        </span>
-                      )}
-                      {c.employmentStatusSource && (
-                        <span className="text-[var(--text-3)] font-semibold flex items-center gap-1.5">
-                          💼 Employment: <strong className="text-zinc-300 font-bold">{c.employmentStatusSource}</strong>
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {c.employmentStatusConfidence !== undefined && (
-                        <span
-                          className="px-2.5 py-0.5 rounded font-bold tracking-wide text-[11px]"
-                          style={{
-                            color: getEmploymentStatusMeta(c.employmentStatus).color,
-                            background: getEmploymentStatusMeta(c.employmentStatus).bg,
-                            border: `1px solid ${getEmploymentStatusMeta(c.employmentStatus).border}`,
-                          }}
-                        >
-                          {getEmploymentStatusMeta(c.employmentStatus).icon} {c.employmentStatusConfidence}% Confidence
-                        </span>
-                      )}
-                      {c.extractionConfidence !== undefined && (
-                        <span className={clsx(
-                          "px-2.5 py-0.5 rounded font-bold tracking-wide",
-                          c.extractionConfidence >= 70 ? "text-[var(--green)] bg-[var(--green)]/10" : "text-amber-500 bg-amber-500/10"
-                        )}>
-                          {c.extractionConfidence}% Name
-                        </span>
-                      )}
+              {/* Low Confidence Name Banner (if applicable) */}
+              {isLowConfidence && (
+                <div className="w-full flex items-start gap-3 p-4 rounded-xl text-xs font-semibold leading-relaxed border"
+                  style={{ background: "rgba(245,158,11,0.06)", borderColor: "rgba(245,158,11,0.28)", color: "#f59e0b" }}>
+                  <span className="text-base leading-none mt-0.5">⚠️</span>
+                  <div className="flex-1">
+                    <div className="font-extrabold text-[12px] uppercase tracking-wide">Please Verify Candidate Name ({c.extractionConfidence}% Confidence)</div>
+                    <div className="text-zinc-400 mt-0.5 leading-normal font-medium">
+                      The parser detected this name with lower confidence. You can quickly edit the name using the form above.
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Info grid - 4 equal columns across 2 rows */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-                {INFO_FIELDS.map(({ key, label, icon, suffix = "" }) => {
-                  const val = isEditing ? editState[key as keyof Candidate] : c[key as keyof Candidate];
-                  const display = val ? `${val}${suffix}` : "—";
-                  const statusMeta = getEmploymentStatusMeta(c.employmentStatus);
-                  
-                  return (
-                    <div key={key} className="flex items-center gap-3.5 p-4 sm:p-5 rounded-2xl transition-all hover:bg-white/[0.02] min-h-[84px]"
-                      style={{ background: "var(--glass)", border: "1px solid var(--border)", boxShadow: "inset 0 1px 1px rgba(255,255,255,0.02)" }}>
-                      <span className="text-2xl flex-shrink-0 w-8 flex items-center justify-center drop-shadow-sm">
-                        {key === "employmentStatus" ? statusMeta.icon : icon}
-                      </span>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-1">{label}</div>
-                        {isEditing && key !== "appliedAt" ? (
-                          key === "employmentStatus" ? (
-                            <select
-                              value={String(editState.employmentStatus || "UNKNOWN")}
-                              onChange={e => setEditState(prev => ({ ...prev, employmentStatus: e.target.value as EmploymentStatus }))}
-                              className="w-full bg-[#14171B] border border-[#2D333B] text-white rounded-lg px-2 py-1 text-xs outline-none focus:border-[#00D9FF]"
-                            >
-                              <option value="CURRENTLY_WORKING">🟢 Currently Working</option>
-                              <option value="STUDENT_FRESHER">🔵 Student / Fresher</option>
-                              <option value="NOT_CURRENTLY_WORKING">⚪ Not Currently Working</option>
-                              <option value="UNKNOWN">🟡 Status Unknown</option>
-                            </select>
-                          ) : (
-                            <input
-                              type="text"
-                              value={val === undefined ? "" : String(val)}
-                              onChange={e => setEditState(prev => ({ ...prev, [key]: e.target.value }))}
-                              className="w-full bg-black/40 border border-white/5 rounded-lg px-2 py-1 text-xs text-white outline-none focus:border-white/20"
-                              placeholder={`Enter ${label}`}
-                            />
-                          )
-                        ) : key === "employmentStatus" ? (
-                          <div className="flex flex-col justify-center min-h-[28px]">
-                            <div className="text-sm font-bold truncate flex items-center gap-1.5" style={{ color: statusMeta.color }}>
-                              <span>{statusMeta.label}</span>
-                            </div>
-                            {(c.currentRole || c.currentCompany) ? (
-                              <div
-                                className="text-[11.5px] text-[#8E949E] font-medium truncate mt-0.5"
-                                title={[c.currentRole, c.currentCompany].filter(Boolean).join(" · ")}
-                              >
-                                {[c.currentRole, c.currentCompany].filter(Boolean).join(" · ")}
-                              </div>
-                            ) : null}
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-between gap-2 min-h-[28px]">
-                            <div className="text-sm font-bold text-white truncate" title={String(val)}>{display}</div>
-                            {key === "phone" && (
-                              <Btn
-                                onClick={() => {
-                                  if (c.phone) {
-                                    setIsWhatsAppOpen(true);
-                                  } else {
-                                    dialog.info("Phone number is unavailable.");
-                                  }
-                                }}
-                                disabled={!c.phone}
-                                className={clsx(
-                                  "p-1.5 rounded-lg transition-all border flex-shrink-0",
-                                  c.phone
-                                    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/40 active:scale-95 cursor-pointer"
-                                    : "border-zinc-800 bg-zinc-900/20 text-zinc-600 cursor-not-allowed opacity-40"
-                                )}
-                                title={c.phone ? "Message candidate on WhatsApp" : "Phone number unavailable"}
-                              >
-                                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.705 1.459h.008c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-                                </svg>
-                              </Btn>
-                            )}
-                            {key === "email" && (
-                              <Btn
-                                onClick={() => {
-                                  if (c.email) {
-                                    setIsEmailOpen(true);
-                                  } else {
-                                    dialog.info("Email address is unavailable.");
-                                  }
-                                }}
-                                disabled={!c.email}
-                                className={clsx(
-                                  "p-1.5 rounded-lg transition-all border flex-shrink-0",
-                                  c.email
-                                    ? "border-blue-500/20 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 hover:border-blue-500/40 active:scale-95 cursor-pointer"
-                                    : "border-zinc-800 bg-zinc-900/20 text-zinc-600 cursor-not-allowed opacity-40"
-                                )}
-                                title={c.email ? "Send Email to candidate" : "Email unavailable"}
-                              >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                              </Btn>
-                            )}
-                          </div>
+              {/* Sub-Tabs Navigation for Profile Details */}
+              <div className="flex items-center justify-between gap-3 flex-wrap border-b border-white/[0.06] pb-3.5">
+                <div className="flex items-center gap-1.5 p-1 bg-[#121316] border border-white/[0.08] rounded-xl overflow-x-auto no-scrollbar shadow-sm">
+                  {([
+                    { id: "overview", label: "Overview", icon: User, count: undefined, color: "text-purple-400" },
+                    { id: "skills", label: "Skills", icon: Sparkles, count: cleanSkills.length, color: "text-cyan-400" },
+                    { id: "activity", label: "Activity & Notes", icon: Activity, count: timelineEvents.length, color: "text-amber-400" },
+                    { id: "stage", label: "Hiring Stage", icon: GitBranch, count: undefined, color: "text-emerald-400" },
+                    { id: "all", label: "View All", icon: LayoutGrid, count: undefined, color: "text-zinc-400" },
+                  ] as const).map(tab => {
+                    const isCurrent = profileSubTab === tab.id;
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => {
+                          setProfileSubTab(tab.id);
+                          if (tab.id === "activity") setIsActivityOpen(true);
+                        }}
+                        className={clsx(
+                          "inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer select-none flex-shrink-0",
+                          isCurrent
+                            ? "bg-white/[0.08] text-white border border-white/[0.12] shadow-sm"
+                            : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.03] border border-transparent"
                         )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Skills */}
-              <div>
-                <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-2">Detected Skills</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {c.skills.length > 0
-                    ? c.skills.map(s => <SkillTag key={s} label={s} />)
-                    : <span className="text-sm text-[var(--text-3)]">No skills detected</span>}
+                      >
+                        <Icon className={clsx("w-3.5 h-3.5", isCurrent ? tab.color : "text-zinc-500")} />
+                        <span>{tab.label}</span>
+                        {tab.count !== undefined && (
+                          <span className={clsx(
+                            "text-[10px] font-mono px-1.5 py-0.2 rounded-full",
+                            isCurrent ? "bg-white/10 text-zinc-200" : "bg-white/5 text-zinc-500"
+                          )}>
+                            {tab.count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Resume file */}
-              <div>
-                <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-2">Resume File</div>
-                <div className="flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium"
-                  style={{ background: "var(--glass)", border: "1px solid var(--border)" }}>
-                  <div className="flex items-center gap-2.5">
-                    <span>📄</span> {c.resumeFile || "Not uploaded"}
+              {/* 1. Unified Candidate Overview Card */}
+              {(profileSubTab === "overview" || profileSubTab === "all") && (
+                <div className="rounded-2xl border border-white/[0.08] bg-[#111214] p-4 sm:p-5 flex flex-col gap-3.5 shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
+                {/* Header Strip */}
+                <div className="flex items-center justify-between border-b border-white/[0.06] pb-3 flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                      <User className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-300">Candidate Overview</span>
                   </div>
-                  {(c.resumeUrl || c.resumeText) && (
-                    <Btn 
+                  
+                  {/* Quick Resume Link pill */}
+                  {(c.resumeFile || c.resumeUrl || c.resumeText) && (
+                    <button
+                      type="button"
                       onClick={() => setActiveTab("resume")}
-                      className="text-xs font-bold px-3 py-1.5 rounded-lg bg-[var(--glass-3)] text-white hover:bg-white/20 transition-all"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-zinc-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all cursor-pointer select-none active:scale-95"
+                      title="Preview candidate's resume"
                     >
-                      View
-                    </Btn>
+                      <FileText className="w-3.5 h-3.5 text-cyan-400" />
+                      <span className="truncate max-w-[220px]">{c.resumeFile || "View Resume"}</span>
+                      <ArrowRight className="w-3 h-3 text-zinc-500" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Compact & High-Density Property Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                  {/* 1. Email */}
+                  <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px] group">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      <div className="flex items-center gap-1.5">
+                        <Mail className="w-3 h-3 text-sky-400" />
+                        <span>Email</span>
+                      </div>
+                      {!isEditing && c.email && (
+                        <button
+                          type="button"
+                          onClick={() => setIsEmailOpen(true)}
+                          className="p-0.5 rounded text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
+                          title="Send email"
+                        >
+                          <Mail className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                    {isEditing ? (
+                      <input
+                        type="email"
+                        value={editState.email || ""}
+                        onChange={e => setEditState(prev => ({ ...prev, email: e.target.value }))}
+                        className="w-full bg-black/50 border border-white/10 rounded-md px-2 py-0.5 text-xs text-white outline-none focus:border-purple-500/50 mt-1"
+                        placeholder="email@example.com"
+                      />
+                    ) : (
+                      <div className="text-xs font-semibold truncate text-zinc-200 mt-1" title={c.email || undefined}>
+                        {c.email || <span className="text-zinc-500 font-normal italic">Not provided</span>}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2. Phone */}
+                  <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px] group">
+                    <div className="flex items-center justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      <div className="flex items-center gap-1.5">
+                        <PhoneIcon className="w-3 h-3 text-emerald-400" />
+                        <span>Phone</span>
+                      </div>
+                      {!isEditing && c.phone && (
+                        <button
+                          type="button"
+                          onClick={() => setIsWhatsAppOpen(true)}
+                          className="p-0.5 rounded text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer"
+                          title="Chat on WhatsApp"
+                        >
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.705 1.459h.008c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editState.phone || ""}
+                        onChange={e => setEditState(prev => ({ ...prev, phone: e.target.value }))}
+                        className="w-full bg-black/50 border border-white/10 rounded-md px-2 py-0.5 text-xs text-white outline-none focus:border-purple-500/50 mt-1"
+                        placeholder="+91..."
+                      />
+                    ) : (
+                      <div className="text-xs font-semibold truncate text-zinc-200 mt-1" title={c.phone || undefined}>
+                        {c.phone || <span className="text-zinc-500 font-normal italic">Not provided</span>}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 3. Location */}
+                  <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px]">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      <MapPin className="w-3 h-3 text-rose-400" />
+                      <span>Location</span>
+                    </div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editState.city || ""}
+                        onChange={e => setEditState(prev => ({ ...prev, city: e.target.value }))}
+                        className="w-full bg-black/50 border border-white/10 rounded-md px-2 py-0.5 text-xs text-white outline-none focus:border-purple-500/50 mt-1"
+                        placeholder="City, Country"
+                      />
+                    ) : (
+                      <div className="text-xs font-semibold truncate text-zinc-200 mt-1">
+                        {c.city || <span className="text-zinc-500 font-normal italic">Not specified</span>}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 4. Applied Date */}
+                  <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px]">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      <Calendar className="w-3 h-3 text-blue-400" />
+                      <span>Applied Date</span>
+                    </div>
+                    <div className="text-xs font-semibold text-zinc-200 truncate mt-1">
+                      {(() => {
+                        if (!c.appliedAt) return <span className="text-zinc-500 font-normal">—</span>;
+                        const str = String(c.appliedAt).trim();
+                        const dmy = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+                        if (dmy) {
+                          const [, d, m, y] = dmy;
+                          const date = new Date(Number(y), Number(m) - 1, Number(d));
+                          if (!isNaN(date.getTime())) {
+                            return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+                          }
+                        }
+                        const date = new Date(str);
+                        if (!isNaN(date.getTime())) {
+                          return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+                        }
+                        return str;
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* 5. Employment Status */}
+                  <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px]">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      <Building2 className="w-3 h-3 text-amber-400" />
+                      <span>Employment Status</span>
+                    </div>
+                    {isEditing ? (
+                      <select
+                        value={String(editState.employmentStatus || "UNKNOWN")}
+                        onChange={e => setEditState(prev => ({ ...prev, employmentStatus: e.target.value as EmploymentStatus }))}
+                        className="w-full bg-black/50 border border-white/10 text-white rounded-md px-2 py-0.5 text-xs outline-none focus:border-purple-500 mt-1"
+                      >
+                        <option value="CURRENTLY_WORKING">🟢 Currently Working</option>
+                        <option value="STUDENT_FRESHER">🔵 Student / Fresher</option>
+                        <option value="NOT_CURRENTLY_WORKING">⚪ Not Currently Working</option>
+                        <option value="UNKNOWN">🟡 Status Unknown</option>
+                      </select>
+                    ) : (
+                      <div className="flex items-center gap-1.5 text-xs font-semibold truncate mt-1">
+                        {(() => {
+                          const sm = getEmploymentStatusMeta(c.employmentStatus);
+                          return (
+                            <>
+                              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: sm.color }} />
+                              <span style={{ color: sm.color }} className="truncate">{sm.label}</span>
+                              {(c.currentRole || c.currentCompany) && (
+                                <span className="text-[11px] text-zinc-500 font-normal truncate" title={[c.currentRole, c.currentCompany].filter(Boolean).join(" · ")}>
+                                  · {[c.currentRole, c.currentCompany].filter(Boolean).join(" · ")}
+                                </span>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 6. Experience */}
+                  <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px]">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      <Briefcase className="w-3 h-3 text-purple-400" />
+                      <span>Experience</span>
+                    </div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editState.exp !== undefined ? String(editState.exp) : ""}
+                        onChange={e => setEditState(prev => ({ ...prev, exp: e.target.value }))}
+                        className="w-full bg-black/50 border border-white/10 rounded-md px-2 py-0.5 text-xs text-white outline-none focus:border-purple-500/50 mt-1"
+                        placeholder="e.g. 2 yrs"
+                      />
+                    ) : (
+                      <div className="text-xs font-semibold text-zinc-200 mt-1">
+                        {c.exp ? `${String(c.exp).replace(/\s*yrs?$/i, "")} yrs` : <span className="text-zinc-500 font-normal">—</span>}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 7. Education */}
+                  <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px]">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      <GraduationCap className="w-3 h-3 text-cyan-400" />
+                      <span>Education</span>
+                    </div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editState.education || ""}
+                        onChange={e => setEditState(prev => ({ ...prev, education: e.target.value }))}
+                        className="w-full bg-black/50 border border-white/10 rounded-md px-2 py-0.5 text-xs text-white outline-none focus:border-purple-500/50 mt-1"
+                        placeholder="e.g. B.Tech / BA"
+                      />
+                    ) : (
+                      <div className="text-xs font-semibold text-zinc-200 truncate mt-1" title={c.education || undefined}>
+                        {c.education || <span className="text-zinc-500 font-normal">—</span>}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 8. Gender */}
+                  <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px]">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                      <User className="w-3 h-3 text-pink-400" />
+                      <span>Gender</span>
+                    </div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editState.gender || ""}
+                        onChange={e => setEditState(prev => ({ ...prev, gender: e.target.value }))}
+                        className="w-full bg-black/50 border border-white/10 rounded-md px-2 py-0.5 text-xs text-white outline-none focus:border-purple-500/50 mt-1"
+                        placeholder="Female / Male / Other"
+                      />
+                    ) : (
+                      <div className="text-xs font-semibold text-zinc-200 mt-1">
+                        {c.gender || <span className="text-zinc-500 font-normal">—</span>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              )}
+
+              {/* 2. Detected Skills */}
+              {(profileSubTab === "skills" || profileSubTab === "all") && (
+                <div className="rounded-2xl border border-white/[0.08] bg-[#111214] p-5 sm:p-6 flex flex-col gap-3 shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-cyan-400" />
+                    <span>Detected Skills ({cleanSkills.length})</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {cleanSkills.length > 0 ? (
+                    cleanSkills.map(s => (
+                      <span
+                        key={s}
+                        className="px-3 py-1 rounded-lg text-xs font-medium bg-white/[0.04] text-zinc-200 border border-white/[0.08] hover:border-cyan-500/40 hover:text-cyan-300 transition-colors"
+                      >
+                        {s}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-zinc-500 italic">No skills detected</span>
                   )}
                 </div>
               </div>
+              )}
 
-              {/* Candidate Activity Timeline & Admin Note */}
-              <div className="bg-[#111214] p-5 sm:p-6 rounded-2xl border border-[#24272D] shadow-[0_4px_24px_rgba(0,0,0,0.4)] flex flex-col gap-5">
-                {/* Header & Tabs */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+              {/* 3. Hiring Pipeline Summary Card */}
+              {(profileSubTab === "stage" || profileSubTab === "all") && (
+                <div className="rounded-2xl border border-white/[0.08] bg-[#111214] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 flex-shrink-0">
+                    <GitBranch className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-zinc-400">Current Hiring Stage</div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <StatusBadge status={c.status} />
+                      <span className="text-xs text-zinc-400">
+                        {c.status === "hired" ? "Candidate successfully hired" :
+                         ["offer", "offer_sent", "offer_accepted", "offer_rejected"].includes(c.status) ? "Active offer stage" :
+                         c.status === "approved" ? "Approved for offer extension" :
+                         ["interview_1", "interview_2"].includes(c.status) ? "Interview evaluations in progress" :
+                         c.status === "shortlisted" ? "Shortlisted for technical rounds" : "Under review"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("pipeline")}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 transition-all cursor-pointer self-start sm:self-auto active:scale-95"
+                >
+                  <span>Open Pipeline Workflow</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              )}
+
+              {/* 4. Candidate Activity Timeline & Admin Note (Collapsible) */}
+              {(profileSubTab === "activity" || profileSubTab === "all") && (() => {
+                const isDetailsVisible = isActivityOpen || profileSubTab === "activity";
+                return (
+                  <div className="bg-[#111214] rounded-2xl border border-[#24272D] shadow-[0_4px_24px_rgba(0,0,0,0.35)] overflow-hidden transition-all">
+                    {/* Header (Always visible, toggleable) */}
+                    <div
+                      onClick={() => setIsActivityOpen(!isDetailsVisible)}
+                  className="flex items-center justify-between p-4 sm:p-5 cursor-pointer select-none hover:bg-white/[0.02] transition-colors gap-3"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 flex-shrink-0">
                       <Activity className="w-4 h-4" />
                     </div>
-                    <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0">
                       <div className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
                         <span>Candidate Activity & Notes</span>
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.05] text-[#9A9DA6] border border-white/[0.08]">
                           {timelineEvents.length} events
                         </span>
                       </div>
-                      <p className="text-[11px] text-[#7E8492]">Automatic workflow audit trail with private admin notes</p>
+                      {!isActivityOpen && (
+                        <span className="text-xs text-[#7E8492] truncate max-w-sm hidden sm:inline">
+                          {c.note ? `Note: "${c.note.slice(0, 45)}${c.note.length > 45 ? '…' : ''}"` : "Private admin notes & audit history"}
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  {/* View Filter Switcher */}
-                  <div className="flex items-center gap-1 bg-[#16171B] p-1 rounded-lg border border-[#24272D] self-start sm:self-auto">
-                    {(["all", "timeline", "notes"] as const).map(tabKey => (
-                      <button
-                        key={tabKey}
-                        type="button"
-                        onClick={() => setTimelineTab(tabKey)}
-                        className={clsx(
-                          "px-2.5 py-1 rounded-md text-xs font-semibold capitalize transition-all cursor-pointer",
-                          timelineTab === tabKey
-                            ? "bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-sm"
-                            : "text-[#8E929E] hover:text-white hover:bg-white/[0.04] border border-transparent"
-                        )}
+                  <div className="flex items-center gap-2.5 flex-shrink-0">
+                    {/* View Filter Switcher (Visible when expanded) */}
+                    {isActivityOpen && (
+                      <div
+                        onClick={e => e.stopPropagation()}
+                        className="hidden sm:flex items-center gap-1 bg-[#16171B] p-1 rounded-lg border border-[#24272D]"
                       >
-                        {tabKey === "all" ? "All Activity" : tabKey === "timeline" ? "Timeline" : "Notes Only"}
-                      </button>
-                    ))}
+                        {(["all", "timeline", "notes"] as const).map(tabKey => (
+                          <button
+                            key={tabKey}
+                            type="button"
+                            onClick={() => setTimelineTab(tabKey)}
+                            className={clsx(
+                              "px-2.5 py-1 rounded-md text-xs font-semibold capitalize transition-all cursor-pointer",
+                              timelineTab === tabKey
+                                ? "bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-sm"
+                                : "text-[#8E929E] hover:text-white hover:bg-white/[0.04] border border-transparent"
+                            )}
+                          >
+                            {tabKey === "all" ? "All Activity" : tabKey === "timeline" ? "Timeline" : "Notes Only"}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Expand / Collapse Button */}
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all cursor-pointer"
+                    >
+                      <span>{isDetailsVisible ? "Hide Details" : "View Details"}</span>
+                      {isDetailsVisible ? (
+                        <ChevronUp className="w-3.5 h-3.5 text-zinc-400" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+                      )}
+                    </button>
                   </div>
                 </div>
 
-                {/* Main Content Layout */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                  {/* Left Column: Interactive Timeline List */}
-                  {(timelineTab === "all" || timelineTab === "timeline") && (
-                    <div className={clsx(
-                      "flex flex-col gap-3.5",
-                      timelineTab === "timeline" ? "lg:col-span-12" : "lg:col-span-7"
-                    )}>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-[#8E929E] flex items-center gap-1.5">
-                          <History className="w-3.5 h-3.5 text-purple-400" />
-                          <span>Activity Timeline ({timelineEvents.length})</span>
-                        </span>
-                        <span className="text-[11px] text-[#606573]">Auto-recorded</span>
-                      </div>
+                {/* Collapsible Content */}
+                {isDetailsVisible && (
+                  <div className="p-5 sm:p-6 pt-0 border-t border-white/[0.06] mt-2 animate-fade-in flex flex-col gap-5">
+                    {/* Mobile Switcher */}
+                    <div className="flex sm:hidden items-center gap-1 bg-[#16171B] p-1 rounded-lg border border-[#24272D] self-start mt-3">
+                      {(["all", "timeline", "notes"] as const).map(tabKey => (
+                        <button
+                          key={tabKey}
+                          type="button"
+                          onClick={() => setTimelineTab(tabKey)}
+                          className={clsx(
+                            "px-2.5 py-1 rounded-md text-xs font-semibold capitalize transition-all cursor-pointer",
+                            timelineTab === tabKey
+                              ? "bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-sm"
+                              : "text-[#8E929E] hover:text-white hover:bg-white/[0.04] border border-transparent"
+                          )}
+                        >
+                          {tabKey === "all" ? "All Activity" : tabKey === "timeline" ? "Timeline" : "Notes Only"}
+                        </button>
+                      ))}
+                    </div>
 
-                      <div className="flex flex-col gap-0 relative pl-4 sm:pl-5 before:absolute before:left-[11px] sm:before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-white/[0.08] max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
-                        {timelineEvents.length === 0 ? (
-                          <div className="py-8 text-center text-xs text-[#707580] bg-[#16171B] rounded-xl border border-dashed border-[#24272D] my-2">
-                            No workflow activity recorded yet.
+                    {/* Main Content Layout */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 mt-2">
+                      {/* Left Column: Interactive Timeline List */}
+                      {(timelineTab === "all" || timelineTab === "timeline") && (
+                        <div className={clsx(
+                          "flex flex-col gap-3.5",
+                          timelineTab === "timeline" ? "lg:col-span-12" : "lg:col-span-7"
+                        )}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold uppercase tracking-wider text-[#8E929E] flex items-center gap-1.5">
+                              <History className="w-3.5 h-3.5 text-purple-400" />
+                              <span>Activity Timeline ({timelineEvents.length})</span>
+                            </span>
+                            <span className="text-[11px] text-[#606573]">Auto-recorded</span>
                           </div>
-                        ) : (
-                          timelineEvents.map((evt, idx) => (
-                            <div key={evt.id} className="relative flex items-start gap-3.5 py-3 group">
-                              {/* Dot / Icon */}
-                              <div
-                                className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 z-10 text-[11px] transition-transform group-hover:scale-110"
-                                style={{
-                                  background: evt.color ? `${evt.color}20` : "rgba(167, 139, 250, 0.15)",
-                                  border: `1px solid ${evt.color ? `${evt.color}55` : "rgba(167, 139, 250, 0.4)"}`,
-                                  color: evt.color || "#A78BFA",
-                                  boxShadow: `0 0 8px ${evt.color ? `${evt.color}30` : "rgba(167, 139, 250, 0.2)"}`
-                                }}
-                              >
-                                {evt.icon || "•"}
+
+                          <div className="flex flex-col gap-0 relative pl-4 sm:pl-5 before:absolute before:left-[11px] sm:before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-white/[0.08] max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
+                            {timelineEvents.length === 0 ? (
+                              <div className="py-8 text-center text-xs text-[#707580] bg-[#16171B] rounded-xl border border-dashed border-[#24272D] my-2">
+                                No workflow activity recorded yet.
                               </div>
+                            ) : (
+                              timelineEvents.map((evt) => {
+                                const pd = parseSafeDate(evt.timestamp);
+                                const timeStr = pd ? pd.toLocaleString(undefined, {
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit"
+                                }) : "Recorded";
 
-                              {/* Card Content */}
-                              <div className="flex-1 bg-[#16171B] hover:bg-[#1A1B20] border border-[#24272D] rounded-xl p-3 transition-colors flex flex-col gap-1">
-                                <div className="flex items-center justify-between gap-2 flex-wrap">
-                                  <span className="text-xs font-semibold text-[#E7E9ED] tracking-tight">
-                                    {evt.title}
-                                  </span>
-                                  <span className="text-[10px] font-mono text-[#7E8492]">
-                                    {evt.timestamp ? new Date(evt.timestamp).toLocaleString(undefined, {
-                                      month: "short",
-                                      day: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit"
-                                    }) : "Pending"}
-                                  </span>
-                                </div>
-                                <p className="text-[11px] text-[#9A9DA6] leading-relaxed">
-                                  {evt.description}
-                                </p>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  )}
+                                return (
+                                  <div key={evt.id} className="relative flex items-start gap-3.5 py-3 group">
+                                    {/* Dot / Icon */}
+                                    <div
+                                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 z-10 text-[11px] transition-transform group-hover:scale-110"
+                                      style={{
+                                        background: evt.color ? `${evt.color}20` : "rgba(167, 139, 250, 0.15)",
+                                        border: `1px solid ${evt.color ? `${evt.color}55` : "rgba(167, 139, 250, 0.4)"}`,
+                                        color: evt.color || "#A78BFA",
+                                        boxShadow: `0 0 8px ${evt.color ? `${evt.color}30` : "rgba(167, 139, 250, 0.2)"}`
+                                      }}
+                                    >
+                                      {evt.icon || "•"}
+                                    </div>
 
-                  {/* Right Column: Admin Note (Editable) */}
-                  {(timelineTab === "all" || timelineTab === "notes") && (
-                    <div className={clsx(
-                      "flex flex-col gap-3.5",
-                      timelineTab === "notes" ? "lg:col-span-12" : "lg:col-span-5"
-                    )}>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-[#8E929E] flex items-center gap-1.5">
-                          <Edit3 className="w-3.5 h-3.5 text-blue-400" />
-                          <span>Admin Private Note</span>
-                        </span>
-                        <span className="text-[10px] font-mono text-emerald-400/80 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                          Auto-saved
-                        </span>
-                      </div>
-
-                      <div className="flex flex-col gap-2.5">
-                        <textarea
-                          rows={timelineTab === "notes" ? 8 : 6}
-                          placeholder="Add private feedback, interviewer comments, or notes about this candidate… (Preserved automatically)"
-                          value={isEditing ? (editState.note || "") : (c.note || "")}
-                          onChange={e => {
-                            if (isEditing) {
-                              setEditState(prev => ({ ...prev, note: e.target.value }));
-                            } else {
-                              updateCandidate(c.id, { note: e.target.value });
-                            }
-                          }}
-                          onBlur={e => {
-                            if (!isEditing) {
-                              updateCandidate(c.id, { note: e.target.value });
-                            }
-                          }}
-                          className="w-full rounded-xl text-xs sm:text-sm p-4 resize-none outline-none transition-all duration-200 bg-[#0E0F12] border border-[#24272D] text-zinc-200 focus:border-purple-500/60 focus:shadow-[0_0_15px_rgba(167,139,250,0.12)] custom-scrollbar placeholder:text-zinc-600 leading-relaxed"
-                        />
-                        <div className="flex items-center justify-between text-[11px] text-[#6E7380] px-1">
-                          <span>💡 Stored in candidate profile record</span>
-                          <span>{(isEditing ? (editState.note || "") : (c.note || "")).length} chars</span>
+                                    {/* Card Content */}
+                                    <div className="flex-1 bg-[#16171B] hover:bg-[#1A1B20] border border-[#24272D] rounded-xl p-3 transition-colors flex flex-col gap-1">
+                                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                                        <span className="text-xs font-semibold text-[#E7E9ED] tracking-tight">
+                                          {evt.title}
+                                        </span>
+                                        <span className="text-[10px] font-mono text-[#7E8492]">
+                                          {timeStr}
+                                        </span>
+                                      </div>
+                                      <p className="text-[11px] text-[#9A9DA6] leading-relaxed">
+                                        {evt.description}
+                                      </p>
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
+
+                      {/* Right Column: Admin Note (Editable) */}
+                      {(timelineTab === "all" || timelineTab === "notes") && (
+                        <div className={clsx(
+                          "flex flex-col gap-3.5",
+                          timelineTab === "notes" ? "lg:col-span-12" : "lg:col-span-5"
+                        )}>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold uppercase tracking-wider text-[#8E929E] flex items-center gap-1.5">
+                              <Edit3 className="w-3.5 h-3.5 text-blue-400" />
+                              <span>Admin Private Note</span>
+                            </span>
+                            <span className="text-[10px] font-mono text-emerald-400/80 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                              Auto-saved
+                            </span>
+                          </div>
+
+                          <div className="flex flex-col gap-2.5">
+                            <textarea
+                              rows={timelineTab === "notes" ? 8 : 6}
+                              placeholder="Add private feedback, interviewer comments, or notes about this candidate… (Preserved automatically)"
+                              value={isEditing ? (editState.note || "") : (c.note || "")}
+                              onChange={e => {
+                                if (isEditing) {
+                                  setEditState(prev => ({ ...prev, note: e.target.value }));
+                                } else {
+                                  updateCandidate(c.id, { note: e.target.value });
+                                }
+                              }}
+                              onBlur={e => {
+                                if (!isEditing) {
+                                  updateCandidate(c.id, { note: e.target.value });
+                                }
+                              }}
+                              className="w-full rounded-xl text-xs sm:text-sm p-4 resize-none outline-none transition-all duration-200 bg-[#0E0F12] border border-[#24272D] text-zinc-200 focus:border-purple-500/60 focus:shadow-[0_0_15px_rgba(167,139,250,0.12)] custom-scrollbar placeholder:text-zinc-600 leading-relaxed"
+                            />
+                            <div className="flex items-center justify-between text-[11px] text-[#6E7380] px-1">
+                              <span>💡 Stored in candidate profile record</span>
+                              <span>{(isEditing ? (editState.note || "") : (c.note || "")).length} chars</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
+                );
+              })()}
 
               {/* Collapsible Diagnostic Panel */}
-              {c.extractionMetadata && (
+              {c.extractionMetadata && (profileSubTab === "overview" || profileSubTab === "all") && (
                 <details className="group rounded-xl border border-white/5 bg-zinc-950/40 p-4 transition-all mt-1">
                   <summary className="flex items-center justify-between cursor-pointer list-none text-xs font-bold uppercase tracking-wider text-[var(--text-3)] hover:text-white select-none">
                     <span>🛠️ Parser Diagnostic Metadata</span>
@@ -1167,82 +1431,39 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
           {activeTab === "resume" && (
             c.resumeUrl ? (
-              <div className="flex flex-col gap-4 animate-fade-in max-w-[820px] w-full mx-auto">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest">
-                    {resumeMode === "pdf" ? "Original PDF Resume" : "Extracted Resume Text"}
+              <div className="flex flex-col gap-3 animate-fade-in max-w-5xl w-full mx-auto flex-1 min-h-0">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#00D9FF] shadow-[0_0_8px_#00D9FF]" />
+                    <span>{resumeMode === "pdf" ? "Original PDF Resume" : "Extracted Resume Text"}</span>
                   </div>
                   {c.resumeText && (
-                    <div className="inline-flex items-center gap-2 select-none">
+                    <div className="inline-flex items-center p-1 rounded-xl bg-[#131417] border border-[#23262E] select-none shadow-sm">
                       <button
                         type="button"
                         onClick={() => setResumeMode("pdf")}
-                        className="inline-flex items-center justify-center gap-2 h-[44px] px-5 rounded-[10px] text-[13px] font-semibold tracking-normal transition-all duration-150 cursor-pointer active:scale-[0.98]"
-                        style={{
-                          background: resumeMode === "pdf" ? "rgba(167, 139, 250, 0.14)" : "#191919",
-                          border: resumeMode === "pdf" ? "1px solid rgba(167, 139, 250, 0.45)" : "1px solid #303030",
-                          color: resumeMode === "pdf" ? "#A78BFA" : "#A7AAB3",
-                          boxShadow: resumeMode === "pdf" ? "0 0 14px rgba(167, 139, 250, 0.15)" : "none",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (resumeMode === "pdf") {
-                            e.currentTarget.style.background = "rgba(167, 139, 250, 0.20)";
-                            e.currentTarget.style.borderColor = "rgba(167, 139, 250, 0.60)";
-                          } else {
-                            e.currentTarget.style.background = "#222222";
-                            e.currentTarget.style.borderColor = "rgba(167, 139, 250, 0.30)";
-                            e.currentTarget.style.color = "#E2E8F0";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (resumeMode === "pdf") {
-                            e.currentTarget.style.background = "rgba(167, 139, 250, 0.14)";
-                            e.currentTarget.style.borderColor = "rgba(167, 139, 250, 0.45)";
-                            e.currentTarget.style.color = "#A78BFA";
-                          } else {
-                            e.currentTarget.style.background = "#191919";
-                            e.currentTarget.style.borderColor = "#303030";
-                            e.currentTarget.style.color = "#A7AAB3";
-                          }
-                        }}
+                        className={clsx(
+                          "inline-flex items-center justify-center gap-2 h-8 px-3.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer",
+                          resumeMode === "pdf"
+                            ? "bg-[rgba(0,217,255,0.12)] text-[#00D9FF] border border-[rgba(0,217,255,0.4)] shadow-[0_0_12px_rgba(0,217,255,0.1)]"
+                            : "text-zinc-400 hover:text-zinc-200 border border-transparent"
+                        )}
                       >
-                        <span className="text-base leading-none">📄</span>
+                        <FileText className="w-3.5 h-3.5" />
                         <span>PDF View</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setResumeMode("text")}
-                        className="inline-flex items-center justify-center gap-2 h-[44px] px-5 rounded-[10px] text-[13px] font-semibold tracking-normal transition-all duration-150 cursor-pointer active:scale-[0.98]"
-                        style={{
-                          background: resumeMode === "text" ? "rgba(167, 139, 250, 0.14)" : "#191919",
-                          border: resumeMode === "text" ? "1px solid rgba(167, 139, 250, 0.45)" : "1px solid #303030",
-                          color: resumeMode === "text" ? "#A78BFA" : "#A7AAB3",
-                          boxShadow: resumeMode === "text" ? "0 0 14px rgba(167, 139, 250, 0.15)" : "none",
-                        }}
-                        onMouseEnter={(e) => {
-                          if (resumeMode === "text") {
-                            e.currentTarget.style.background = "rgba(167, 139, 250, 0.20)";
-                            e.currentTarget.style.borderColor = "rgba(167, 139, 250, 0.60)";
-                          } else {
-                            e.currentTarget.style.background = "#222222";
-                            e.currentTarget.style.borderColor = "rgba(167, 139, 250, 0.30)";
-                            e.currentTarget.style.color = "#E2E8F0";
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (resumeMode === "text") {
-                            e.currentTarget.style.background = "rgba(167, 139, 250, 0.14)";
-                            e.currentTarget.style.borderColor = "rgba(167, 139, 250, 0.45)";
-                            e.currentTarget.style.color = "#A78BFA";
-                          } else {
-                            e.currentTarget.style.background = "#191919";
-                            e.currentTarget.style.borderColor = "#303030";
-                            e.currentTarget.style.color = "#A7AAB3";
-                          }
-                        }}
+                        className={clsx(
+                          "inline-flex items-center justify-center gap-2 h-8 px-3.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer",
+                          resumeMode === "text"
+                            ? "bg-[rgba(0,217,255,0.12)] text-[#00D9FF] border border-[rgba(0,217,255,0.4)] shadow-[0_0_12px_rgba(0,217,255,0.1)]"
+                            : "text-zinc-400 hover:text-zinc-200 border border-transparent"
+                        )}
                       >
-                        <span className="text-base leading-none">📝</span>
+                        <FileText className="w-3.5 h-3.5" />
                         <span>Text View</span>
                       </button>
                     </div>
@@ -1252,205 +1473,269 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                 {resumeMode === "pdf" ? (
                   <PDFViewer
                     url={c.resumeUrl}
-                    filename={c.resumeFile}
+                    filename={c.resumeFile || `${c.name || "Candidate"}_Resume.pdf`}
                   />
                 ) : (
-                  <div className="w-full rounded-xl text-xs font-mono p-5 overflow-y-auto h-[540px] sm:h-[580px] lg:h-[600px] max-h-[75vh] whitespace-pre-wrap leading-relaxed select-text animate-fade-in"
-                    style={{ background: "#080808", border: "1px solid var(--border)", color: "var(--text-2)" }}>
-                    {c.resumeText}
+                  <div className="flex flex-col gap-2 w-full flex-1 min-h-0 h-[calc(98vh-220px)] min-h-[600px]">
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (c.resumeText) {
+                            navigator.clipboard.writeText(c.resumeText);
+                            dialog.alert("Resume text copied to clipboard!");
+                          }
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 transition-colors"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy Text</span>
+                      </button>
+                    </div>
+                    <div
+                      className="w-full flex-1 rounded-xl text-xs font-mono p-5 overflow-y-auto whitespace-pre-wrap leading-relaxed select-text animate-fade-in custom-scrollbar"
+                      style={{ background: "#080808", border: "1px solid var(--border)", color: "var(--text-2)" }}
+                    >
+                      {c.resumeText}
+                    </div>
                   </div>
                 )}
               </div>
             ) : c.resumeText ? (
-              <div className="flex flex-col gap-4 animate-fade-in max-w-[820px] w-full mx-auto">
+              <div className="flex flex-col gap-3 animate-fade-in max-w-5xl w-full mx-auto flex-1 min-h-0 h-[calc(98vh-220px)] min-h-[600px]">
                 <div className="flex items-center justify-between">
-                  <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest">
-                    Original Extracted Resume Content
+                  <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_#f59e0b]" />
+                    <span>Extracted Resume Text</span>
                   </div>
-                  <div className="text-xs text-[var(--text-3)] bg-[var(--glass-2)] px-2.5 py-1 rounded border border-[var(--border)]">
-                    PDF Document Text
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (c.resumeText) {
+                        navigator.clipboard.writeText(c.resumeText);
+                        dialog.alert("Resume text copied to clipboard!");
+                      }
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 transition-colors"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy Text</span>
+                  </button>
                 </div>
-                <div className="w-full rounded-xl text-xs font-mono p-5 overflow-y-auto h-[540px] sm:h-[580px] lg:h-[600px] max-h-[75vh] whitespace-pre-wrap leading-relaxed select-text"
-                  style={{ background: "#080808", border: "1px solid var(--border)", color: "var(--text-2)" }}>
+                <div
+                  className="w-full flex-1 rounded-xl text-xs font-mono p-5 overflow-y-auto whitespace-pre-wrap leading-relaxed select-text custom-scrollbar"
+                  style={{ background: "#080808", border: "1px solid var(--border)", color: "var(--text-2)" }}
+                >
                   {c.resumeText}
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-12 px-4 text-center rounded-xl animate-fade-in max-w-[820px] w-full mx-auto"
-                style={{ background: "var(--glass)", border: "1px solid var(--border)" }}>
+              <div
+                className="flex flex-col items-center justify-center py-16 px-4 text-center rounded-xl animate-fade-in max-w-5xl w-full mx-auto"
+                style={{ background: "var(--glass)", border: "1px solid var(--border)" }}
+              >
                 <span className="text-4xl mb-3">📄</span>
-                <div className="text-sm font-semibold mb-1">No original resume text available</div>
+                <div className="text-sm font-semibold mb-1 text-white">No original resume document available</div>
                 <div className="text-xs text-[var(--text-3)] max-w-sm">
-                  This candidate was seed-generated. Real parsed resumes uploaded via the PDF uploader will display their full original text here.
+                  This candidate does not have an attached PDF or parsed text. Newly uploaded resumes will display their full original PDF document here.
                 </div>
               </div>
             )
           )}
 
-          {/* Workflow Management */}
-          {["new", "review", "shortlisted", "interview_1", "interview_2", "approved", "rejected", "offer", "offer_sent", "offer_accepted", "offer_rejected", "hired"].includes(c.status) && (
-            <div
-              className="mt-6 flex flex-col gap-3.5 rounded-[12px] p-5"
-              style={{
-                background: "#111214",
-                border: "1px solid #24272D",
-              }}
-            >
-              {/* Section Header */}
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center gap-2">
-                  <GitBranch className="w-3.5 h-3.5 text-[#A78BFA]" />
-                  <span
-                    className="text-[12px] font-semibold uppercase tracking-[0.08em]"
-                    style={{ color: "#A78BFA" }}
-                  >
-                    Workflow Actions
-                  </span>
-                </div>
-                <span className="text-[11px] font-mono font-medium text-[#70747D] uppercase tracking-wider">
-                  Interview Progression
-                </span>
-              </div>
-              
-              <div className="flex flex-col gap-3">
-                {/* Shortlist Action Banner */}
-                {(c.status === "new" || c.status === "review") && (
-                  <div
-                    className="p-4 rounded-[10px] flex items-center justify-between flex-wrap gap-3"
-                    style={{ background: "#16171B", border: "1px solid #24272D" }}
-                  >
-                    <div>
-                      <div className="font-semibold text-sm text-[#E7E9ED]">Shortlist Candidate</div>
-                      <div className="text-xs text-[#9A9DA6] mt-0.5">Move candidate to the shortlisted stage to begin interview scheduling.</div>
+          {/* Pipeline Workflow Management */}
+          {activeTab === "pipeline" && (
+            <div className="flex flex-col gap-6 animate-fade-in w-full pt-1">
+              {/* Visual Pipeline Lifecycle Stepper */}
+              <div className="rounded-2xl border border-white/[0.08] bg-[#111214] p-4 sm:p-5 shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
+                <div className="flex items-center justify-between gap-3 overflow-x-auto no-scrollbar py-0.5">
+                  {/* Step 1: Interviews */}
+                  <div className="flex items-center gap-3 flex-1 min-w-[200px]">
+                    <div className={clsx(
+                      "w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs flex-shrink-0 transition-all",
+                      isR2Completed || isR1Passed
+                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shadow-[0_0_12px_rgba(34,197,94,0.15)]"
+                        : ["interview_1", "interview_2", "shortlisted"].includes(c.status)
+                        ? "bg-purple-500/15 text-purple-300 border border-purple-500/40 shadow-[0_0_12px_rgba(167,139,250,0.2)]"
+                        : "bg-white/[0.04] text-zinc-500 border border-white/[0.08]"
+                    )}>
+                      {isR2Completed ? <Check className="w-4 h-4" /> : "1"}
                     </div>
-                    <Btn
-                      className="text-xs font-bold px-4 py-2 rounded-lg active:scale-95 transition-all"
-                      style={{
-                        background: "rgba(0, 217, 255, 0.08)",
-                        border: "1px solid rgba(0, 217, 255, 0.35)",
-                        color: "#00D9FF",
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.background = "rgba(0, 217, 255, 0.15)";
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.background = "rgba(0, 217, 255, 0.08)";
-                      }}
-                      onClick={() => updateCandidate(c.id, { status: "shortlisted" })}>
-                      Shortlist
-                    </Btn>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-white tracking-tight">Interview Evaluations</span>
+                      <span className="text-[11px] text-zinc-400 truncate">
+                        {isR2Completed ? "R1 & R2 Completed" : isR1Passed ? "R1 Cleared · R2 Next" : isR1Scheduled ? "R1 Scheduled" : "Screening & Rounds"}
+                      </span>
+                    </div>
                   </div>
-                )}
 
-                {/* Horizontal Interview Progression Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch relative">
-                  {/* Subtle Visual Connector Arrow */}
-                  <div className="hidden md:flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
-                    <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-200"
-                      style={{
-                        background: "#16171B",
-                        border: isR1Passed ? "1px solid rgba(34, 197, 94, 0.40)" : "1px solid #2B2F38",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
-                      }}
-                    >
-                      <ArrowRight
-                        className="w-3.5 h-3.5 transition-colors"
-                        style={{ color: isR1Passed ? "#22C55E" : "#70747D" }}
-                      />
+                  {/* Step Connector 1 */}
+                  <div className={clsx(
+                    "hidden sm:block flex-1 h-[2px] rounded-full mx-2 transition-all",
+                    isR2Completed ? "bg-emerald-500/40" : "bg-white/[0.08]"
+                  )} />
+
+                  {/* Step 2: Offer Extended */}
+                  <div className="flex items-center gap-3 flex-1 min-w-[200px]">
+                    <div className={clsx(
+                      "w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs flex-shrink-0 transition-all",
+                      candidateOffer?.status === "accepted"
+                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shadow-[0_0_12px_rgba(34,197,94,0.15)]"
+                        : ["approved", "offer", "offer_sent"].includes(c.status)
+                        ? "bg-amber-500/15 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.2)]"
+                        : "bg-white/[0.04] text-zinc-500 border border-white/[0.08]"
+                    )}>
+                      {candidateOffer?.status === "accepted" ? <Check className="w-4 h-4" /> : "2"}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-white tracking-tight">Offer Extension</span>
+                      <span className="text-[11px] text-zinc-400 truncate">
+                        {candidateOffer?.status === "accepted" ? "Offer Accepted" : candidateOffer?.status === "sent" ? "Offer Sent · Awaiting Response" : candidateOffer ? "Offer Draft Prepared" : "Draft & Extension"}
+                      </span>
                     </div>
                   </div>
+
+                  {/* Step Connector 2 */}
+                  <div className={clsx(
+                    "hidden sm:block flex-1 h-[2px] rounded-full mx-2 transition-all",
+                    c.status === "hired" || candidateOffer?.status === "accepted" ? "bg-emerald-500/40" : "bg-white/[0.08]"
+                  )} />
+
+                  {/* Step 3: Onboarding & Hire */}
+                  <div className="flex items-center gap-3 flex-1 min-w-[200px]">
+                    <div className={clsx(
+                      "w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs flex-shrink-0 transition-all",
+                      c.status === "hired" || candidateEmployee
+                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shadow-[0_0_12px_rgba(34,197,94,0.15)]"
+                        : c.status.startsWith("onboarding_")
+                        ? "bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 shadow-[0_0_12px_rgba(0,217,255,0.2)]"
+                        : "bg-white/[0.04] text-zinc-500 border border-white/[0.08]"
+                    )}>
+                      {c.status === "hired" || candidateEmployee ? <Check className="w-4 h-4" /> : "3"}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-white tracking-tight">Onboarding & Hire</span>
+                      <span className="text-[11px] text-zinc-400 truncate">
+                        {c.status === "hired" || candidateEmployee ? "Official Employee" : `${candidateDocs.filter(d => d.status === "verified").length}/${candidateDocs.length || 0} Docs Verified`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {["new", "review", "shortlisted", "interview_1", "interview_2", "approved", "rejected", "offer", "offer_sent", "offer_accepted", "offer_rejected", "hired"].includes(c.status) && (
+                <div className="rounded-2xl border border-white/[0.08] bg-[#111214] p-5 sm:p-6 shadow-[0_4px_24px_rgba(0,0,0,0.35)] flex flex-col gap-4">
+                  {/* Section Header */}
+                  <div className="flex items-center justify-between border-b border-white/[0.06] pb-3.5 flex-wrap gap-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-400">
+                        <GitBranch className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-300">
+                          Interview Evaluations
+                        </span>
+                        <span className="text-[10px] text-zinc-500">
+                          Screening & Technical Rounds Progression
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-400">
+                      {isR2Completed ? "All Rounds Completed" : isR1Passed ? "Round 1 Cleared" : isR1Scheduled ? "Round 1 Scheduled" : "Progression Active"}
+                    </span>
+                  </div>
+                  
+                  <div className="flex flex-col gap-3">
+                    {/* Shortlist Action Banner */}
+                    {(c.status === "new" || c.status === "review") && (
+                      <div
+                        className="p-4 rounded-xl flex items-center justify-between flex-wrap gap-3 bg-white/[0.02] border border-white/[0.08]"
+                      >
+                        <div>
+                          <div className="font-semibold text-sm text-zinc-200">Shortlist Candidate</div>
+                          <div className="text-xs text-zinc-400 mt-0.5">Move candidate to the shortlisted stage to begin interview scheduling.</div>
+                        </div>
+                        <Btn
+                          className="text-xs font-bold px-4 py-2 rounded-lg active:scale-95 transition-all text-cyan-300 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 cursor-pointer"
+                          onClick={() => updateCandidate(c.id, { status: "shortlisted" })}>
+                          Shortlist
+                        </Btn>
+                      </div>
+                    )}
+
+                    {/* Horizontal Interview Progression Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch relative">
+                      {/* Subtle Visual Connector Arrow */}
+                      <div className="hidden md:flex items-center justify-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 pointer-events-none">
+                        <div
+                          className={clsx(
+                            "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-md",
+                            isR1Passed
+                              ? "bg-[#111214] border border-emerald-500/40 text-emerald-400 shadow-[0_0_12px_rgba(34,197,94,0.25)]"
+                              : "bg-[#16171B] border border-white/10 text-zinc-500"
+                          )}
+                        >
+                          <ArrowRight className="w-4 h-4" />
+                        </div>
+                      </div>
 
                   {/* ================= ROUND 1 CARD ================= */}
                   <div
-                    className="p-4 sm:p-5 rounded-[10px] flex flex-col justify-between gap-3 min-h-[190px] transition-all"
+                    className="p-4 sm:p-5 rounded-2xl flex flex-col justify-between gap-3.5 transition-all shadow-sm"
                     style={{
-                      background: "#16171B",
+                      background: "#14161A",
                       border: isR1Passed
-                        ? "1px solid rgba(34, 197, 94, 0.30)"
+                        ? "1px solid rgba(34, 197, 94, 0.35)"
                         : isR1Rejected
-                        ? "1px solid rgba(239, 68, 68, 0.30)"
-                        : "1px solid #24272D",
+                        ? "1px solid rgba(239, 68, 68, 0.35)"
+                        : "1px solid rgba(255, 255, 255, 0.08)",
                     }}
                   >
                     <div>
                       {/* Header */}
                       <div className="flex items-center justify-between gap-2 mb-3">
-                        <div className="flex items-center gap-2">
-                          {isR1Passed ? (
-                            <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
-                          ) : isR1Rejected ? (
-                            <AlertCircle className="w-4 h-4 text-[#EF4444]" />
-                          ) : isR1Scheduled ? (
-                            <Calendar className="w-4 h-4 text-[#A78BFA]" />
-                          ) : (
-                            <Calendar className="w-4 h-4 text-[#70747D]" />
-                          )}
-                          <span className="font-semibold text-sm text-[#E7E9ED]">Round 1</span>
+                        <div className="flex items-center gap-2.5">
+                          <div className={clsx(
+                            "w-8 h-8 rounded-xl flex items-center justify-center transition-all",
+                            isR1Passed ? "bg-emerald-500/10 border border-emerald-500/25 text-emerald-400" :
+                            isR1Rejected ? "bg-red-500/10 border border-red-500/25 text-red-400" :
+                            isR1Scheduled ? "bg-purple-500/10 border border-purple-500/25 text-purple-400" :
+                            "bg-white/[0.04] border border-white/[0.08] text-zinc-400"
+                          )}>
+                            {isR1Passed ? <CheckCircle2 className="w-4 h-4" /> : <Calendar className="w-4 h-4" />}
+                          </div>
+                          <div>
+                            <div className="font-bold text-xs sm:text-sm text-zinc-100">Round 1</div>
+                            <div className="text-[10px] text-zinc-500">Screening & Technical</div>
+                          </div>
                         </div>
 
                         {/* Status Badges */}
                         {isR1Passed && (
-                          <span
-                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
-                            style={{
-                              background: "rgba(34, 197, 94, 0.08)",
-                              border: "1px solid rgba(34, 197, 94, 0.30)",
-                              color: "#22C55E",
-                            }}
-                          >
+                          <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_10px_rgba(34,197,94,0.15)]">
                             <Check className="w-3 h-3" />
                             <span>Completed</span>
                           </span>
                         )}
                         {isR1Rejected && (
-                          <span
-                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
-                            style={{
-                              background: "rgba(239, 68, 68, 0.08)",
-                              border: "1px solid rgba(239, 68, 68, 0.30)",
-                              color: "#EF4444",
-                            }}
-                          >
+                          <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full inline-flex items-center gap-1 bg-red-500/10 border border-red-500/30 text-red-400">
                             <X className="w-3 h-3" />
                             <span>Rejected</span>
                           </span>
                         )}
                         {isR1Scheduled && (
-                          <span
-                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
-                            style={{
-                              background: "rgba(167, 139, 250, 0.08)",
-                              border: "1px solid rgba(167, 139, 250, 0.30)",
-                              color: "#A78BFA",
-                            }}
-                          >
+                          <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full inline-flex items-center gap-1 bg-purple-500/10 border border-purple-500/30 text-purple-300">
                             <Calendar className="w-3 h-3" />
                             <span>Scheduled</span>
                           </span>
                         )}
                         {!r1 && !isR1Passed && !isR1Rejected && (
                           (c.status === "new" || c.status === "review") ? (
-                            <span
-                              className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px]"
-                              style={{
-                                background: "rgba(245, 197, 66, 0.08)",
-                                border: "1px solid rgba(245, 197, 66, 0.25)",
-                                color: "#F5C542",
-                              }}
-                            >
+                            <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400">
                               Pending Shortlist
                             </span>
                           ) : (
-                            <span
-                              className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
-                              style={{
-                                background: "rgba(0, 217, 255, 0.08)",
-                                border: "1px solid rgba(0, 217, 255, 0.30)",
-                                color: "#00D9FF",
-                              }}
-                            >
+                            <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full inline-flex items-center gap-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
                               <Clock className="w-3 h-3" />
                               <span>Available</span>
                             </span>
@@ -1534,20 +1819,21 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       )}
 
                       {r1 && (
-                        <div className="flex flex-col gap-2.5">
-                          <div className="text-xs text-[#9A9DA6] flex items-center gap-1.5 flex-wrap">
-                            <Calendar className="w-3.5 h-3.5 text-[#70747D]" />
-                            <span>Scheduled: {r1.scheduledAt ? new Date(r1.scheduledAt).toLocaleString() : "Date not set"}</span>
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-zinc-300 flex-wrap">
+                            <Calendar className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+                            <span className="font-mono text-[11px] text-zinc-500">Scheduled:</span>
+                            <span className="font-medium text-zinc-200">{r1.scheduledAt ? new Date(r1.scheduledAt).toLocaleString() : "Date not set"}</span>
                           </div>
 
                           {/* Scheduled State Actions */}
                           {isR1Scheduled && (
-                            <div className="flex flex-col gap-2 mt-0.5">
+                            <div className="flex flex-col gap-2.5 mt-0.5">
                               <textarea
-                                placeholder="Interview Notes..."
+                                placeholder="Add interview feedback and notes here..."
                                 value={r1Notes}
                                 onChange={e => setR1Notes(e.target.value)}
-                                className="w-full bg-[#0E0F12] text-[var(--text)] text-xs border border-[#24272D] rounded-lg p-2.5 outline-none h-16 focus:border-[#A78BFA]/50 transition-colors"
+                                className="w-full bg-[#0A0B0D] text-zinc-200 text-xs border border-white/[0.10] rounded-xl p-3 outline-none h-20 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30 transition-all placeholder:text-zinc-600"
                               />
                               <div className="flex flex-wrap items-center gap-2 pt-1">
                                 <button
@@ -1556,22 +1842,9 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                     updateInterview(r1.id, { status: "completed", decision: "select", notes: r1Notes });
                                     updateCandidate(c.id, { status: "interview_2" });
                                   }}
-                                  className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3.5 rounded-[8px] text-xs font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] flex-1 min-w-[140px]"
-                                  style={{
-                                    background: "rgba(167, 139, 250, 0.10)",
-                                    border: "1px solid rgba(167, 139, 250, 0.35)",
-                                    color: "#A78BFA",
-                                  }}
-                                  onMouseEnter={e => {
-                                    e.currentTarget.style.background = "rgba(167, 139, 250, 0.18)";
-                                    e.currentTarget.style.borderColor = "rgba(167, 139, 250, 0.55)";
-                                  }}
-                                  onMouseLeave={e => {
-                                    e.currentTarget.style.background = "rgba(167, 139, 250, 0.10)";
-                                    e.currentTarget.style.borderColor = "rgba(167, 139, 250, 0.35)";
-                                  }}
+                                  className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl text-xs font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] flex-1 min-w-[150px] text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_15px_rgba(147,51,234,0.25)] border border-purple-400/30"
                                 >
-                                  <Check className="w-3.5 h-3.5 text-[#A78BFA]" />
+                                  <Check className="w-3.5 h-3.5 text-white" />
                                   <span>Select for Next Round</span>
                                 </button>
 
@@ -1585,22 +1858,9 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                       updateCandidate(c.id, { status: "rejected", note: (c.note || "") + `\nRejected in R1: ${reason}` });
                                     }
                                   }}
-                                  className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3.5 rounded-[8px] text-xs font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98]"
-                                  style={{
-                                    background: "rgba(239, 68, 68, 0.08)",
-                                    border: "1px solid rgba(239, 68, 68, 0.35)",
-                                    color: "#EF4444",
-                                  }}
-                                  onMouseEnter={e => {
-                                    e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
-                                    e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.55)";
-                                  }}
-                                  onMouseLeave={e => {
-                                    e.currentTarget.style.background = "rgba(239, 68, 68, 0.08)";
-                                    e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.35)";
-                                  }}
+                                  className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl text-xs font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] text-red-400 hover:text-red-300 bg-red-500/[0.08] hover:bg-red-500/[0.16] border border-red-500/30 hover:border-red-500/50"
                                 >
-                                  <X className="w-3.5 h-3.5 text-[#EF4444]" />
+                                  <X className="w-3.5 h-3.5 text-red-400" />
                                   <span>Reject</span>
                                 </button>
                               </div>
@@ -1609,15 +1869,25 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                           {/* Completed / Selected State Details */}
                           {isR1Passed && (
-                            <div className="flex flex-col gap-1.5 text-xs text-[#70747D]">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[#9A9DA6]">Decision:</span>
-                                <span className="font-semibold text-[#22C55E]">Selected for Next Round</span>
+                            <div className="flex flex-col gap-2.5">
+                              <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/25">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                                    <Check className="w-3.5 h-3.5" />
+                                  </div>
+                                  <div>
+                                    <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-400/80">Evaluation Outcome</div>
+                                    <div className="text-xs font-semibold text-emerald-300">Selected for Next Round</div>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                  PASSED
+                                </span>
                               </div>
                               {r1.notes && (
-                                <div className="text-xs text-[#8B919C] bg-[#0E0F12] p-2 rounded-lg border border-[#24272D]">
-                                  <span className="text-[#606060] font-medium block text-[11px] mb-0.5">Interview Notes:</span>
-                                  {r1.notes}
+                                <div className="text-xs text-zinc-300 bg-[#0A0B0D] p-3 rounded-xl border border-white/[0.06]">
+                                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Interview Notes:</span>
+                                  <p className="leading-relaxed text-zinc-300">{r1.notes}</p>
                                 </div>
                               )}
                             </div>
@@ -1625,15 +1895,25 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                           {/* Rejected State Details */}
                           {isR1Rejected && (
-                            <div className="flex flex-col gap-1.5 text-xs text-[#70747D]">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[#9A9DA6]">Decision:</span>
-                                <span className="font-semibold text-[#EF4444]">Rejected</span>
+                            <div className="flex flex-col gap-2.5">
+                              <div className="flex items-center justify-between p-3 rounded-xl bg-red-500/[0.08] border border-red-500/25">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-6 h-6 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400 flex-shrink-0">
+                                    <X className="w-3.5 h-3.5" />
+                                  </div>
+                                  <div>
+                                    <div className="text-[10px] uppercase font-bold tracking-wider text-red-400/80">Evaluation Outcome</div>
+                                    <div className="text-xs font-semibold text-red-300">Candidate Rejected</div>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-red-500/20 text-red-300 border border-red-500/30">
+                                  DECLINED
+                                </span>
                               </div>
                               {r1.notes && (
-                                <div className="text-xs text-[#8B919C] bg-[#0E0F12] p-2 rounded-lg border border-[#24272D]">
-                                  <span className="text-[#606060] font-medium block text-[11px] mb-0.5">Notes:</span>
-                                  {r1.notes}
+                                <div className="text-xs text-zinc-300 bg-[#0A0B0D] p-3 rounded-xl border border-white/[0.06]">
+                                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Notes:</span>
+                                  <p className="leading-relaxed text-zinc-300">{r1.notes}</p>
                                 </div>
                               )}
                             </div>
@@ -1643,11 +1923,19 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                       {/* Fallback when stage is past R1 without explicit r1 record */}
                       {!r1 && isR1Passed && (
-                        <div className="flex flex-col gap-1 text-xs text-[#70747D] py-1">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[#9A9DA6]">Decision:</span>
-                            <span className="font-semibold text-[#22C55E]">Selected (Stage: {c.status})</span>
+                        <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/25">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                              <Check className="w-3.5 h-3.5" />
+                            </div>
+                            <div>
+                              <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-400/80">Evaluation Outcome</div>
+                              <div className="text-xs font-semibold text-emerald-300">Selected (Stage: {c.status})</div>
+                            </div>
                           </div>
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                            PASSED
+                          </span>
                         </div>
                       )}
                     </div>
@@ -1656,102 +1944,81 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                   {/* ================= ROUND 2 CARD ================= */}
                   <div
                     className={clsx(
-                      "p-4 sm:p-5 rounded-[10px] flex flex-col justify-between gap-3 min-h-[190px] transition-all",
-                      isR2Locked && "opacity-60 select-none"
+                      "p-5 rounded-2xl flex flex-col justify-between gap-4 transition-all duration-200 shadow-sm",
+                      isR2Locked && "opacity-75"
                     )}
                     style={{
-                      background: isR2Locked ? "#121316" : "#16171B",
+                      background: isR2Locked ? "#101114" : "#14161A",
                       border: isR2Locked
-                        ? "1px dashed #24272D"
+                        ? "1px dashed rgba(255, 255, 255, 0.10)"
                         : isR2Completed
                         ? "1px solid rgba(34, 197, 94, 0.30)"
                         : isR2Rejected
                         ? "1px solid rgba(239, 68, 68, 0.30)"
-                        : "1px solid #24272D",
+                        : isR2Scheduled
+                        ? "1px solid rgba(167, 139, 250, 0.30)"
+                        : "1px solid rgba(255, 255, 255, 0.08)",
                     }}
                   >
                     <div>
                       {/* Header */}
                       <div className="flex items-center justify-between gap-2 mb-3">
-                        <div className="flex items-center gap-2">
-                          {isR2Locked ? (
-                            <Lock className="w-4 h-4 text-[#70747D]" />
-                          ) : isR2Completed ? (
-                            <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
-                          ) : isR2Rejected ? (
-                            <AlertCircle className="w-4 h-4 text-[#EF4444]" />
-                          ) : isR2Scheduled ? (
-                            <Calendar className="w-4 h-4 text-[#A78BFA]" />
-                          ) : (
-                            <Clock className="w-4 h-4 text-[#00D9FF]" />
-                          )}
-                          <span className={clsx("font-semibold text-sm", isR2Locked ? "text-[#70747D]" : "text-[#E7E9ED]")}>
-                            Round 2
-                          </span>
+                        <div className="flex items-center gap-2.5">
+                          <div className={clsx(
+                            "w-8 h-8 rounded-xl flex items-center justify-center transition-all",
+                            isR2Locked ? "bg-white/[0.03] border border-white/[0.08] text-zinc-500" :
+                            isR2Completed ? "bg-emerald-500/10 border border-emerald-500/25 text-emerald-400" :
+                            isR2Rejected ? "bg-red-500/10 border border-red-500/25 text-red-400" :
+                            isR2Scheduled ? "bg-purple-500/10 border border-purple-500/25 text-purple-400" :
+                            "bg-cyan-500/10 border border-cyan-500/25 text-cyan-400"
+                          )}>
+                            {isR2Locked ? (
+                              <Lock className="w-4 h-4" />
+                            ) : isR2Completed ? (
+                              <CheckCircle2 className="w-4 h-4" />
+                            ) : isR2Rejected ? (
+                              <AlertCircle className="w-4 h-4" />
+                            ) : isR2Scheduled ? (
+                              <Calendar className="w-4 h-4" />
+                            ) : (
+                              <Clock className="w-4 h-4" />
+                            )}
+                          </div>
+                          <div>
+                            <div className={clsx("font-bold text-xs sm:text-sm", isR2Locked ? "text-zinc-500" : "text-zinc-100")}>
+                              Round 2
+                            </div>
+                            <div className="text-[10px] text-zinc-500">Technical & Leadership</div>
+                          </div>
                         </div>
 
                         {/* Status Badges */}
                         {isR2Locked && (
-                          <span
-                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
-                            style={{
-                              background: "rgba(255, 255, 255, 0.04)",
-                              border: "1px solid rgba(255, 255, 255, 0.10)",
-                              color: "#8B919C",
-                            }}
-                          >
+                          <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full inline-flex items-center gap-1 bg-white/[0.04] border border-white/[0.10] text-zinc-400">
                             <Lock className="w-3 h-3" />
                             <span>Locked</span>
                           </span>
                         )}
                         {isR2Available && (
-                          <span
-                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
-                            style={{
-                              background: "rgba(0, 217, 255, 0.08)",
-                              border: "1px solid rgba(0, 217, 255, 0.30)",
-                              color: "#00D9FF",
-                            }}
-                          >
+                          <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full inline-flex items-center gap-1 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
                             <Clock className="w-3 h-3" />
                             <span>Available</span>
                           </span>
                         )}
                         {isR2Scheduled && (
-                          <span
-                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
-                            style={{
-                              background: "rgba(167, 139, 250, 0.08)",
-                              border: "1px solid rgba(167, 139, 250, 0.30)",
-                              color: "#A78BFA",
-                            }}
-                          >
+                          <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full inline-flex items-center gap-1 bg-purple-500/10 border border-purple-500/30 text-purple-300">
                             <Calendar className="w-3 h-3" />
                             <span>Scheduled</span>
                           </span>
                         )}
                         {isR2Completed && (
-                          <span
-                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
-                            style={{
-                              background: "rgba(34, 197, 94, 0.08)",
-                              border: "1px solid rgba(34, 197, 94, 0.30)",
-                              color: "#22C55E",
-                            }}
-                          >
+                          <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full inline-flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_10px_rgba(34,197,94,0.15)]">
                             <Check className="w-3 h-3" />
                             <span>Completed</span>
                           </span>
                         )}
                         {isR2Rejected && (
-                          <span
-                            className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px] inline-flex items-center gap-1"
-                            style={{
-                              background: "rgba(239, 68, 68, 0.08)",
-                              border: "1px solid rgba(239, 68, 68, 0.30)",
-                              color: "#EF4444",
-                            }}
-                          >
+                          <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full inline-flex items-center gap-1 bg-red-500/10 border border-red-500/30 text-red-400">
                             <X className="w-3 h-3" />
                             <span>Rejected</span>
                           </span>
@@ -1762,15 +2029,15 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       {isR2Locked && (
                         <div className="flex flex-col items-center justify-center text-center py-6 gap-2 my-auto">
                           <div className={clsx(
-                            "w-8 h-8 rounded-full flex items-center justify-center",
-                            isR1Rejected ? "bg-red-500/10 border border-red-500/20 text-red-400" : "bg-white/[0.03] border border-white/[0.08] text-[#70747D]"
+                            "w-9 h-9 rounded-xl flex items-center justify-center",
+                            isR1Rejected ? "bg-red-500/10 border border-red-500/20 text-red-400" : "bg-white/[0.03] border border-white/[0.08] text-zinc-500"
                           )}>
                             <Lock className="w-4 h-4" />
                           </div>
-                          <div className="text-xs font-semibold text-[#8B919C]">
+                          <div className="text-xs font-semibold text-zinc-400">
                             {isR1Rejected ? "Process Stopped" : "Round 2 Locked"}
                           </div>
-                          <div className="text-[11px] text-[#606060] max-w-[210px]">
+                          <div className="text-[11px] text-zinc-500 max-w-[220px]">
                             {isR1Rejected
                               ? "Candidate was rejected in Round 1. Round 2 is not available."
                               : "Complete and select candidate in Round 1 first."}
@@ -1780,7 +2047,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                       {isR2Available && (
                         <div className="flex flex-col gap-2 mt-1">
-                          <div className="text-xs text-[#9A9DA6]">
+                          <div className="text-xs text-zinc-400">
                             Round 1 passed! Ready to schedule Round 2.
                           </div>
                           <div className="flex flex-col sm:flex-row gap-2 sm:items-center mt-1">
@@ -1840,20 +2107,21 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       )}
 
                       {r2 && (
-                        <div className="flex flex-col gap-2.5">
-                          <div className="text-xs text-[#9A9DA6] flex items-center gap-1.5 flex-wrap">
-                            <Calendar className="w-3.5 h-3.5 text-[#70747D]" />
-                            <span>Scheduled: {r2.scheduledAt ? new Date(r2.scheduledAt).toLocaleString() : "Date not set"}</span>
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-zinc-300 flex-wrap">
+                            <Calendar className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+                            <span className="font-mono text-[11px] text-zinc-500">Scheduled:</span>
+                            <span className="font-medium text-zinc-200">{r2.scheduledAt ? new Date(r2.scheduledAt).toLocaleString() : "Date not set"}</span>
                           </div>
 
                           {/* Scheduled State Actions */}
                           {isR2Scheduled && (
-                            <div className="flex flex-col gap-2 mt-0.5">
+                            <div className="flex flex-col gap-2.5 mt-0.5">
                               <textarea
-                                placeholder="Interview Notes..."
+                                placeholder="Add interview feedback and notes here..."
                                 value={r2Notes}
                                 onChange={e => setR2Notes(e.target.value)}
-                                className="w-full bg-[#0E0F12] text-[var(--text)] text-xs border border-[#24272D] rounded-lg p-2.5 outline-none h-16 focus:border-[#A78BFA]/50 transition-colors"
+                                className="w-full bg-[#0A0B0D] text-zinc-200 text-xs border border-white/[0.10] rounded-xl p-3 outline-none h-20 focus:border-purple-400/60 focus:ring-1 focus:ring-purple-400/30 transition-all placeholder:text-zinc-600"
                               />
                               <div className="flex flex-wrap items-center gap-2 pt-1">
                                 <button
@@ -1866,23 +2134,10 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                       status: "draft", sentAt: null, respondedAt: null, createdAt: new Date().toISOString()
                                     });
                                   }}
-                                  className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3.5 rounded-[8px] text-xs font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] flex-1 min-w-[110px]"
-                                  style={{
-                                    background: "rgba(34, 197, 94, 0.08)",
-                                    border: "1px solid rgba(34, 197, 94, 0.35)",
-                                    color: "#22C55E",
-                                  }}
-                                  onMouseEnter={e => {
-                                    e.currentTarget.style.background = "rgba(34, 197, 94, 0.15)";
-                                    e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.55)";
-                                  }}
-                                  onMouseLeave={e => {
-                                    e.currentTarget.style.background = "rgba(34, 197, 94, 0.08)";
-                                    e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.35)";
-                                  }}
+                                  className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl text-xs font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] flex-1 min-w-[130px] text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-[0_0_15px_rgba(16,185,129,0.25)] border border-emerald-400/30"
                                 >
-                                  <Check className="w-3.5 h-3.5 text-[#22C55E]" />
-                                  <span>Approve</span>
+                                  <Check className="w-3.5 h-3.5 text-white" />
+                                  <span>Approve & Move to Offer</span>
                                 </button>
 
                                 <button
@@ -1895,22 +2150,9 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                       updateCandidate(c.id, { status: "rejected", note: (c.note || "") + `\nRejected in R2: ${reason}` });
                                     }
                                   }}
-                                  className="inline-flex items-center justify-center gap-1.5 h-[38px] px-3.5 rounded-[8px] text-xs font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98]"
-                                  style={{
-                                    background: "rgba(239, 68, 68, 0.08)",
-                                    border: "1px solid rgba(239, 68, 68, 0.35)",
-                                    color: "#EF4444",
-                                  }}
-                                  onMouseEnter={e => {
-                                    e.currentTarget.style.background = "rgba(239, 68, 68, 0.15)";
-                                    e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.55)";
-                                  }}
-                                  onMouseLeave={e => {
-                                    e.currentTarget.style.background = "rgba(239, 68, 68, 0.08)";
-                                    e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.35)";
-                                  }}
+                                  className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl text-xs font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] text-red-400 hover:text-red-300 bg-red-500/[0.08] hover:bg-red-500/[0.16] border border-red-500/30 hover:border-red-500/50"
                                 >
-                                  <X className="w-3.5 h-3.5 text-[#EF4444]" />
+                                  <X className="w-3.5 h-3.5 text-red-400" />
                                   <span>Reject</span>
                                 </button>
                               </div>
@@ -1919,15 +2161,25 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                           {/* Completed State Details */}
                           {isR2Completed && (
-                            <div className="flex flex-col gap-1.5 text-xs text-[#70747D]">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[#9A9DA6]">Decision:</span>
-                                <span className="font-semibold text-[#22C55E]">Selected / Approved</span>
+                            <div className="flex flex-col gap-2.5">
+                              <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-500/[0.08] border border-emerald-500/25">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                                    <Check className="w-3.5 h-3.5" />
+                                  </div>
+                                  <div>
+                                    <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-400/80">Evaluation Outcome</div>
+                                    <div className="text-xs font-semibold text-emerald-300">Selected / Approved for Offer</div>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                  APPROVED
+                                </span>
                               </div>
                               {r2.notes && (
-                                <div className="text-xs text-[#8B919C] bg-[#0E0F12] p-2 rounded-lg border border-[#24272D]">
-                                  <span className="text-[#606060] font-medium block text-[11px] mb-0.5">Interview Notes:</span>
-                                  {r2.notes}
+                                <div className="text-xs text-zinc-300 bg-[#0A0B0D] p-3 rounded-xl border border-white/[0.06]">
+                                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Interview Notes:</span>
+                                  <p className="leading-relaxed text-zinc-300">{r2.notes}</p>
                                 </div>
                               )}
                             </div>
@@ -1935,15 +2187,25 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                           {/* Rejected State Details */}
                           {isR2Rejected && (
-                            <div className="flex flex-col gap-1.5 text-xs text-[#70747D]">
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[#9A9DA6]">Decision:</span>
-                                <span className="font-semibold text-[#EF4444]">Rejected</span>
+                            <div className="flex flex-col gap-2.5">
+                              <div className="flex items-center justify-between p-3 rounded-xl bg-red-500/[0.08] border border-red-500/25">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-6 h-6 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400 flex-shrink-0">
+                                    <X className="w-3.5 h-3.5" />
+                                  </div>
+                                  <div>
+                                    <div className="text-[10px] uppercase font-bold tracking-wider text-red-400/80">Evaluation Outcome</div>
+                                    <div className="text-xs font-semibold text-red-300">Candidate Rejected</div>
+                                  </div>
+                                </div>
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-red-500/20 text-red-300 border border-red-500/30">
+                                  DECLINED
+                                </span>
                               </div>
                               {r2.notes && (
-                                <div className="text-xs text-[#8B919C] bg-[#0E0F12] p-2 rounded-lg border border-[#24272D]">
-                                  <span className="text-[#606060] font-medium block text-[11px] mb-0.5">Notes:</span>
-                                  {r2.notes}
+                                <div className="text-xs text-zinc-300 bg-[#0A0B0D] p-3 rounded-xl border border-white/[0.06]">
+                                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Notes:</span>
+                                  <p className="leading-relaxed text-zinc-300">{r2.notes}</p>
                                 </div>
                               )}
                             </div>
@@ -1952,213 +2214,281 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       )}
                     </div>
                   </div>
+
                 </div>
               </div>
             </div>
           )}
 
           {/* Offer & Onboarding Row */}
-          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
             {/* Offer Management */}
             {["approved", "offer", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected", "hired"].includes(c.status) ? (
               <div
-                className="flex flex-col gap-3.5 rounded-[12px] p-5 h-full"
+                className="flex flex-col justify-between gap-4 rounded-2xl p-5 shadow-sm transition-all duration-200"
                 style={{
                   background: "#111214",
-                  border: "1px solid #24272D",
+                  border: candidateOffer?.status === "accepted"
+                    ? "1px solid rgba(34, 197, 94, 0.30)"
+                    : candidateOffer?.status === "sent"
+                    ? "1px solid rgba(0, 217, 255, 0.30)"
+                    : candidateOffer?.status === "rejected"
+                    ? "1px solid rgba(239, 68, 68, 0.30)"
+                    : "1px solid rgba(255, 255, 255, 0.08)",
                 }}
               >
-                {/* Section Header */}
-                <div className="flex items-center gap-2">
-                  <Briefcase
-                    className="w-3.5 h-3.5"
-                    style={{ color: candidateOffer?.status === "accepted" ? "#22C55E" : "#A78BFA" }}
-                  />
-                  <span
-                    className="text-[12px] font-semibold uppercase tracking-[0.08em]"
-                    style={{ color: candidateOffer?.status === "accepted" ? "#22C55E" : "#A78BFA" }}
-                  >
-                    Offer Management
-                  </span>
-                </div>
-                
-                <div
-                  className="p-4 rounded-[10px] flex flex-col gap-3 flex-1"
-                  style={{ background: "#16171B", border: "1px solid #24272D" }}
-                >
-                  {!candidateOffer ? (
-                    c.status === "approved" ? (
-                    <div className="flex flex-col gap-2">
-                      <div className="text-xs text-[#9A9DA6] mb-1">Ready to extend an offer? You can generate a contract first or proceed directly.</div>
-                      <Btn className="bg-[var(--primary)] text-black text-xs font-bold px-4 py-2 rounded-lg self-start"
-                        onClick={() => {
-                          addOffer({
-                            id: crypto.randomUUID(), candidateId: c.id, contractTemplateId: null,
-                            status: "draft", sentAt: null, respondedAt: null, createdAt: new Date().toISOString()
-                          });
-                          updateCandidate(c.id, { status: "offer" });
-                        }}>Prepare Offer</Btn>
-                    </div>
-                    ) : (
-                      <div className="text-xs text-[#777B84]">No offer prepared.</div>
-                    )
-                  ) : (
-                    <div className="flex flex-col gap-2.5">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-[#9A9DA6]" />
-                          <span className="font-semibold text-sm text-[#E7E9ED]">
-                            Offer Status: <span className="uppercase" style={{
-                              color: candidateOffer.status === "accepted" ? "#22C55E"
-                                : candidateOffer.status === "sent" ? "#00D9FF"
-                                : candidateOffer.status === "rejected" ? "#EF4444"
-                                : "#F5C542"
-                            }}>{candidateOffer.status}</span>
-                          </span>
-                        </div>
-                        <span
-                          className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-[6px]"
-                          style={{
-                            background: candidateOffer.status === "accepted" ? "rgba(34, 197, 94, 0.08)"
-                              : candidateOffer.status === "sent" ? "rgba(0, 217, 255, 0.08)"
-                              : candidateOffer.status === "rejected" ? "rgba(239, 68, 68, 0.08)"
-                              : "rgba(245, 197, 66, 0.08)",
-                            border: candidateOffer.status === "accepted" ? "1px solid rgba(34, 197, 94, 0.30)"
-                              : candidateOffer.status === "sent" ? "1px solid rgba(0, 217, 255, 0.30)"
-                              : candidateOffer.status === "rejected" ? "1px solid rgba(239, 68, 68, 0.30)"
-                              : "1px solid rgba(245, 197, 66, 0.30)",
-                            color: candidateOffer.status === "accepted" ? "#22C55E"
-                              : candidateOffer.status === "sent" ? "#00D9FF"
-                              : candidateOffer.status === "rejected" ? "#EF4444"
-                              : "#F5C542",
-                          }}
-                        >
-                          {candidateOffer.status === "accepted" ? "Offer Accepted"
-                            : candidateOffer.status === "sent" ? "Offer Sent"
-                            : candidateOffer.status === "rejected" ? "Offer Rejected"
-                            : "Offer Draft"}
-                        </span>
+                <div>
+                  {/* Section Header */}
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className={clsx(
+                        "w-8 h-8 rounded-xl flex items-center justify-center transition-all",
+                        candidateOffer?.status === "accepted" ? "bg-emerald-500/10 border border-emerald-500/25 text-emerald-400" :
+                        candidateOffer?.status === "sent" ? "bg-cyan-500/10 border border-cyan-500/25 text-cyan-400" :
+                        candidateOffer?.status === "rejected" ? "bg-red-500/10 border border-red-500/25 text-red-400" :
+                        "bg-purple-500/10 border border-purple-500/25 text-purple-400"
+                      )}>
+                        <Briefcase className="w-4 h-4" />
                       </div>
+                      <div>
+                        <div className="font-bold text-xs sm:text-sm text-zinc-100">Offer Extension</div>
+                        <div className="text-[10px] text-zinc-500">Contracts & Acceptance Portal</div>
+                      </div>
+                    </div>
 
-                      {candidateOffer.status === "draft" && c.status === "offer" && (
-                        <div className="flex gap-2 mt-1">
-                          <Btn className="bg-[var(--glass-3)] text-white text-xs font-semibold px-4 py-2 rounded-lg flex-1 border border-[var(--border)] hover:bg-[var(--glass-4)] transition-all" 
-                            onClick={() => {
-                              updateOffer(candidateOffer.id, { status: "sent", sentAt: new Date().toISOString() });
-                              updateCandidate(c.id, { status: "offer_sent" });
-                            }}>Mark as Sent</Btn>
-                          <Btn className="bg-[var(--glass-3)] text-[var(--primary)] text-xs font-semibold px-4 py-2 rounded-lg flex-1 border border-[var(--primary)] hover:bg-[var(--glass-4)] transition-all" 
-                            onClick={() => {
-                              setDocStudioType(c.roleName?.toLowerCase().includes("intern") ? "offer-internship" : "offer-fulltime");
-                              setIsDocStudioOpen(true);
-                            }}>📄 Studio Offer</Btn>
-                        </div>
-                      )}
-                      {candidateOffer.status === "sent" && c.status === "offer_sent" && (
-                        <div className="text-xs text-[#9A9DA6] p-3 bg-[#0E0F12] rounded-lg border border-[#24272D] mt-1">
-                          <p>Waiting for candidate response. The candidate can review and respond via:</p>
-                          <a href={`/offer/${c.id}`} target="_blank" rel="noreferrer" className="text-[#00D9FF] underline block mt-1.5 font-semibold hover:text-[#00D9FF]/80">Open Candidate Offer Page</a>
-                        </div>
-                      )}
-                      {(candidateOffer.status === "accepted" || candidateOffer.status === "rejected") && (
-                        <div className="flex flex-col gap-2 mt-1">
-                          <div className="text-xs text-[#777B84]">
-                            Responded at: {new Date(candidateOffer.respondedAt!).toLocaleString()}
+                    {/* Status Badge */}
+                    {candidateOffer ? (
+                      <span
+                        className={clsx(
+                          "text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full inline-flex items-center gap-1.5",
+                          candidateOffer.status === "accepted" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-[0_0_10px_rgba(34,197,94,0.15)]" :
+                          candidateOffer.status === "sent" ? "bg-cyan-500/10 border border-cyan-500/30 text-cyan-400" :
+                          candidateOffer.status === "rejected" ? "bg-red-500/10 border border-red-500/30 text-red-400" :
+                          "bg-amber-500/10 border border-amber-500/30 text-amber-400"
+                        )}
+                      >
+                        <span className={clsx(
+                          "w-1.5 h-1.5 rounded-full",
+                          candidateOffer.status === "accepted" ? "bg-emerald-400 animate-pulse" :
+                          candidateOffer.status === "sent" ? "bg-cyan-400 animate-pulse" :
+                          candidateOffer.status === "rejected" ? "bg-red-400" :
+                          "bg-amber-400"
+                        )} />
+                        <span>{candidateOffer.status === "accepted" ? "Offer Accepted" : candidateOffer.status === "sent" ? "Offer Sent" : candidateOffer.status === "rejected" ? "Offer Rejected" : "Offer Draft"}</span>
+                      </span>
+                    ) : (
+                      <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.10] text-zinc-400">
+                        Ready to Draft
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="p-4 rounded-xl flex flex-col gap-3.5 bg-[#14161A] border border-white/[0.06]">
+                    {!candidateOffer ? (
+                      c.status === "approved" ? (
+                        <div className="flex flex-col gap-3 py-1">
+                          <div className="text-xs text-zinc-400 leading-relaxed">
+                            Candidate has cleared all interview stages! Prepare an offer letter and share the acceptance link.
                           </div>
-                          {candidateOffer.status === "accepted" && (
-                            <div className="flex gap-2">
-                              <Btn className="bg-[var(--glass-3)] text-white text-xs font-semibold px-4 py-2 rounded-lg border border-[var(--border)] hover:bg-[var(--glass-4)] transition-all" 
+                          <button
+                            type="button"
+                            className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_15px_rgba(147,51,234,0.25)] border border-purple-400/30 active:scale-[0.98] transition-all cursor-pointer self-start"
+                            onClick={() => {
+                              addOffer({
+                                id: crypto.randomUUID(), candidateId: c.id, contractTemplateId: null,
+                                status: "draft", sentAt: null, respondedAt: null, createdAt: new Date().toISOString()
+                              });
+                              updateCandidate(c.id, { status: "offer" });
+                            }}
+                          >
+                            <Briefcase className="w-3.5 h-3.5" />
+                            <span>Prepare Offer Letter</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-zinc-500 py-3 text-center">No offer prepared yet.</div>
+                      )
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between flex-wrap gap-2 text-xs">
+                          <div className="flex items-center gap-2 text-zinc-300">
+                            <FileText className="w-4 h-4 text-purple-400" />
+                            <span className="text-zinc-500">Letter Status:</span>
+                            <span className="font-semibold text-zinc-100 uppercase tracking-wide">{candidateOffer.status}</span>
+                          </div>
+                          {candidateOffer.sentAt && (
+                            <span className="text-[11px] font-mono text-zinc-500">
+                              Sent: {new Date(candidateOffer.sentAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+
+                        {candidateOffer.status === "draft" && c.status === "offer" && (
+                          <div className="flex flex-col sm:flex-row gap-2 mt-1">
+                            <button
+                              type="button"
+                              className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-semibold text-zinc-200 bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.12] hover:border-white/[0.22] active:scale-[0.98] transition-all cursor-pointer flex-1"
+                              onClick={() => {
+                                updateOffer(candidateOffer.id, { status: "sent", sentAt: new Date().toISOString() });
+                                updateCandidate(c.id, { status: "offer_sent" });
+                              }}
+                            >
+                              <Check className="w-3.5 h-3.5 text-zinc-400" />
+                              <span>Mark as Sent</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-[0_0_15px_rgba(59,130,246,0.25)] border border-blue-400/30 active:scale-[0.98] transition-all cursor-pointer flex-1"
+                              onClick={() => {
+                                setDocStudioType(c.roleName?.toLowerCase().includes("intern") ? "offer-internship" : "offer-fulltime");
+                                setIsDocStudioOpen(true);
+                              }}
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>Studio Offer</span>
+                            </button>
+                          </div>
+                        )}
+
+                        {candidateOffer.status === "sent" && c.status === "offer_sent" && (
+                          <div className="p-3.5 rounded-xl bg-cyan-500/[0.08] border border-cyan-500/20 text-xs text-cyan-200 flex flex-col gap-2 mt-1">
+                            <div className="flex items-center gap-2 font-medium">
+                              <Clock className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+                              <span>Waiting for candidate response. Portal link is active.</span>
+                            </div>
+                            <a
+                              href={`/offer/${c.id}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-2 transition-colors self-start"
+                            >
+                              <span>Open Candidate Offer Page</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </div>
+                        )}
+
+                        {(candidateOffer.status === "accepted" || candidateOffer.status === "rejected") && (
+                          <div className="flex flex-col gap-2.5 mt-1">
+                            <div className="flex items-center gap-2 text-xs text-zinc-400">
+                              <Calendar className="w-3.5 h-3.5 text-zinc-500" />
+                              <span>Responded at: {candidateOffer.respondedAt ? new Date(candidateOffer.respondedAt).toLocaleString() : "Recently"}</span>
+                            </div>
+                            {candidateOffer.status === "accepted" && (
+                              <button
+                                type="button"
+                                className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-[0_0_15px_rgba(16,185,129,0.25)] border border-emerald-400/30 active:scale-[0.98] transition-all cursor-pointer self-start"
                                 onClick={() => {
                                   setDocStudioType(c.roleName?.toLowerCase().includes("intern") ? "offer-internship" : "offer-fulltime");
                                   setIsDocStudioOpen(true);
-                                }}>📄 Download / View Offer</Btn>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                                }}
+                              >
+                                <FileText className="w-3.5 h-3.5" />
+                                <span>Download / View Signed Offer</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (
               <div
-                className="flex flex-col gap-3.5 rounded-[12px] p-5 h-full"
+                className="flex flex-col justify-between gap-4 rounded-2xl p-5 shadow-sm transition-all duration-200"
                 style={{
                   background: "#111214",
-                  border: "1px solid #24272D",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
                 }}
               >
-                <div className="flex items-center gap-2">
-                  <Briefcase className="w-3.5 h-3.5 text-[#777B84]" />
-                  <span className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#777B84]">
-                    Offer Management
-                  </span>
-                </div>
-                <div
-                  className="p-4 rounded-[10px] flex flex-col gap-3 flex-1 items-center justify-center text-center"
-                  style={{ background: "#16171B", border: "1px dashed #24272D" }}
-                >
-                  <Briefcase className="w-6 h-6 text-white/20 mb-1" />
-                  <div className="text-xs font-medium text-[#9A9DA6]">Candidate not yet in offer stage.</div>
-                  <div className="text-[11px] text-[var(--text-3)]">Move candidate to Approved or Offer to manage offer letters.</div>
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-zinc-500">
+                        <Briefcase className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-xs sm:text-sm text-zinc-400">Offer Extension</div>
+                        <div className="text-[10px] text-zinc-500">Contracts & Acceptance Portal</div>
+                      </div>
+                    </div>
+                    <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.10] text-zinc-500">
+                      Pending Interviews
+                    </span>
+                  </div>
+                  <div className="p-6 rounded-xl flex flex-col items-center justify-center text-center gap-2 bg-[#14161A] border border-dashed border-white/[0.10]">
+                    <div className="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-zinc-500">
+                      <Briefcase className="w-4 h-4" />
+                    </div>
+                    <div className="text-xs font-semibold text-zinc-400">Candidate not yet in offer stage</div>
+                    <div className="text-[11px] text-zinc-500 max-w-[260px]">
+                      Complete Round 1 & Round 2 evaluations to unlock offer letter drafting and dispatch.
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Onboarding Management */}
-            <div className="flex flex-col gap-3.5 rounded-[12px] p-5 h-full" style={{ background: "#111214", border: "1px solid #24272D" }}>
-              <div className="text-[12px] font-semibold uppercase tracking-[0.08em] text-[#A78BFA] flex items-center gap-2">
-                <FileText className="w-3.5 h-3.5 text-[#A78BFA]" />
-                <span>Onboarding Management</span>
-              </div>
-              
+            <div
+              className="flex flex-col justify-between gap-4 rounded-2xl p-5 shadow-sm transition-all duration-200"
+              style={{
+                background: "#111214",
+                border: candidateEmployee
+                  ? "1px solid rgba(34, 197, 94, 0.30)"
+                  : "1px solid rgba(255, 255, 255, 0.08)",
+              }}
+            >
               <div className="flex flex-col gap-3.5">
                 {/* Header */}
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-[#A1A7B3]">
-                      <FileText className="w-3.5 h-3.5" />
+                    <div className="w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/25 flex items-center justify-center text-indigo-400">
+                      <FileText className="w-4 h-4" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-white tracking-tight">Documents</span>
-                      {candidateDocs.length > 0 && (
-                        <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-[var(--text-2)]">
-                          {candidateDocs.filter(d => d.status === "verified").length}/{candidateDocs.length} Verified
-                        </span>
-                      )}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-xs sm:text-sm text-zinc-100">Onboarding & Compliance</span>
+                        {candidateDocs.length > 0 && (
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-zinc-300">
+                            {candidateDocs.filter(d => d.status === "verified").length}/{candidateDocs.length} Verified
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-zinc-500">Candidate Documents & Verification</div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(`${getPublicBaseUrl()}/onboarding/${c.id}`);
-                        setCopiedUploadLink(true);
-                        setTimeout(() => setCopiedUploadLink(false), 2000);
-                        dialog.success("Candidate upload link copied to clipboard.");
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#D1D5DB] hover:text-white bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.10] hover:border-white/[0.20] active:scale-95 transition-all cursor-pointer"
-                    >
-                      {copiedUploadLink ? (
-                        <Check className="w-3.5 h-3.5 text-[#22C55E]" />
-                      ) : (
-                        <Copy className="w-3.5 h-3.5 text-[#9A9DA6]" />
-                      )}
-                      <span>{copiedUploadLink ? "Copied Link" : "Copy Upload Link"}</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${getPublicBaseUrl()}/onboarding/${c.id}`);
+                      setCopiedUploadLink(true);
+                      setTimeout(() => setCopiedUploadLink(false), 2000);
+                      dialog.success("Candidate upload link copied to clipboard.");
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.10] hover:border-white/[0.20] active:scale-95 transition-all cursor-pointer"
+                  >
+                    {copiedUploadLink ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                    )}
+                    <span>{copiedUploadLink ? "Link Copied!" : "Copy Upload Link"}</span>
+                  </button>
                 </div>
 
                 {/* Documents List */}
                 {candidateDocs.length === 0 ? (
-                  <div
-                    className="p-6 rounded-[10px] flex flex-col items-center justify-center text-center gap-1.5"
-                    style={{ background: "#16171B", border: "1px dashed #24272D" }}
-                  >
-                    <FileText className="w-6 h-6 text-white/20 mb-1" />
-                    <div className="text-xs font-medium text-[#9A9DA6]">No documents uploaded yet.</div>
-                    <div className="text-[11px] text-[var(--text-3)]">Share the upload link above to collect candidate onboarding documents.</div>
+                  <div className="p-6 rounded-xl flex flex-col items-center justify-center text-center gap-2 bg-[#14161A] border border-dashed border-white/[0.10]">
+                    <div className="w-9 h-9 rounded-xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-zinc-500">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div className="text-xs font-semibold text-zinc-400">No documents uploaded yet</div>
+                    <div className="text-[11px] text-zinc-500 max-w-[280px]">
+                      Share the upload link above to collect candidate onboarding and identity documents.
+                    </div>
                   </div>
                 ) : (
                   <div className="flex flex-col gap-2">
@@ -2170,55 +2500,44 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       return (
                         <div
                           key={doc.id}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:px-4 sm:py-2.5 rounded-[10px] transition-all duration-150 group"
-                          style={{
-                            background: "#16171B",
-                            border: "1px solid #24272D",
-                          }}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:px-4 sm:py-3 rounded-xl transition-all duration-150 group bg-[#14161A] hover:bg-[#17191E] border border-white/[0.06]"
                         >
                           {/* File Details */}
                           <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center flex-shrink-0 text-[#9A9DA6] group-hover:text-white group-hover:border-white/20 transition-all">
-                              <FileText className="w-4 h-4 text-[#A78BFA]" />
+                            <div className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center flex-shrink-0 text-indigo-400 group-hover:border-white/20 transition-all">
+                              <FileText className="w-4 h-4" />
                             </div>
 
                             <div className="flex flex-col min-w-0 flex-1 gap-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span
-                                  className="text-xs sm:text-[13px] font-semibold text-[#F1F3F5] truncate max-w-[220px] sm:max-w-[340px]"
+                                  className="text-xs sm:text-[13px] font-semibold text-zinc-100 truncate max-w-[220px] sm:max-w-[340px]"
                                   title={doc.fileName}
                                 >
                                   {doc.fileName}
                                 </span>
 
-                                <span
-                                  className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-[5px]"
-                                  style={{
-                                    background: "rgba(255, 255, 255, 0.05)",
-                                    border: "1px solid rgba(255, 255, 255, 0.10)",
-                                    color: "#A1A7B3",
-                                  }}
-                                >
+                                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-zinc-400">
                                   {doc.type || "Document"}
                                 </span>
                               </div>
 
                               <div className="flex items-center gap-2 text-[11px]">
                                 {isPending && (
-                                  <span className="inline-flex items-center gap-1 font-medium text-amber-400/90">
+                                  <span className="inline-flex items-center gap-1 font-medium text-amber-400">
                                     <Clock className="w-3 h-3 text-amber-400" />
                                     <span>Pending verification</span>
                                   </span>
                                 )}
                                 {isVerified && (
-                                  <span className="inline-flex items-center gap-1 font-medium text-[#22C55E]">
-                                    <CheckCircle2 className="w-3 h-3 text-[#22C55E]" />
+                                  <span className="inline-flex items-center gap-1 font-medium text-emerald-400">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                                     <span>Verified</span>
                                   </span>
                                 )}
                                 {isRejected && (
-                                  <span className="inline-flex items-center gap-1 font-medium text-[#EF4444]">
-                                    <AlertCircle className="w-3 h-3 text-[#EF4444]" />
+                                  <span className="inline-flex items-center gap-1 font-medium text-red-400">
+                                    <AlertCircle className="w-3 h-3 text-red-400" />
                                     <span>Rejected</span>
                                   </span>
                                 )}
@@ -2235,10 +2554,10 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                 if (url) window.open(url, '_blank');
                                 else dialog.error("Failed to open document securely.");
                               }}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#D1D5DB] hover:text-white bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.10] hover:border-white/[0.20] active:scale-95 transition-all cursor-pointer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.10] hover:border-white/[0.20] active:scale-95 transition-all cursor-pointer"
                               title="View document in new tab"
                             >
-                              <ExternalLink className="w-3.5 h-3.5 text-[#9A9DA6]" />
+                              <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
                               <span>View</span>
                             </button>
 
@@ -2255,20 +2574,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                       updateCandidate(c.id, { status: "onboarding_review" });
                                     }
                                   }}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#22C55E] hover:text-[#4ADE80] transition-all cursor-pointer active:scale-95"
-                                  style={{
-                                    background: "rgba(34, 197, 94, 0.10)",
-                                    border: "1px solid rgba(34, 197, 94, 0.35)",
-                                    boxShadow: "0 0 12px rgba(34, 197, 94, 0.10)",
-                                  }}
-                                  onMouseEnter={e => {
-                                    e.currentTarget.style.background = "rgba(34, 197, 94, 0.18)";
-                                    e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.60)";
-                                  }}
-                                  onMouseLeave={e => {
-                                    e.currentTarget.style.background = "rgba(34, 197, 94, 0.10)";
-                                    e.currentTarget.style.borderColor = "rgba(34, 197, 94, 0.35)";
-                                  }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/50 active:scale-95 transition-all cursor-pointer"
                                 >
                                   <Check className="w-3.5 h-3.5" />
                                   <span>Verify</span>
@@ -2280,19 +2586,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                     updateDocument(doc.id, { status: "rejected" });
                                     updateCandidate(c.id, { status: "onboarding_rejected" });
                                   }}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#EF4444] hover:text-[#F87171] transition-all cursor-pointer active:scale-95"
-                                  style={{
-                                    background: "rgba(239, 68, 68, 0.10)",
-                                    border: "1px solid rgba(239, 68, 68, 0.35)",
-                                  }}
-                                  onMouseEnter={e => {
-                                    e.currentTarget.style.background = "rgba(239, 68, 68, 0.18)";
-                                    e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.60)";
-                                  }}
-                                  onMouseLeave={e => {
-                                    e.currentTarget.style.background = "rgba(239, 68, 68, 0.10)";
-                                    e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.35)";
-                                  }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 active:scale-95 transition-all cursor-pointer"
                                 >
                                   <X className="w-3.5 h-3.5" />
                                   <span>Reject</span>
@@ -2300,21 +2594,19 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                               </div>
                             ) : (
                               <span
-                                className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-[6px] inline-flex items-center gap-1.5"
-                                style={{
-                                  background: isVerified ? "rgba(34, 197, 94, 0.08)" : "rgba(239, 68, 68, 0.08)",
-                                  border: isVerified ? "1px solid rgba(34, 197, 94, 0.30)" : "1px solid rgba(239, 68, 68, 0.30)",
-                                  color: isVerified ? "#22C55E" : "#EF4444",
-                                }}
+                                className={clsx(
+                                  "text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full inline-flex items-center gap-1",
+                                  isVerified ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border border-red-500/30 text-red-400"
+                                )}
                               >
                                 {isVerified ? (
                                   <>
-                                    <CheckCircle2 className="w-3 h-3 text-[#22C55E]" />
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                                     <span>Verified</span>
                                   </>
                                 ) : (
                                   <>
-                                    <AlertCircle className="w-3 h-3 text-[#EF4444]" />
+                                    <AlertCircle className="w-3 h-3 text-red-400" />
                                     <span>Rejected</span>
                                   </>
                                 )}
@@ -2327,7 +2619,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                   </div>
                 )}
               </div>
-              
+
               {!candidateEmployee && (
                 <button
                   type="button"
@@ -2336,7 +2628,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     updateCandidate(c.id, { status: "hired" });
                   }}
                   disabled={convertingToEmployee || candidateDocs.length === 0 || !candidateDocs.every(d => d.status === "verified")}
-                  className="w-full h-11 px-4 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2.5 text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-[0.99] border border-emerald-400/30 hover:border-emerald-300/50 shadow-[0_0_20px_rgba(16,185,129,0.22)] hover:shadow-[0_0_25px_rgba(16,185,129,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111] disabled:opacity-45 disabled:pointer-events-none disabled:shadow-none transition-all duration-150 cursor-pointer"
+                  className="w-full h-11 px-4 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2.5 text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-[0.99] border border-emerald-400/30 hover:border-emerald-300/50 shadow-[0_0_20px_rgba(16,185,129,0.22)] hover:shadow-[0_0_25px_rgba(16,185,129,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 disabled:opacity-40 disabled:pointer-events-none disabled:shadow-none transition-all duration-150 cursor-pointer mt-2"
                 >
                   {convertingToEmployee ? (
                     <>
@@ -2351,87 +2643,103 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                   )}
                 </button>
               )}
+
               {candidateEmployee && (
-                <div className="p-3 rounded-lg border border-[var(--green)] bg-[var(--green)]/10">
-                  <div className="text-sm font-bold text-[var(--green)] mb-1">🎉 Hired as Employee</div>
-                  <div className="text-xs text-[var(--text-2)]">Type: {candidateEmployee.employmentType}</div>
-                  <div className="text-xs text-[var(--text-2)]">Bond Req: {candidateEmployee.bondRequirement}</div>
+                <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/[0.08] mt-2">
+                  <div className="text-sm font-bold text-emerald-400 flex items-center gap-2 mb-1.5">
+                    <span>🎉</span>
+                    <span>Hired as Organization Employee</span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-zinc-300 flex-wrap">
+                    <div>Type: <span className="font-semibold text-zinc-100">{candidateEmployee.employmentType}</span></div>
+                    <div>Bond Req: <span className="font-semibold text-zinc-100">{candidateEmployee.bondRequirement}</span></div>
+                  </div>
                   
                   {/* Bond Management */}
-                  <div className="mt-3 pt-3 border-t border-[var(--green)]/20">
+                  <div className="mt-3 pt-3 border-t border-emerald-500/20">
                     <div className="flex justify-between items-center mb-2">
-                      <div className="text-xs font-semibold">Bond Status</div>
-                      <Btn className="text-[10px] px-2 py-1 rounded bg-[var(--glass-3)]"
+                      <div className="text-xs font-semibold text-zinc-200">Bond Status</div>
+                      <button
+                        type="button"
+                        className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-white/[0.08] hover:bg-white/[0.14] text-zinc-200 border border-white/[0.10] transition-all cursor-pointer"
                         onClick={() => handleToggleBond(employeeBond?.isRequired || false)}>
                         Toggle
-                      </Btn>
+                      </button>
                     </div>
                     {employeeBond?.isRequired ? (
-                      <div className="text-[10px] bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 p-2 rounded">
+                      <div className="text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/25 p-2.5 rounded-lg">
                         <strong>Required.</strong> (Amount: {employeeBond.amount}, Duration: {employeeBond.duration})
                       </div>
                     ) : (
-                      <div className="text-[10px] text-[var(--text-3)]">No bond required.</div>
+                      <div className="text-[11px] text-zinc-500">No bond required.</div>
                     )}
                   </div>
 
                   {/* Resignation Management */}
-                  <div className="mt-3 pt-3 border-t border-[var(--green)]/20">
+                  <div className="mt-3 pt-3 border-t border-emerald-500/20">
                     {employeeResignation ? (
-                      <div className="bg-red-500/10 border border-red-500/20 p-2 rounded">
-                        <div className="text-xs font-bold text-red-500">Resigned / Terminated</div>
-                        <div className="text-[10px] text-[var(--text-2)] mt-1">Reason: {employeeResignation.resignationReason}</div>
+                      <div className="bg-red-500/10 border border-red-500/20 p-2.5 rounded-lg">
+                        <div className="text-xs font-bold text-red-400">Resigned / Terminated</div>
+                        <div className="text-[11px] text-zinc-300 mt-1">Reason: {employeeResignation.resignationReason}</div>
                         {employeeResignation.isBreach && (
-                          <div className="text-[10px] text-red-400 font-semibold mt-1">⚠️ BREACH: {employeeResignation.breachReason}</div>
+                          <div className="text-[11px] text-red-400 font-semibold mt-1">⚠️ BREACH: {employeeResignation.breachReason}</div>
                         )}
                         <div className="mt-3 flex flex-col gap-2">
-                          <Btn className="w-full text-[10px] py-1 rounded bg-[var(--glass-4)] hover:bg-white/10 text-white"
+                          <button
+                            type="button"
+                            className="w-full text-xs py-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-white border border-white/[0.10] transition-all cursor-pointer font-semibold"
                             onClick={() => {
                                setDocStudioType('experience-letter');
                                setIsDocStudioOpen(true);
                             }}>
                             Generate Experience Letter
-                          </Btn>
-                          <Btn className="w-full text-[10px] py-1 rounded bg-[var(--glass-4)] hover:bg-white/10 text-white"
+                          </button>
+                          <button
+                            type="button"
+                            className="w-full text-xs py-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.12] text-white border border-white/[0.10] transition-all cursor-pointer font-semibold"
                             onClick={() => {
                                setDocStudioType('relieving-letter');
                                setIsDocStudioOpen(true);
                             }}>
                             Generate Relieving Letter
-                          </Btn>
+                          </button>
                         </div>
                       </div>
                     ) : (
                       <>
-                        <Btn className="w-full text-xs py-1.5 rounded border border-red-500/30 text-red-500 hover:bg-red-500/10"
+                        <button
+                          type="button"
+                          className="w-full text-xs py-2 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all font-semibold cursor-pointer"
                           onClick={() => setShowResignationForm(!showResignationForm)}>
                           Process Resignation
-                        </Btn>
+                        </button>
                         {showResignationForm && (
-                          <div className="mt-2 flex flex-col gap-2">
+                          <div className="mt-2.5 flex flex-col gap-2.5 p-3 rounded-xl bg-black/40 border border-red-500/20">
                             <textarea
                               value={resignationReason}
                               onChange={e => setResignationReason(e.target.value)}
                               placeholder="Resignation / Termination Reason..."
-                              className="w-full bg-[var(--glass-4)] border border-[var(--border)] rounded p-2 text-xs text-white"
+                              className="w-full bg-[#0E0F12] border border-white/[0.10] rounded-lg p-2.5 text-xs text-white outline-none focus:border-red-400/50"
                             />
-                            <label className="flex items-center gap-2 text-xs">
-                              <input type="checkbox" checked={isBreach} onChange={e => setIsBreach(e.target.checked)} />
-                              Classify as Bond Breach
+                            <label className="flex items-center gap-2 text-xs text-zinc-300 cursor-pointer">
+                              <input type="checkbox" checked={isBreach} onChange={e => setIsBreach(e.target.checked)} className="rounded accent-red-500" />
+                              <span>Classify as Bond Breach</span>
                             </label>
                             {isBreach && (
                               <textarea
                                 value={breachReason}
                                 onChange={e => setBreachReason(e.target.value)}
                                 placeholder="Details of breach..."
-                                className="w-full bg-[var(--glass-4)] border border-red-500/50 rounded p-2 text-xs text-white"
+                                className="w-full bg-[#0E0F12] border border-red-500/40 rounded-lg p-2.5 text-xs text-white outline-none"
                               />
                             )}
-                            <Btn className="bg-red-500 text-white font-bold py-1 rounded text-xs mt-1"
+                            <button
+                              type="button"
+                              className="bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded-lg text-xs mt-1 transition-all cursor-pointer"
                               onClick={handleSubmitResignation}
                               disabled={processingResignation}>
                               Confirm Separation
-                            </Btn>
+                            </button>
                           </div>
                         )}
                       </>
@@ -2441,6 +2749,8 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
               )}
             </div>
           </div>
+        </div>
+      )}
 
           {/* Status row removed to enforce strict workflow */}
 

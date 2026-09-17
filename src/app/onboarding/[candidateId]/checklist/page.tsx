@@ -1,8 +1,7 @@
 import React from "react";
 import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
-import { DocumentPreview } from "@/components/documents/DocumentPreview";
-import { PrintButton } from "@/components/documents/PrintButton";
+import { ChecklistClient } from "./ChecklistClient";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -42,13 +41,11 @@ export default async function ChecklistPage({ params }: { params: { candidateId:
   };
 
   return (
-    <div className="min-h-screen p-6 bg-zinc-100 flex flex-col items-center">
-      <div className="w-full max-w-4xl bg-white shadow-xl">
-        <DocumentPreview documentType="background-verification" data={documentData} />
-      </div>
-      <div className="mt-8 mb-8 print:hidden">
-        <PrintButton />
-      </div>
-    </div>
+    <ChecklistClient
+      candidateId={candidateId}
+      candidate={candidate}
+      offer={offer}
+      documentData={documentData}
+    />
   );
 }

@@ -63,7 +63,69 @@ export const DOC_TITLES = {
   "internship-certificate": "Internship Certificate", "continuing-obligation": "Continuing Obligation Reminder"
 };
 
+export function getSavedTemplate(dt: string): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(`hd_template_${dt}_html`);
+  } catch (e) {
+    return null;
+  }
+}
+
+export function saveTemplatePermanently(dt: string, html: string, defaultData?: Partial<DocumentData>) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(`hd_template_${dt}_html`, html);
+    if (defaultData) {
+      localStorage.setItem(`hd_template_${dt}_defaults`, JSON.stringify(defaultData));
+    }
+  } catch (e) {
+    console.error("Failed to save template permanently:", e);
+  }
+}
+
+export function resetTemplateToDefault(dt: string) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(`hd_template_${dt}_html`);
+    localStorage.removeItem(`hd_template_${dt}_defaults`);
+  } catch (e) {
+    console.error("Failed to reset template:", e);
+  }
+}
+
+export function hasSavedTemplate(dt: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return Boolean(localStorage.getItem(`hd_template_${dt}_html`));
+  } catch (e) {
+    return false;
+  }
+}
+
 export function generateDocument(dt: string, rawD: DocumentData, LOGO_BLACK: string, LOGO_WHITE: string, ICON_BLACK: string): string {
+    // If a permanent template override exists for this document type, hydrate its data fields with current candidate data
+    const savedTemplate = getSavedTemplate(dt);
+    if (savedTemplate && typeof window !== "undefined") {
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(savedTemplate, "text/html");
+        const fieldEls = doc.querySelectorAll<HTMLElement>("[data-field]");
+        fieldEls.forEach((el) => {
+          const key = el.getAttribute("data-field") as keyof DocumentData;
+          if (key && (rawD as any)?.[key] !== undefined && String((rawD as any)[key]).trim() !== "") {
+            el.textContent = String((rawD as any)[key]);
+          }
+        });
+        const content = doc.body.innerHTML;
+        if (content && content.includes("page")) {
+          return content;
+        }
+      } catch (err) {
+        console.warn("Could not hydrate saved template, falling back to base generator:", err);
+      }
+    }
+
     const ICONS = {
       briefcase: '<rect x="3" y="7.5" width="18" height="12.5" rx="1.6"/><path d="M8.5 7.5V5.8C8.5 4.8 9.3 4 10.3 4H13.7C14.7 4 15.5 4.8 15.5 5.8V7.5"/><line x1="3" y1="13" x2="21" y2="13"/>',
       user: '<circle cx="12" cy="8.3" r="3.6"/><path d="M4.8 20c0-3.8 3.2-6.3 7.2-6.3s7.2 2.5 7.2 6.3"/>',
@@ -109,12 +171,12 @@ export function generateDocument(dt: string, rawD: DocumentData, LOGO_BLACK: str
     function esc(s?: string) { return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
     const DEFAULTS: Record<string, string> = {
-      candidateName: "Shital Khulape", designation: "Dev", department: "Development", departmentOther: "Development",
-      reportingManager: "Harish", officeLocation: "Satara Office", workingHours: "10:00 AM – 8:00 PM",
+      candidateName: "Candidate Name", designation: "Designation", department: "Development", departmentOther: "Development",
+      reportingManager: "", officeLocation: "Satara Office", workingHours: "10:00 AM – 8:00 PM",
       dateOfJoining: "13/11/2026", letterDate: "13/11/2026", offerValidityDate: "14/11/2026",
       refNo: "OFFER/2026/001", probationPeriod: "3 Months", internshipEndDate: "[INTERNSHIP END DATE]",
       probationSalary: "8000", ctcAmount: "[CTC AMOUNT]", monthlyGross: "[MONTHLY GROSS]",
-      proprietorName: "[PROPRIETOR NAME]", noticePeriod: "1 Month",
+      proprietorName: "Triple S Production", noticePeriod: "1 Month",
       officeAddress: "Rajdhani Towers, Rajwada, Satara", hrEmail: "hr@triplesproduction.com", hrPhone: "9879707000",
       website: "www.triplesproduction.com", emergencyContact: "98887688997",
       bankName: "[BANK NAME]", accountNumber: "[ACCOUNT NUMBER]", ifsc: "[IFSC CODE]", pan: "[PAN]",
@@ -127,7 +189,7 @@ export function generateDocument(dt: string, rawD: DocumentData, LOGO_BLACK: str
     const d: DocumentData = { ...DEFAULTS, ...(rawD || {}) };
     for (const key of Object.keys(DEFAULTS)) {
       const v = (rawD as any)?.[key];
-      if (v === undefined || v === null || String(v).trim() === "") {
+      if (v === undefined || v === null) {
         (d as any)[key] = DEFAULTS[key];
       } else {
         (d as any)[key] = String(v).trim();
@@ -185,35 +247,35 @@ export function generateDocument(dt: string, rawD: DocumentData, LOGO_BLACK: str
         '<div class="mid"><div class="title">Letter of<br>Appointment</div><div class="rule-w"></div>' +
         '<div class="tagline">Creative &nbsp;&middot;&nbsp; Technology &nbsp;&middot;&nbsp; Branding</div></div>' +
         '<div class="bottom"><div class="metarow">' +
-        '<div class="m"><div class="lbl">PREPARED FOR</div><div class="val">' + val(d.candidateName) + '</div></div>' +
-        '<div class="m"><div class="lbl">REFERENCE NO.</div><div class="val">' + val(d.refNo) + '</div></div>' +
-        '<div class="m"><div class="lbl">DATE OF JOINING</div><div class="val">' + val(d.dateOfJoining) + '</div></div>' +
-        '</div><div class="confbar"><div>Strictly Private &amp; Confidential</div><div>' + val(d.letterDate) + '</div></div></div>' +
+        '<div class="m"><div class="lbl">PREPARED FOR</div><div class="val" data-field="candidateName">' + val(d.candidateName) + '</div></div>' +
+        '<div class="m"><div class="lbl">REFERENCE NO.</div><div class="val" data-field="refNo">' + val(d.refNo) + '</div></div>' +
+        '<div class="m"><div class="lbl">DATE OF JOINING</div><div class="val" data-field="dateOfJoining">' + val(d.dateOfJoining) + '</div></div>' +
+        '</div><div class="confbar"><div>Strictly Private &amp; Confidential</div><div data-field="letterDate">' + val(d.letterDate) + '</div></div></div>' +
         '</div></div>';
     }
 
     function buildPage2(d: DocumentData) {
       const inner =
         '<h1 class="pt">Welcome to the Team</h1>' +
-        '<p class="body">Dear ' + val(d.candidateName) + ',</p>' +
+        '<p class="body">Dear <span data-field="candidateName">' + val(d.candidateName) + '</span>,</p>' +
         '<p class="body">With reference to your application and interview with us, we are pleased to offer you employment with Triple S Production (&ldquo;the Company&rdquo;), on the terms set out in this letter and its Annexures. This letter summarises the key terms of your appointment &mdash; a detailed Employment Agreement will be shared for signature on or before your date of joining.</p>' +
         '<div class="strip">' +
         '<div class="cell"><div class="lbl">Employment Type</div><div class="val">Full-Time</div></div>' +
-        '<div class="cell"><div class="lbl">Location</div><div class="val">' + val(d.officeLocation) + '</div></div>' +
-        '<div class="cell"><div class="lbl">Department</div><div class="val">' + val(d.department) + '</div></div>' +
-        '<div class="cell"><div class="lbl">Working Hours</div><div class="val">' + val(d.workingHours) + '</div></div>' +
+        '<div class="cell"><div class="lbl">Location</div><div class="val" data-field="officeLocation">' + val(d.officeLocation) + '</div></div>' +
+        '<div class="cell"><div class="lbl">Department</div><div class="val" data-field="department">' + val(d.department) + '</div></div>' +
+        '<div class="cell"><div class="lbl">Working Hours</div><div class="val" data-field="workingHours">' + val(d.workingHours) + '</div></div>' +
         '</div>' +
         '<div class="infocard2"><div class="hd2">' + icon("user", 16, "#ffffff") + ' <span>Candidate Information</span></div><div class="rows">' +
-        '<div class="row2">' + badge("briefcase", 30, false, "#F4F4F6") + '<div><div class="lbl">Designation</div><div class="val">' + val(d.designation) + '</div></div></div>' +
-        '<div class="row2">' + badge("users", 30, false, "#F4F4F6") + '<div><div class="lbl">Reporting To</div><div class="val">' + val(d.reportingManager) + '</div></div></div>' +
-        '<div class="row2">' + badge("calendar", 30, false, "#F4F4F6") + '<div><div class="lbl">Date of Joining</div><div class="val">' + val(d.dateOfJoining) + '</div></div></div>' +
-        '<div class="row2">' + badge("hourglass", 30, false, "#F4F4F6") + '<div><div class="lbl">Probation Period</div><div class="val">' + val(d.probationPeriod) + '</div></div></div>' +
-        '<div class="row2">' + badge("pin", 30, false, "#F4F4F6") + '<div><div class="lbl">Place of Work</div><div class="val">' + val(d.officeLocation) + '</div></div></div>' +
-        '<div class="row2">' + badge("lock", 30, false, "#F4F4F6") + '<div><div class="lbl">Notice Period (Post-Confirmation)</div><div class="val">' + val(d.noticePeriod) + '</div></div></div>' +
+        '<div class="row2">' + badge("briefcase", 30, false, "#F4F4F6") + '<div><div class="lbl">Designation</div><div class="val" data-field="designation">' + val(d.designation) + '</div></div></div>' +
+        '<div class="row2">' + badge("users", 30, false, "#F4F4F6") + '<div><div class="lbl">Reporting To</div><div class="val" data-field="reportingManager">' + val(d.reportingManager) + '</div></div></div>' +
+        '<div class="row2">' + badge("calendar", 30, false, "#F4F4F6") + '<div><div class="lbl">Date of Joining</div><div class="val" data-field="dateOfJoining">' + val(d.dateOfJoining) + '</div></div></div>' +
+        '<div class="row2">' + badge("hourglass", 30, false, "#F4F4F6") + '<div><div class="lbl">Probation Period</div><div class="val" data-field="probationPeriod">' + val(d.probationPeriod) + '</div></div></div>' +
+        '<div class="row2">' + badge("pin", 30, false, "#F4F4F6") + '<div><div class="lbl">Place of Work</div><div class="val" data-field="officeLocation">' + val(d.officeLocation) + '</div></div></div>' +
+        '<div class="row2">' + badge("lock", 30, false, "#F4F4F6") + '<div><div class="lbl">Notice Period (Post-Confirmation)</div><div class="val" data-field="noticePeriod">' + val(d.noticePeriod) + '</div></div></div>' +
         '</div></div>' +
         '<div class="banner">' + badge("shield", 32) + '<div>This appointment is subject to successful verification of your documents, educational qualifications, and professional references. Any discrepancy discovered at any stage may result in withdrawal of this offer.</div></div>' +
-        '<div class="sig2"><div><div class="name">' + val(d.proprietorName) + '</div><div class="role">Founder, Triple S Production</div></div>' +
-        '<div style="text-align:right;"><div class="role">Signed &amp; issued on</div><div class="name">' + val(d.letterDate) + '</div></div></div>';
+        '<div class="sig2"><div><div class="name" data-field="proprietorName">' + val(d.proprietorName) + '</div><div class="role">Founder, Triple S Production</div></div>' +
+        '<div style="text-align:right;"><div class="role">Signed &amp; issued on</div><div class="name" data-field="letterDate">' + val(d.letterDate) + '</div></div></div>';
       return page(inner, 2, d);
     }
 
@@ -230,11 +292,11 @@ export function generateDocument(dt: string, rawD: DocumentData, LOGO_BLACK: str
       }).join("");
       const inner =
         '<h1 class="pt">Compensation &amp; Benefits</h1>' +
-        '<p class="body">Your compensation is structured in two stages &mdash; a fixed monthly salary during your ' + val(d.probationPeriod) + ' probation period, followed by your full Cost to Company (CTC) on successful confirmation.</p>' +
+        '<p class="body">Your compensation is structured in two stages &mdash; a fixed monthly salary during your <span data-field="probationPeriod">' + val(d.probationPeriod) + '</span> probation period, followed by your full Cost to Company (CTC) on successful confirmation.</p>' +
         '<div class="payflow">' +
-        '<div class="panel"><div class="kicker2">Probation &middot; ' + val(d.probationPeriod) + '</div><div class="amt">' + formatCurrency(d.probationSalary) + '</div><div class="sub2">Fixed monthly salary during the testing phase</div></div>' +
+        '<div class="panel"><div class="kicker2">Probation &middot; <span data-field="probationPeriod">' + val(d.probationPeriod) + '</span></div><div class="amt" data-field="probationSalary">' + formatCurrency(d.probationSalary) + '</div><div class="sub2">Fixed monthly salary during the testing phase</div></div>' +
         '<div class="arrow">' + icon("chevron-down", 20, "#9CA3AF") + '</div>' +
-        '<div class="panel dark"><div class="kicker2">Post-Confirmation</div><div class="amt">' + formatCurrency(d.ctcAmount) + ' <span style="font-size:10pt;font-weight:400;opacity:0.85;">/ yr</span></div><div class="sub2">' + formatCurrency(d.monthlyGross) + ' monthly gross &middot; details in Annexure B</div></div>' +
+        '<div class="panel dark"><div class="kicker2">Post-Confirmation</div><div class="amt" data-field="ctcAmount">' + formatCurrency(d.ctcAmount) + ' <span style="font-size:10pt;font-weight:400;opacity:0.85;">/ yr</span></div><div class="sub2" data-field="monthlyGross">' + formatCurrency(d.monthlyGross) + ' monthly gross &middot; details in Annexure B</div></div>' +
         '</div>' +
         '<div class="banner" style="margin-top:5mm;">' + badge("shield", 32) + '<div>The probation salary is a fixed, testing-phase compensation. Your full CTC, increments, and benefits apply only after successful confirmation at the end of the probation period.</div></div>' +
         '<div class="paycard">' + rows + '</div>';
@@ -405,21 +467,21 @@ export function generateDocument(dt: string, rawD: DocumentData, LOGO_BLACK: str
         '<p class="body">With reference to your application and interview with us, we are pleased to offer you an internship with Triple S Production (&ldquo;the Company&rdquo;), on the terms set out in this letter and its Annexures. This letter summarises the key terms of your internship &mdash; a detailed Internship Agreement will be shared for signature on or before your date of joining.</p>' +
         '<div class="strip">' +
         '<div class="cell"><div class="lbl">Engagement Type</div><div class="val">Internship</div></div>' +
-        '<div class="cell"><div class="lbl">Location</div><div class="val">' + val(d.officeLocation) + '</div></div>' +
-        '<div class="cell"><div class="lbl">Department</div><div class="val">' + val(d.department) + '</div></div>' +
-        '<div class="cell"><div class="lbl">Working Hours</div><div class="val">' + val(d.workingHours) + '</div></div>' +
+        '<div class="cell"><div class="lbl">Location</div><div class="val" data-field="officeLocation">' + val(d.officeLocation) + '</div></div>' +
+        '<div class="cell"><div class="lbl">Department</div><div class="val" data-field="department">' + val(d.department) + '</div></div>' +
+        '<div class="cell"><div class="lbl">Working Hours</div><div class="val" data-field="workingHours">' + val(d.workingHours) + '</div></div>' +
         '</div>' +
         '<div class="infocard2"><div class="hd2">' + icon("user", 16, "#ffffff") + ' <span>Intern Information</span></div><div class="rows">' +
-        '<div class="row2">' + badge("briefcase", 30, false, "#F4F4F6") + '<div><div class="lbl">Designation</div><div class="val">' + val(d.designation) + '</div></div></div>' +
-        '<div class="row2">' + badge("users", 30, false, "#F4F4F6") + '<div><div class="lbl">Reporting To</div><div class="val">' + val(d.reportingManager) + '</div></div></div>' +
-        '<div class="row2">' + badge("calendar", 30, false, "#F4F4F6") + '<div><div class="lbl">Date of Joining</div><div class="val">' + val(d.dateOfJoining) + '</div></div></div>' +
-        '<div class="row2">' + badge("hourglass", 30, false, "#F4F4F6") + '<div><div class="lbl">Internship Duration</div><div class="val">' + val(d.probationPeriod) + ' (until ' + val(d.internshipEndDate) + ')</div></div></div>' +
-        '<div class="row2">' + badge("pin", 30, false, "#F4F4F6") + '<div><div class="lbl">Place of Work</div><div class="val">' + val(d.officeLocation) + '</div></div></div>' +
-        '<div class="row2">' + badge("lock", 30, false, "#F4F4F6") + '<div><div class="lbl">Notice Period</div><div class="val">' + val(d.noticePeriod) + '</div></div></div>' +
+        '<div class="row2">' + badge("briefcase", 30, false, "#F4F4F6") + '<div><div class="lbl">Designation</div><div class="val" data-field="designation">' + val(d.designation) + '</div></div></div>' +
+        '<div class="row2">' + badge("users", 30, false, "#F4F4F6") + '<div><div class="lbl">Reporting To</div><div class="val" data-field="reportingManager">' + val(d.reportingManager) + '</div></div></div>' +
+        '<div class="row2">' + badge("calendar", 30, false, "#F4F4F6") + '<div><div class="lbl">Date of Joining</div><div class="val" data-field="dateOfJoining">' + val(d.dateOfJoining) + '</div></div></div>' +
+        '<div class="row2">' + badge("hourglass", 30, false, "#F4F4F6") + '<div><div class="lbl">Internship Duration</div><div class="val" data-field="probationPeriod">' + val(d.probationPeriod) + ' (until <span data-field="internshipEndDate">' + val(d.internshipEndDate) + '</span>)</div></div></div>' +
+        '<div class="row2">' + badge("pin", 30, false, "#F4F4F6") + '<div><div class="lbl">Place of Work</div><div class="val" data-field="officeLocation">' + val(d.officeLocation) + '</div></div></div>' +
+        '<div class="row2">' + badge("lock", 30, false, "#F4F4F6") + '<div><div class="lbl">Notice Period</div><div class="val" data-field="noticePeriod">' + val(d.noticePeriod) + '</div></div></div>' +
         '</div></div>' +
         '<div class="banner">' + badge("shield", 32) + '<div>This internship is subject to successful verification of your documents, educational qualifications, and professional references. Any discrepancy discovered at any stage may result in withdrawal of this offer.</div></div>' +
-        '<div class="sig2"><div><div class="name">' + val(d.proprietorName) + '</div><div class="role">Founder, Triple S Production</div></div>' +
-        '<div style="text-align:right;"><div class="role">Signed &amp; issued on</div><div class="name">' + val(d.letterDate) + '</div></div></div>';
+        '<div class="sig2"><div><div class="name" data-field="proprietorName">' + val(d.proprietorName) + '</div><div class="role">Founder, Triple S Production</div></div>' +
+        '<div style="text-align:right;"><div class="role">Signed &amp; issued on</div><div class="name" data-field="letterDate">' + val(d.letterDate) + '</div></div></div>';
       return page(inner, 2, d, "Letter of Internship");
     }
     function buildIntern3(d: DocumentData) {
@@ -618,11 +680,11 @@ export function generateDocument(dt: string, rawD: DocumentData, LOGO_BLACK: str
       const city = esc(((d.officeAddress || "Satara").split(",").pop() || "").trim() || "Satara");
       const page1 =
         '<h1 class="pt">Employee Agreement</h1>' +
-        '<p class="body">This Employment Agreement (&ldquo;Agreement&rdquo;) is made on ' + val(d.letterDate) + ' between <strong>Triple S Production</strong> (&ldquo;the Company&rdquo;) and <strong>' + val(d.candidateName) + '</strong> (&ldquo;the Employee&rdquo;), collectively &ldquo;the Parties&rdquo;.</p>' +
-        '<p class="body"><strong>1. Appointment.</strong> The Company appoints the Employee, and the Employee accepts appointment, as ' + val(d.designation) + ' in the ' + val(d.department) + ' department, reporting to ' + val(d.reportingManager) + ', effective from ' + val(d.dateOfJoining) + '.</p>' +
-        '<p class="body"><strong>2. Term &amp; Probation.</strong> The Employee shall be on probation for ' + val(d.probationPeriod) + ' from the date of joining, during which either Party may terminate this Agreement with 7 days&rsquo; written notice. On successful completion of probation, the appointment shall be confirmed in writing.</p>' +
-        '<p class="body"><strong>3. Place of Work &amp; Working Hours.</strong> The Employee shall be based at the Company&rsquo;s ' + val(d.officeLocation) + ', working ' + val(d.workingHours) + ', and may be assigned to remote or hybrid work at the Company&rsquo;s discretion.</p>' +
-        '<p class="body"><strong>4. Remuneration.</strong> The Employee shall be paid an annual compensation of &#8377;' + val(d.ctcAmount) + ', payable monthly, subject to applicable statutory deductions and periodic review at the Company&rsquo;s discretion.</p>';
+        '<p class="body">This Employment Agreement (&ldquo;Agreement&rdquo;) is made on <span data-field="letterDate">' + val(d.letterDate) + '</span> between <strong>Triple S Production</strong> (&ldquo;the Company&rdquo;) and <strong><span data-field="candidateName">' + val(d.candidateName) + '</span></strong> (&ldquo;the Employee&rdquo;), collectively &ldquo;the Parties&rdquo;.</p>' +
+        '<p class="body"><strong>1. Appointment.</strong> The Company appoints the Employee, and the Employee accepts appointment, as <span data-field="designation">' + val(d.designation) + '</span> in the <span data-field="department">' + val(d.department) + '</span> department, reporting to <span data-field="reportingManager">' + val(d.reportingManager) + '</span>, effective from <span data-field="dateOfJoining">' + val(d.dateOfJoining) + '</span>.</p>' +
+        '<p class="body"><strong>2. Term &amp; Probation.</strong> The Employee shall be on probation for <span data-field="probationPeriod">' + val(d.probationPeriod) + '</span> from the date of joining, during which either Party may terminate this Agreement with 7 days&rsquo; written notice. On successful completion of probation, the appointment shall be confirmed in writing.</p>' +
+        '<p class="body"><strong>3. Place of Work &amp; Working Hours.</strong> The Employee shall be based at the Company&rsquo;s <span data-field="officeLocation">' + val(d.officeLocation) + '</span>, working <span data-field="workingHours">' + val(d.workingHours) + '</span>, and may be assigned to remote or hybrid work at the Company&rsquo;s discretion.</p>' +
+        '<p class="body"><strong>4. Remuneration.</strong> The Employee shall be paid an annual compensation of &#8377;<span data-field="ctcAmount">' + val(d.ctcAmount) + '</span>, payable monthly, subject to applicable statutory deductions and periodic review at the Company&rsquo;s discretion.</p>';
       const dp = deptProfile(d);
       const page2 =
         '<p class="body"><strong>5. Working Hours &amp; Time Credit.</strong> The Employee shall log a minimum of 8 active working hours per working day through the Company&rsquo;s time-tracking system. Active hours logged beyond 8 in a day shall accrue as time credit, at the rate of 8 accrued credit hours equalling 1 day of leave, redeemable subject to Company approval. Unapproved or uninformed absence, and any shortfall against the required monthly hours, shall result in a proportionate deduction from salary in line with the Payment of Wages Act and the Company&rsquo;s wage deduction policy. Medical leave may be treated as paid leave at the Company&rsquo;s discretion, subject to supporting documentation.</p>' +

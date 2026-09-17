@@ -6,15 +6,11 @@ import type { SortKey } from "@/types";
 import { FilterSelect, FilterSearch, type FilterOption } from "./FilterSelect";
 import { ArrowDown, ArrowUp, Star, X } from "lucide-react";
 
-const EMPLOYMENT_STATUSES = [
-  { label: "All Employment Status", value: "all" },
-  { label: "Currently Working", value: "CURRENTLY_WORKING" },
-  { label: "Student / Fresher", value: "STUDENT_FRESHER" },
-  { label: "Not Currently Working", value: "NOT_CURRENTLY_WORKING" },
-  { label: "Status Unknown", value: "UNKNOWN" },
-];
+interface FiltersBarProps {
+  onBulkDelete?: () => void;
+}
 
-export default function FiltersBar() {
+export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
   const { filters, setFilters, clearFilters, roles } = useStore();
   const hasActive =
     filters.search ||
@@ -22,7 +18,6 @@ export default function FiltersBar() {
     filters.status !== "all" ||
     filters.city ||
     filters.gender !== "all" ||
-    filters.employmentStatus !== "all" ||
     filters.exp !== "all";
 
   // ─── Local search state: debounce 200ms before pushing to global filter ─────
@@ -63,8 +58,6 @@ export default function FiltersBar() {
     { value: "all", label: "All Genders" },
     ...GENDERS.map(g => ({ value: g, label: g })),
   ], []);
-
-  const employmentStatusOptions: FilterOption[] = useMemo(() => EMPLOYMENT_STATUSES, []);
 
   const expOptions: FilterOption[] = useMemo(() => [
     { value: "all", label: "All Exp." },
@@ -121,16 +114,7 @@ export default function FiltersBar() {
         containerClassName="flex-1 min-w-[95px]"
       />
 
-      {/* 5. Employment Status */}
-      <FilterSelect
-        options={employmentStatusOptions}
-        value={filters.employmentStatus}
-        onChange={val => setFilters({ employmentStatus: val })}
-        placeholder="Employment Status"
-        containerClassName="flex-1 min-w-[145px]"
-      />
-
-      {/* 6. All Exp. */}
+      {/* 5. All Exp. */}
       <FilterSelect
         options={expOptions}
         value={filters.exp}
@@ -139,7 +123,7 @@ export default function FiltersBar() {
         containerClassName="flex-1 min-w-[88px]"
       />
 
-      {/* 7. All Cities */}
+      {/* 6. All Cities */}
       <FilterSelect
         options={cityOptions}
         value={filters.city}
@@ -149,7 +133,7 @@ export default function FiltersBar() {
         containerClassName="flex-1 min-w-[92px]"
       />
 
-      {/* 8. Newest First (Sort) */}
+      {/* 7. Newest First (Sort) */}
       <FilterSelect
         options={sortOptions}
         value={filters.sort}
@@ -158,6 +142,33 @@ export default function FiltersBar() {
         align="right"
         containerClassName="flex-1 min-w-[125px]"
       />
+
+      {/* 8. Bulk Delete button */}
+      {onBulkDelete && (
+        <button
+          type="button"
+          onClick={onBulkDelete}
+          className="h-[40px] px-3.5 rounded-[9px] text-[11.5px] font-semibold tracking-wide transition-all duration-150 inline-flex items-center justify-center gap-1.5 cursor-pointer select-none active:scale-[0.98] whitespace-nowrap flex-shrink-0"
+          style={{
+            background: "#151719",
+            border: "1px solid #303238",
+            color: "#9A9FA8",
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = "rgba(239, 68, 68, 0.10)";
+            e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.35)";
+            e.currentTarget.style.color = "#EF4444";
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = "#151719";
+            e.currentTarget.style.borderColor = "#303238";
+            e.currentTarget.style.color = "#9A9FA8";
+          }}
+        >
+          <span>⌀</span>
+          <span>BULK DELETE</span>
+        </button>
+      )}
 
       {/* Clear Active Filters button */}
       {hasActive && (

@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import type { Candidate, Role, Contract, Filters, Interview, Offer, CandidateDocument, Employee, EmployeeBond, EmployeeResignation } from "@/types";
 import { DEFAULT_ROLES, generateSeedCandidates, getContractTemplates } from "@/lib/data";
 import { exportCandidatesToCSV } from "@/lib/utils/csv";
+import { DialogProvider } from "@/lib/dialog";
 
 interface Store {
   candidates: Candidate[];
@@ -15,10 +16,13 @@ interface Store {
   addCandidate: (c: Candidate) => void;
   addCandidates: (c: Candidate[]) => void;
   updateCandidate: (id: string, patch: Partial<Candidate>) => void;
-  deleteCandidate: (id: string) => void;
-  deleteCandidates: (ids: string[]) => void;
-  deleteBelowScore: (threshold: number) => number;
+  deleteCandidate: (id: string) => Promise<void>;
+  deleteCandidates: (ids: string[]) => Promise<void>;
+  deleteBelowScore: (threshold: number) => Promise<number>;
   addRole: (r: Role) => void;
+  updateRole: (id: string, patch: Partial<Role>) => Promise<void>;
+  deleteRole: (id: string) => Promise<void>;
+  deleteRoles: (ids: string[]) => Promise<void>;
   updateContract: (id: string, update: string | Partial<Contract>) => void;
   globalBrandAssets: { logoUrl: string; signUrl: string };
   setGlobalBrandAsset: (type: "logo" | "sign", url: string) => void;
@@ -337,27 +341,49 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     import("@/lib/supabase").then(db => db.updateDBCandidate(id, patch)).catch(err => console.error(err));
   }, []);
 
-  const deleteCandidate = useCallback((id: string) => {
+  const deleteCandidate = useCallback(async (id: string) => {
     setCandidatesRaw(prev => {
       const next = prev.filter(c => c.id !== id);
       setRolesRaw(rPrev => computeRoleCounts(next, rPrev));
       return next;
     });
-    import("@/lib/supabase").then(db => db.deleteDBCandidate(id)).catch(err => console.error(err));
+    setSelectedIds(prev => {
+      if (!prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    try {
+      const db = await import("@/lib/supabase");
+      await db.deleteDBCandidate(id);
+    } catch (err) {
+      console.error("[HireDesk Store] Failed to delete candidate from Supabase:", err);
+      throw err;
+    }
   }, []);
 
-  const deleteCandidates = useCallback((ids: string[]) => {
+  const deleteCandidates = useCallback(async (ids: string[]) => {
     const idSet = new Set(ids);
     setCandidatesRaw(prev => {
       const next = prev.filter(c => !idSet.has(c.id));
       setRolesRaw(rPrev => computeRoleCounts(next, rPrev));
       return next;
     });
-    setSelectedIds(new Set());
-    import("@/lib/supabase").then(db => db.deleteDBCandidates(ids)).catch(err => console.error(err));
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      ids.forEach(id => next.delete(id));
+      return next;
+    });
+    try {
+      const db = await import("@/lib/supabase");
+      await db.deleteDBCandidates(ids);
+    } catch (err) {
+      console.error("[HireDesk Store] Failed to delete candidates from Supabase:", err);
+      throw err;
+    }
   }, []);
 
-  const deleteBelowScore = useCallback((threshold: number) => {
+  const deleteBelowScore = useCallback(async (threshold: number) => {
     let deletedCount = 0;
     const toDeleteIds: string[] = [];
     setCandidatesRaw(prev => {
@@ -373,14 +399,79 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       return next;
     });
     if (toDeleteIds.length > 0) {
-      import("@/lib/supabase").then(db => db.deleteDBCandidates(toDeleteIds)).catch(err => console.error(err));
+      try {
+        const db = await import("@/lib/supabase");
+        await db.deleteDBCandidates(toDeleteIds);
+      } catch (err) {
+        console.error("[HireDesk Store] Failed to delete below-score candidates from Supabase:", err);
+      }
     }
     return deletedCount;
   }, []);
 
   const addRole = useCallback((r: Role) => {
-    setRolesRaw(prev => [...prev, r]);
+    setRolesRaw(prev => {
+      const next = [...prev, r];
+      if (typeof window !== "undefined") {
+        try { localStorage.setItem("hiredesk_custom_roles", JSON.stringify(next)); } catch (e) {}
+      }
+      return next;
+    });
     import("@/lib/supabase").then(db => db.insertDBRoles([r])).catch(console.error);
+  }, []);
+
+  const updateRole = useCallback(async (id: string, patch: Partial<Role>) => {
+    setRolesRaw(prev => {
+      const next = prev.map(r => r.id === id ? { ...r, ...patch } : r);
+      if (typeof window !== "undefined") {
+        try { localStorage.setItem("hiredesk_custom_roles", JSON.stringify(next)); } catch (e) {}
+      }
+      return next;
+    });
+    if (patch.name) {
+      setCandidatesRaw(prev => prev.map(c => c.roleId === id ? { ...c, roleName: patch.name! } : c));
+    }
+    try {
+      const db = await import("@/lib/supabase");
+      await db.updateDBRole(id, patch);
+    } catch (err) {
+      console.error("[HireDesk Store] Failed to update role in Supabase:", err);
+    }
+  }, []);
+
+  const deleteRole = useCallback(async (id: string) => {
+    setRolesRaw(prev => {
+      const next = prev.filter(r => r.id !== id);
+      if (typeof window !== "undefined") {
+        try { localStorage.setItem("hiredesk_custom_roles", JSON.stringify(next)); } catch (e) {}
+      }
+      return next;
+    });
+    setFiltersRaw(prev => prev.roleId === id ? { ...prev, roleId: "" } : prev);
+    try {
+      const db = await import("@/lib/supabase");
+      await db.deleteDBRole(id);
+    } catch (err) {
+      console.error("[HireDesk Store] Failed to delete role from Supabase:", err);
+    }
+  }, []);
+
+  const deleteRoles = useCallback(async (ids: string[]) => {
+    const idSet = new Set(ids);
+    setRolesRaw(prev => {
+      const next = prev.filter(r => !idSet.has(r.id));
+      if (typeof window !== "undefined") {
+        try { localStorage.setItem("hiredesk_custom_roles", JSON.stringify(next)); } catch (e) {}
+      }
+      return next;
+    });
+    setFiltersRaw(prev => idSet.has(prev.roleId) ? { ...prev, roleId: "" } : prev);
+    try {
+      const db = await import("@/lib/supabase");
+      await db.deleteDBRoles(ids);
+    } catch (err) {
+      console.error("[HireDesk Store] Failed to delete roles from Supabase:", err);
+    }
   }, []);
 
   const updateContract = useCallback((id: string, update: string | Partial<Contract>) => {
@@ -511,7 +602,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     candidates, roles, contracts, filters, selectedIds,
     setCandidates, setRoles, addCandidate, addCandidates,
     updateCandidate, deleteCandidate, deleteCandidates, deleteBelowScore,
-    addRole, updateContract,
+    addRole, updateRole, deleteRole, deleteRoles, updateContract,
     globalBrandAssets, setGlobalBrandAsset, deleteGlobalBrandAsset,
     setContractAsset, deleteContractAsset,
     setFilters, clearFilters,
@@ -523,7 +614,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     candidates, roles, contracts, filters, selectedIds,
     setCandidates, setRoles, addCandidate, addCandidates,
     updateCandidate, deleteCandidate, deleteCandidates, deleteBelowScore,
-    addRole, updateContract,
+    addRole, updateRole, deleteRole, deleteRoles, updateContract,
     globalBrandAssets, setGlobalBrandAsset, deleteGlobalBrandAsset,
     setContractAsset, deleteContractAsset,
     setFilters, clearFilters,
@@ -583,7 +674,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     });
   }, [candidates, employees, roles, offers]);
 
-  return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;
+  return <StoreCtx.Provider value={value}><DialogProvider>{children}</DialogProvider></StoreCtx.Provider>;
 }
 
 export function useStore() {

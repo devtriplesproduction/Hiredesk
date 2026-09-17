@@ -54,24 +54,26 @@ export function Modal({ open, onClose, children, className }: { open:boolean; on
   );
 }
 
-export function ScoreBadge({ score }: { score:number }) {
+export function ScoreBadge({ score, className }: { score:number; className?: string }) {
   const isHi = score >= 70;
   const isMid = score >= 45;
   return (
     <span className={clsx(
-      "font-mono text-[11.5px] font-semibold min-w-[36px] h-[26px] px-2 rounded-[7px] border inline-flex items-center justify-center select-none",
-      isHi ? "score-hi" : isMid ? "score-mid" : "score-lo"
+      "font-mono text-[11.5px] font-semibold min-w-[36px] h-[26px] px-2 rounded-[7px] border inline-flex items-center justify-center select-none overflow-hidden truncate",
+      isHi ? "score-hi" : isMid ? "score-mid" : "score-lo",
+      className
     )}>
       {score}
     </span>
   );
 }
 
-export function StatusBadge({ status }: { status:Candidate["status"] }) {
+export function StatusBadge({ status, className }: { status:Candidate["status"]; className?: string }) {
   return (
     <span className={clsx(
-      "text-[10.5px] font-semibold uppercase tracking-wider h-[23px] px-2.5 rounded-[6px] border inline-flex items-center justify-center whitespace-nowrap select-none",
-      `status-${status}`
+      "text-[10.5px] font-semibold uppercase tracking-wider h-[23px] px-2.5 rounded-[6px] border inline-flex items-center justify-center whitespace-nowrap select-none overflow-hidden truncate",
+      `status-${status}`,
+      className
     )}>
       {status}
     </span>

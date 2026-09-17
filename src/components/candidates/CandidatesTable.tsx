@@ -20,9 +20,10 @@ interface RowProps {
   isSelected: boolean;
   onSelect: (id: string) => void;
   onView: (c: Candidate) => void;
+  onDelete: (e: React.MouseEvent, c: Candidate) => void;
 }
 
-const CandidateRow = memo(function CandidateRow({ candidate: c, isSelected, onSelect, onView }: RowProps) {
+const CandidateRow = memo(function CandidateRow({ candidate: c, isSelected, onSelect, onView, onDelete }: RowProps) {
   const statusMeta = getEmploymentStatusMeta(c.employmentStatus);
 
   return (
@@ -74,12 +75,27 @@ const CandidateRow = memo(function CandidateRow({ candidate: c, isSelected, onSe
       </td>
       <td className={tdText}>{c.exp || "—"}</td>
       <td className={clsx(tdText, "whitespace-nowrap")}>{c.appliedAt || "—"}</td>
+      <td className={clsx(tdCls, "w-[44px] text-right")} onClick={e => e.stopPropagation()}>
+        <button
+          type="button"
+          onClick={e => onDelete(e, c)}
+          title={`Delete ${c.name}`}
+          className="w-7 h-7 rounded-[7px] inline-flex items-center justify-center text-[#666C76] hover:text-[#EF4444] hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-all cursor-pointer"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            <line x1="10" y1="11" x2="10" y2="17" />
+            <line x1="14" y1="11" x2="14" y2="17" />
+          </svg>
+        </button>
+      </td>
     </tr>
   );
 });
 
 export default function CandidatesTable() {
-  const { candidates, updateCandidate, deleteCandidates, selectedIds, toggleSelect, toggleSelectAll, clearSelection } = useStore();
+  const { candidates, updateCandidate, deleteCandidate, deleteCandidates, selectedIds, toggleSelect, toggleSelectAll, clearSelection } = useStore();
   const filtered = useFilteredCandidates();
   const [activeCandidate, setActiveCandidate] = useState<Candidate | null>(null);
   const [showBulkDelete, setShowBulkDelete] = useState(false);
@@ -139,20 +155,67 @@ export default function CandidatesTable() {
 
   const handleView = useCallback((c: Candidate) => setActiveCandidate(c), []);
 
-  const handleReject = useCallback(async (id: string, name: string) => {
+  const handleDeleteCandidate = useCallback(async (e: React.MouseEvent, c: Candidate) => {
+    e.stopPropagation();
     const confirmed = await dialog.confirm({
       title: "Delete Candidate",
-      message: `Are you sure you want to delete ${name}?`,
+      message: `Are you sure you want to permanently delete ${c.name}? This action cannot be undone.`,
       confirmText: "DELETE",
       cancelText: "CANCEL",
       isDestructive: true,
     });
-    if (confirmed) updateCandidate(id, { status: "rejected" });
-  }, [updateCandidate]);
+    if (!confirmed) return;
+
+    try {
+      await deleteCandidate(c.id);
+      dialog.success({
+        title: "Candidate Deleted",
+        message: `Successfully deleted ${c.name} from the database.`,
+      });
+    } catch (err: any) {
+      console.error("[CandidatesTable] Delete error:", err);
+      dialog.error({
+        title: "Deletion Failed",
+        message: `Unable to delete candidate: ${err?.message || "Database error"}.`,
+      });
+    }
+  }, [deleteCandidate]);
 
   return (
     <>
-      <FiltersBar />
+      {/* ── Candidates Title Row ────────────────────────────────────────── */}
+      <div className="flex items-start sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-[22px] font-extrabold tracking-tight text-white">Candidates</h1>
+          <div className="font-mono text-[10px] text-[var(--text-3)] mt-1 uppercase tracking-widest">
+            All applicants · Filter · Review · Score
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowSmartMatch(true)}
+          className="h-[35px] px-3.5 rounded-[8px] text-[11.5px] font-semibold tracking-wide transition-all duration-150 inline-flex items-center justify-center gap-1.5 cursor-pointer select-none active:scale-[0.98] whitespace-nowrap shrink-0"
+          style={{
+            background: "rgba(0, 217, 255, 0.08)",
+            border: "1px solid rgba(0, 217, 255, 0.25)",
+            color: "#00D9FF",
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = "rgba(0, 217, 255, 0.15)";
+            e.currentTarget.style.borderColor = "rgba(0, 217, 255, 0.45)";
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = "rgba(0, 217, 255, 0.08)";
+            e.currentTarget.style.borderColor = "rgba(0, 217, 255, 0.25)";
+          }}
+        >
+          <span>✨</span>
+          <span>SMART MATCH</span>
+        </button>
+      </div>
+
+      <FiltersBar onBulkDelete={() => setShowBulkDelete(true)} />
 
       {/* Bulk action bar */}
       {selCount > 0 && (
@@ -168,58 +231,9 @@ export default function CandidatesTable() {
         </div>
       )}
 
-      {/* Results count & Actions */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-3.5">
-        <div className="text-[12px] text-[#858B95] font-medium">
-          {filtered.length} result{filtered.length !== 1 ? "s" : ""}
-        </div>
-        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => setShowSmartMatch(true)}
-            className="h-[35px] px-3.5 rounded-[8px] text-[11.5px] font-semibold tracking-wide transition-all duration-150 inline-flex items-center justify-center gap-1.5 cursor-pointer select-none active:scale-[0.98]"
-            style={{
-              background: "rgba(0, 217, 255, 0.08)",
-              border: "1px solid rgba(0, 217, 255, 0.25)",
-              color: "#00D9FF",
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = "rgba(0, 217, 255, 0.15)";
-              e.currentTarget.style.borderColor = "rgba(0, 217, 255, 0.45)";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = "rgba(0, 217, 255, 0.08)";
-              e.currentTarget.style.borderColor = "rgba(0, 217, 255, 0.25)";
-            }}
-          >
-            <span>✨</span>
-            <span>SMART MATCH</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setShowBulkDelete(true)}
-            className="h-[35px] px-3.5 rounded-[8px] text-[11.5px] font-semibold tracking-wide transition-all duration-150 inline-flex items-center justify-center gap-1.5 cursor-pointer select-none active:scale-[0.98]"
-            style={{
-              background: "#151719",
-              border: "1px solid #2B2F35",
-              color: "#9A9FA8",
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = "rgba(239, 68, 68, 0.10)";
-              e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.35)";
-              e.currentTarget.style.color = "#EF4444";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = "#151719";
-              e.currentTarget.style.borderColor = "#2B2F35";
-              e.currentTarget.style.color = "#9A9FA8";
-            }}
-          >
-            <span>⌀</span>
-            <span>BULK DELETE</span>
-          </button>
-        </div>
+      {/* Results count */}
+      <div className="text-[12px] text-[#858B95] font-medium mb-3.5">
+        {filtered.length} result{filtered.length !== 1 ? "s" : ""}
       </div>
 
       {filtered.length === 0
@@ -279,7 +293,7 @@ export default function CandidatesTable() {
 
                     <div className="flex justify-end gap-2 border-t border-[#1D2126] pt-3">
                       <Btn variant="ghost" size="sm" onClick={() => handleView(c)}>View Profile</Btn>
-                      <Btn variant="danger" size="sm" onClick={() => handleReject(c.id, c.name)}>✕</Btn>
+                      <Btn variant="danger" size="sm" onClick={(e) => handleDeleteCandidate(e, c)}>✕ Delete</Btn>
                     </div>
                   </div>
                 );
@@ -312,6 +326,7 @@ export default function CandidatesTable() {
                       <th className={clsx(thCls, "w-[11%]")}>Employment</th>
                       <th className={clsx(thCls, "w-[8%]")}>Exp</th>
                       <th className={clsx(thCls, "w-[10%]")}>Applied</th>
+                      <th className={clsx(thCls, "w-[44px] text-right")}></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -322,6 +337,7 @@ export default function CandidatesTable() {
                         isSelected={selectedIds.has(c.id)}
                         onSelect={toggleSelect}
                         onView={handleView}
+                        onDelete={handleDeleteCandidate}
                       />
                     ))}
                   </tbody>

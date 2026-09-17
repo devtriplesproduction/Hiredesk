@@ -174,6 +174,37 @@ input[type="range"]::-webkit-slider-thumb {
   -webkit-user-select: text !important;
 }
 
+.document-studio-wrapper .page[contenteditable="true"] {
+  cursor: text;
+  outline: none;
+}
+
+.document-studio-wrapper .page [contenteditable="false"],
+.document-studio-wrapper .page img,
+.document-studio-wrapper .page svg,
+.document-studio-wrapper .page .badge,
+.document-studio-wrapper .page .page-wm,
+.document-studio-wrapper .page .wm {
+  cursor: default;
+  user-select: none !important;
+}
+
+.document-studio-wrapper .page:focus,
+.document-studio-wrapper .page *:focus {
+  outline: none;
+}
+
+.document-studio-wrapper .page [data-field]:hover {
+  outline: 1px dashed rgba(167, 139, 250, 0.45);
+  border-radius: 2px;
+}
+
+.document-studio-wrapper .page [data-field]:focus {
+  outline: 1.5px solid rgba(167, 139, 250, 0.9);
+  background: rgba(167, 139, 250, 0.08);
+  border-radius: 2px;
+}
+
 .document-studio-wrapper .page ::selection,
 .document-studio-wrapper .page::selection,
 .print-paper ::selection,

@@ -150,21 +150,23 @@ export default function ContractsList() {
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-2.5 w-full sm:w-auto flex-shrink-0 mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-white/[0.06] sm:border-t-0 justify-end">
-                  <Btn
+                  <button
+                    type="button"
                     onClick={() => { setPreselectedCandidateId(""); setGenerating(c); }}
-                    className="h-[38px] px-4 rounded-xl text-[13px] font-semibold transition-all duration-150 flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 bg-white hover:bg-[#F2F4F7] active:bg-[#E4E7ED] text-black shadow-sm shadow-white/5 active:scale-[0.98] select-none"
+                    className="group/gen relative h-[38px] px-4 rounded-xl text-[12.5px] font-bold uppercase tracking-wider transition-all duration-200 flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-gradient-to-b from-[#FFFFFF] to-[#E9ECEF] text-[#0A0C10] shadow-[0_2px_12px_rgba(255,255,255,0.12),inset_0_1px_0_rgba(255,255,255,0.9)] hover:shadow-[0_4px_18px_rgba(0,217,255,0.28),inset_0_1px_0_rgba(255,255,255,1)] hover:from-white hover:to-white active:scale-[0.97] select-none cursor-pointer border border-white/60 hover:border-[#00D9FF]/80 outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF]/40"
                   >
-                    <Sparkles size={13} className="text-black/75" />
-                    <span>Generate</span>
-                  </Btn>
+                    <Sparkles size={13.5} className="text-[#0A0C10] group-hover/gen:text-[#00B4D8] transition-colors duration-200 group-hover/gen:rotate-12" />
+                    <span className="leading-none">Generate</span>
+                  </button>
 
-                  <Btn
+                  <button
+                    type="button"
                     onClick={() => setEditing(c)}
-                    className="h-[38px] px-3.5 rounded-xl text-[13px] font-medium transition-all duration-150 flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 bg-[#1a1c22] hover:bg-[#242730] active:bg-[#16181d] text-[#D0D5DE] hover:text-white border border-[#2f333d] hover:border-[#3f4553] active:scale-[0.98] select-none"
+                    className="group/edit relative h-[38px] px-3.5 rounded-xl text-[12px] font-semibold uppercase tracking-wider transition-all duration-200 flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-[#16181D]/90 hover:bg-[#1D2128] active:bg-[#121417] text-[#C4C9D4] hover:text-white border border-[#2B303A] hover:border-[#00D9FF]/40 hover:shadow-[0_2px_12px_rgba(0,0,0,0.4),0_0_12px_rgba(0,217,255,0.06)] active:scale-[0.97] select-none cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF]/30"
                   >
-                    <FileEdit size={13} className="text-[#8B919C] group-hover:text-[#D0D5DE]" />
-                    <span>Edit Template</span>
-                  </Btn>
+                    <FileEdit size={13.5} className="text-[#848B98] group-hover/edit:text-[#00D9FF] transition-colors duration-200" />
+                    <span className="leading-none">Edit Template</span>
+                  </button>
                 </div>
               </div>
             );

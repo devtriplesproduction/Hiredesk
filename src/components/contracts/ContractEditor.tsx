@@ -388,19 +388,6 @@ export default function ContractEditor({ contract, onBack }: Props) {
     }
   }, []);
 
-  // Formatting helper (B, I, U) preserving selection
-  const fmt = useCallback((cmd: string) => {
-    if (!editorRef.current) return;
-    const sel = window.getSelection();
-    const isInside = sel && sel.rangeCount > 0 && editorRef.current.contains(sel.getRangeAt(0).commonAncestorContainer);
-    if (!isInside && savedRangeRef.current) {
-      sel?.removeAllRanges();
-      sel?.addRange(savedRangeRef.current);
-    }
-    document.execCommand(cmd, false, undefined);
-    saveSelection();
-    handleInput();
-  }, [saveSelection, handleInput]);
 
   // Insert field at EXACT cursor position
   const insertField = useCallback((text: string) => {
@@ -898,39 +885,12 @@ export default function ContractEditor({ contract, onBack }: Props) {
               />
             </div>
 
-            {/* Format Toolbar */}
-            <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-[#8A909B] mb-2.5">
-                Format
-              </div>
-              <div className="flex gap-2">
-                {[
-                  { label: "B", cmd: "bold", title: "Bold" },
-                  { label: "I", cmd: "italic", title: "Italic" },
-                  { label: "U", cmd: "underline", title: "Underline" },
-                ].map(({ label, cmd, title }) => (
-                  <button
-                    key={cmd}
-                    type="button"
-                    onMouseDown={e => e.preventDefault()}
-                    onClick={() => fmt(cmd)}
-                    title={title}
-                    className="w-10 h-10 rounded-xl bg-[#17191D] hover:bg-[#20242C] active:bg-[#131518] border border-[#2A2F37] hover:border-[#00D9FF]/50 text-[#E8EAED] hover:text-white transition-all font-bold text-sm flex items-center justify-center cursor-pointer active:scale-95 shadow-sm"
-                  >
-                    <span className={cmd === "italic" ? "italic" : cmd === "underline" ? "underline" : ""}>
-                      {label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Insert Fields */}
-            <div>
+            <div className="flex-1 flex flex-col min-h-0">
               <div className="text-[11px] font-bold uppercase tracking-wider text-[#8A909B] mb-2.5">
                 Insert Field
               </div>
-              <div className="flex flex-col gap-1.5 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
+              <div className="flex flex-col gap-1.5 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                 {FIELDS.map(f => (
                   <button
                     key={f}

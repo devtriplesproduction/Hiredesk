@@ -116,18 +116,22 @@ export default function DashboardPage() {
           <div className="text-sm sm:text-base font-bold tracking-tight">Recent Candidates</div>
           <Btn variant="outline" size="sm" onClick={() => router.push("/candidates")}>View All →</Btn>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 overflow-x-auto">
           {recentCandidates.map(c => (
-            <div key={c.id} className="flex items-center gap-3 py-3 border-b border-[var(--border)] last:border-0">
+            <div key={c.id} className="grid grid-cols-[36px_1fr_44px_165px] sm:grid-cols-[36px_1fr_48px_175px] items-center gap-3 py-3 border-b border-[var(--border)] last:border-0 min-w-[320px]">
               <div className="w-9 h-9 rounded-xl bg-[var(--glass-3)] border border-[var(--border-2)] flex items-center justify-center font-bold text-sm flex-shrink-0">
                 {c.name[0]}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold">{c.name}</div>
-                <div className="font-mono text-[10px] text-[var(--text-3)]">{c.roleName} · {c.city} · {c.appliedAt}</div>
+              <div className="min-w-0">
+                <div className="text-sm font-semibold truncate">{c.name}</div>
+                <div className="font-mono text-[10px] text-[var(--text-3)] truncate">{c.roleName} · {c.city} · {c.appliedAt}</div>
               </div>
-              <ScoreBadge score={c.score.total} />
-              <StatusBadge status={c.status} />
+              <div className="flex items-center justify-center w-full">
+                <ScoreBadge score={c.score.total} className="w-full text-center" />
+              </div>
+              <div className="flex items-center justify-center w-full">
+                <StatusBadge status={c.status} className="w-full text-center" />
+              </div>
             </div>
           ))}
         </div>

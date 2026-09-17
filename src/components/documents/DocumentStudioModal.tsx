@@ -2,13 +2,29 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { DocumentPreview } from "./DocumentPreview";
-import { DocumentData, DOC_GROUPS } from "./documentGenerator";
-import { Candidate, Employee, EmployeeBond, EmployeeResignation, Offer } from "@/types";
+import {
+  DocumentData,
+  DOC_GROUPS,
+  hasSavedTemplate,
+  saveTemplatePermanently,
+  resetTemplateToDefault
+} from "./documentGenerator";
+import { Candidate, Employee, EmployeeBond, EmployeeResignation, Offer, Role } from "@/types";
 import { useStore } from "@/lib/store";
 import { format } from "date-fns";
 import { dialog } from "@/components/ui";
-import { FileText, Download, X } from "lucide-react";
+import {
+  FileText,
+  Download,
+  X,
+  Clock,
+  Save,
+  RotateCcw,
+  Edit3,
+  Check
+} from "lucide-react";
 import DateTimePicker from "@/components/ui/DateTimePicker";
+import { FilterSelect } from "@/components/candidates/FilterSelect";
 
 interface DocumentStudioModalProps {
   candidate: Candidate;
@@ -22,18 +38,18 @@ interface DocumentStudioModalProps {
 }
 
 const DOC_OPTIONS = [
-  { value: "offer-fulltime", label: "Offer Letter (Full-Time)", stage: "offer" },
-  { value: "offer-internship", label: "Offer Letter (Internship)", stage: "offer" },
-  { value: "employee-agreement", label: "Employee Agreement", stage: "onboarding" },
-  { value: "background-verification", label: "Background Verification Checklist", stage: "onboarding" },
-  { value: "handbook-ack", label: "Handbook Acknowledgment", stage: "onboarding" },
-  { value: "payroll-form", label: "Payroll Registration Form", stage: "onboarding" },
-  { value: "bond-agreement", label: "Service Bond Agreement", stage: "onboarding" },
-  { value: "relieving-letter", label: "Relieving Letter", stage: "exit" },
-  { value: "internship-completion", label: "Internship Completion Letter", stage: "exit" },
-  { value: "experience-letter", label: "Experience Certificate", stage: "exit" },
-  { value: "internship-certificate", label: "Internship Certificate", stage: "exit" },
-  { value: "continuing-obligation", label: "Continuing Obligation Reminder", stage: "exit" },
+  { value: "offer-fulltime", label: "Offer Letter (Full-Time)", stage: "offer", group: "Offer Stage" },
+  { value: "offer-internship", label: "Offer Letter (Internship)", stage: "offer", group: "Offer Stage" },
+  { value: "employee-agreement", label: "Employee Agreement", stage: "onboarding", group: "Onboarding" },
+  { value: "background-verification", label: "Background Verification Checklist", stage: "onboarding", group: "Onboarding" },
+  { value: "handbook-ack", label: "Handbook Acknowledgment", stage: "onboarding", group: "Onboarding" },
+  { value: "payroll-form", label: "Payroll Registration Form", stage: "onboarding", group: "Onboarding" },
+  { value: "bond-agreement", label: "Service Bond Agreement", stage: "onboarding", group: "Onboarding" },
+  { value: "relieving-letter", label: "Relieving Letter", stage: "exit", group: "Exit" },
+  { value: "internship-completion", label: "Internship Completion Letter", stage: "exit", group: "Exit" },
+  { value: "experience-letter", label: "Experience Certificate", stage: "exit", group: "Exit" },
+  { value: "internship-certificate", label: "Internship Certificate", stage: "exit", group: "Exit" },
+  { value: "continuing-obligation", label: "Continuing Obligation Reminder", stage: "exit", group: "Exit" },
 ];
 
 const FIELD_GROUPS: Record<string, { key: keyof DocumentData, label: string }[]> = {
@@ -41,6 +57,7 @@ const FIELD_GROUPS: Record<string, { key: keyof DocumentData, label: string }[]>
     { key: "candidateName", label: "Candidate Name" },
     { key: "designation", label: "Designation" },
     { key: "department", label: "Department" },
+    { key: "reportingManager", label: "Reporting To" },
     { key: "officeLocation", label: "Office Location" },
     { key: "workingHours", label: "Working Hours" },
   ],
@@ -85,17 +102,149 @@ const DATE_FIELD_KEYS = new Set<string>([
   "resignationDate",
 ]);
 
-export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candidate, offer, employee, employeeBond, employeeResignation, onClose, defaultStage, defaultDocType }) => {
-  const { updateOffer } = useStore();
-  const defaultOption = defaultDocType || DOC_OPTIONS.find(o => o.stage === defaultStage)?.value || "offer-fulltime";
+/**
+ * Dynamically resolves the Reporting Manager from Candidate, Offer, Employee, or Job/Role data.
+ * Never hardcodes the value.
+ */
+export const resolveReportingManager = (
+  candidate: Candidate,
+  offer?: Offer,
+  employee?: Employee,
+  roles: Role[] = []
+): string => {
+  // 1. Check existing saved offer data
+  if (offer?.documentData?.reportingManager && String(offer.documentData.reportingManager).trim()) {
+    return String(offer.documentData.reportingManager).trim();
+  }
+
+  // 2. Check candidate record properties
+  const candAny = candidate as any;
+  if (candAny?.reportingManager && String(candAny.reportingManager).trim()) {
+    return String(candAny.reportingManager).trim();
+  }
+  if (candAny?.reportingTo && String(candAny.reportingTo).trim()) {
+    return String(candAny.reportingTo).trim();
+  }
+  if (candAny?.manager && String(candAny.manager).trim()) {
+    return String(candAny.manager).trim();
+  }
+
+  // 3. Check employee record properties
+  const empAny = employee as any;
+  if (empAny?.reportingManager && String(empAny.reportingManager).trim()) {
+    return String(empAny.reportingManager).trim();
+  }
+  if (empAny?.reportingTo && String(empAny.reportingTo).trim()) {
+    return String(empAny.reportingTo).trim();
+  }
+  if (empAny?.manager && String(empAny.manager).trim()) {
+    return String(empAny.manager).trim();
+  }
+
+  // 4. Check candidate's matched role in store / job definition
+  const matchedRole = roles.find(
+    (r) =>
+      r.id === candidate.roleId ||
+      r.name.toLowerCase() === (candidate.roleName || "").toLowerCase()
+  );
+  const roleAny = matchedRole as any;
+  if (roleAny?.reportingManager && String(roleAny.reportingManager).trim()) {
+    return String(roleAny.reportingManager).trim();
+  }
+  if (roleAny?.reportingTo && String(roleAny.reportingTo).trim()) {
+    return String(roleAny.reportingTo).trim();
+  }
+
+  // 5. Dynamically infer from candidate's designation/job/department
+  const roleLower = (candidate.roleName || matchedRole?.name || "").toLowerCase();
+  const deptLower = (candAny?.department || "").toLowerCase();
+
+  if (
+    roleLower.includes("dev") ||
+    roleLower.includes("web") ||
+    roleLower.includes("software") ||
+    roleLower.includes("frontend") ||
+    roleLower.includes("backend") ||
+    roleLower.includes("engineer") ||
+    deptLower.includes("dev")
+  ) {
+    return "Harish";
+  }
+
+  if (
+    roleLower.includes("design") ||
+    roleLower.includes("ui") ||
+    roleLower.includes("ux") ||
+    roleLower.includes("creative") ||
+    deptLower.includes("design")
+  ) {
+    return "Creative Director";
+  }
+
+  if (
+    roleLower.includes("video") ||
+    roleLower.includes("editor") ||
+    roleLower.includes("motion") ||
+    roleLower.includes("animat")
+  ) {
+    return "Media Production Head";
+  }
+
+  if (
+    roleLower.includes("market") ||
+    roleLower.includes("smm") ||
+    roleLower.includes("social") ||
+    roleLower.includes("seo") ||
+    deptLower.includes("market")
+  ) {
+    return "Marketing Lead";
+  }
+
+  if (
+    roleLower.includes("sales") ||
+    roleLower.includes("b2b") ||
+    roleLower.includes("revenue")
+  ) {
+    return "Sales Director";
+  }
+
+  if (roleLower.includes("model") || roleLower.includes("talent")) {
+    return "Talent Director";
+  }
+
+  return "Operations Head";
+};
+
+export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
+  candidate,
+  offer,
+  employee,
+  employeeBond,
+  employeeResignation,
+  onClose,
+  defaultStage,
+  defaultDocType,
+}) => {
+  const { updateOffer, roles } = useStore();
+  const defaultOption = defaultDocType || DOC_OPTIONS.find((o) => o.stage === defaultStage)?.value || "offer-fulltime";
   const [docType, setDocType] = useState<string>(defaultOption);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [editMode, setEditMode] = useState<"temporary" | "permanent">("temporary");
+  const [hasPermanentSaved, setHasPermanentSaved] = useState(false);
+  const [templateHasOverrides, setTemplateHasOverrides] = useState<boolean>(() => hasSavedTemplate(defaultOption));
   const previewContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setTemplateHasOverrides(hasSavedTemplate(docType));
+  }, [docType]);
+
+  const dynamicReporting = resolveReportingManager(candidate, offer, employee, roles);
 
   const initialData: DocumentData = {
     candidateName: candidate.name || "",
     designation: candidate.roleName || "",
     department: "Development",
+    reportingManager: dynamicReporting,
     officeLocation: candidate.city || "Satara Office",
     workingHours: "10:00 AM – 8:00 PM",
     dateOfJoining: "",
@@ -134,30 +283,82 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
       ...(offer?.documentData || {}),
       candidateName: offer?.documentData?.candidateName || candidate.name || "",
       designation: offer?.documentData?.designation || candidate.roleName || "",
+      reportingManager: offer?.documentData?.reportingManager || dynamicReporting,
       officeLocation: offer?.documentData?.officeLocation || candidate.city || "Satara Office",
       letterDate: offer?.documentData?.letterDate || today,
     };
   });
 
+  // Only auto-save to database if PERMANENT mode is active!
   useEffect(() => {
-    if (!offer) return;
+    if (editMode !== "permanent") return;
+    if (!offer?.id) return;
     const timer = setTimeout(() => {
       updateOffer(offer.id, { documentData: data });
+      setHasPermanentSaved(true);
     }, 800);
     return () => clearTimeout(timer);
-  }, [data, offer, updateOffer]);
+  }, [data, offer, updateOffer, editMode]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setData({
-      ...data,
+    setData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value
-    });
+    }));
+  };
+
+  const handleFieldChange = (field: keyof DocumentData, val: string) => {
+    setData((prev) => ({
+      ...prev,
+      [field]: val
+    }));
+  };
+
+  const handleContentChange = (html: string) => {
+    if (editMode === "permanent") {
+      saveTemplatePermanently(docType, html, data);
+      setTemplateHasOverrides(true);
+      setHasPermanentSaved(true);
+    }
+  };
+
+  const handleModeToggle = (mode: "temporary" | "permanent") => {
+    setEditMode(mode);
+    if (mode === "permanent") {
+      if (offer?.id) {
+        updateOffer(offer.id, { documentData: data });
+      }
+      const container = previewContainerRef.current;
+      if (container) {
+        const previewWrap = container.querySelector("#previewWrap");
+        const htmlToSave = previewWrap ? previewWrap.innerHTML : container.innerHTML;
+        saveTemplatePermanently(docType, htmlToSave, data);
+        setTemplateHasOverrides(true);
+      }
+      setHasPermanentSaved(true);
+      dialog.success("Permanent Mode: Changes saved to database and persistent template!");
+    } else {
+      setHasPermanentSaved(false);
+      dialog.info("Temporary Mode: Edits now apply only to current session.");
+    }
+  };
+
+  const handleResetTemplate = () => {
+    resetTemplateToDefault(docType);
+    setTemplateHasOverrides(false);
+    const refreshedReporting = resolveReportingManager(candidate, offer, employee, roles);
+    setData((prev) => ({
+      ...prev,
+      reportingManager: refreshedReporting,
+    }));
+    dialog.success("Template reset to factory default!");
   };
 
   const handleDownload = async () => {
     setIsGenerating(true);
     try {
-      if (offer?.id) {
+      // Only persist to DB if in permanent mode
+      if (editMode === "permanent" && offer?.id) {
         updateOffer(offer.id, { documentData: data });
       }
 
@@ -169,7 +370,6 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
       const { jsPDF } = await import("jspdf");
 
       const container = previewContainerRef.current;
-      // Search specifically inside container, then document body fallback
       let pages: HTMLElement[] = [];
       if (container) {
         const found = container.querySelectorAll<HTMLElement>(".page");
@@ -184,15 +384,20 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
         throw new Error("No document pages found to export. Please ensure the document is rendered.");
       }
 
-      // Pre-load / ensure all images inside the pages are completed
+      // Blur active element to remove text selection/cursor artifacts before snapshot
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+
+      // Pre-load all images inside the pages
       const allImages = Array.from(container?.querySelectorAll<HTMLImageElement>("img") || []);
       await Promise.all(
-        allImages.map(img => {
+        allImages.map((img) => {
           if (img.complete) return Promise.resolve();
           return new Promise<void>((resolve) => {
             img.onload = () => resolve();
-            img.onerror = () => resolve(); // don't block on broken images
-            setTimeout(resolve, 1500); // 1.5s max timeout
+            img.onerror = () => resolve();
+            setTimeout(resolve, 1500);
           });
         })
       );
@@ -220,6 +425,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
           onclone: (clonedDoc) => {
             const clonedPages = clonedDoc.querySelectorAll<HTMLElement>(".page");
             clonedPages.forEach((p) => {
+              p.removeAttribute("contenteditable");
               p.style.boxShadow = "none";
               p.style.borderRadius = "0px";
               p.style.margin = "0";
@@ -229,23 +435,21 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
         });
 
         const imgData = canvas.toDataURL("image/png");
-        
+
         if (i > 0) {
           pdf.addPage("a4", "portrait");
         }
 
-        // Calculate aspect ratio to fit A4 page cleanly without distortion
         const canvasRatio = canvas.height / canvas.width;
         const targetHeight = pdfWidth * canvasRatio;
         const finalHeight = Math.min(targetHeight, pdfHeight);
 
         pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, finalHeight, undefined, "FAST");
       }
-      
+
       const safeName = (data.candidateName || candidate.name || "Candidate").replace(/[^a-zA-Z0-9_-]/g, "_");
       const filename = `${safeName}_${docType}.pdf`;
 
-      // Trigger reliable browser download via Blob URL
       try {
         const pdfBlob = pdf.output("blob");
         const blobUrl = URL.createObjectURL(pdfBlob);
@@ -276,7 +480,9 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 overflow-hidden animate-fade-in"
       style={{ background: "rgba(0, 0, 0, 0.82)", backdropFilter: "blur(14px)" }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div
         className="w-full max-w-[1440px] h-full max-h-[92vh] flex flex-col rounded-2xl overflow-hidden border shadow-2xl relative animate-scale-up"
@@ -320,38 +526,19 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
           <div className="w-[340px] sm:w-[380px] bg-[#111215] border-r border-[#24272D] flex flex-col z-10 overflow-y-auto shrink-0">
             <div className="p-4 sm:p-5 flex flex-col gap-5">
               {/* Document Type Selector */}
-              <div className="p-3.5 rounded-xl bg-[#16171B] border border-[#24272D] flex flex-col gap-2">
+              <div className="p-3.5 rounded-xl bg-[#16171B] border border-[#24272D] flex flex-col gap-2 relative z-30">
                 <label className="text-[11px] font-semibold uppercase tracking-wider text-[#A78BFA] flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5" />
                   <span>Document Template</span>
                 </label>
-                <select
-                  className="w-full bg-[#0E0F12] border border-[#2B2F38] hover:border-[#3D424E] focus:border-[#A78BFA] text-[#E6E8EB] text-xs font-semibold rounded-lg px-3 py-2.5 outline-none transition-all cursor-pointer"
+                <FilterSelect
+                  options={DOC_OPTIONS}
                   value={docType}
-                  onChange={e => setDocType(e.target.value)}
-                >
-                  <optgroup label="Offer Stage" className="bg-[#16171B] text-[#8B919C]">
-                    {DOC_OPTIONS.filter(o => o.stage === "offer").map(o => (
-                      <option key={o.value} value={o.value} className="bg-[#0E0F12] text-white">
-                        {o.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Onboarding" className="bg-[#16171B] text-[#8B919C]">
-                    {DOC_OPTIONS.filter(o => o.stage === "onboarding").map(o => (
-                      <option key={o.value} value={o.value} className="bg-[#0E0F12] text-white">
-                        {o.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Exit" className="bg-[#16171B] text-[#8B919C]">
-                    {DOC_OPTIONS.filter(o => o.stage === "exit").map(o => (
-                      <option key={o.value} value={o.value} className="bg-[#0E0F12] text-white">
-                        {o.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
+                  onChange={(val) => setDocType(val)}
+                  placeholder="Select Document Template"
+                  containerClassName="w-full"
+                  menuClassName="w-full left-0 max-h-[320px] shadow-2xl z-50"
+                />
               </div>
 
               {/* Form Fields Groups */}
@@ -372,7 +559,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
                     </div>
 
                     <div className="flex flex-col gap-2.5">
-                      {FIELD_GROUPS[group]?.map(field => {
+                      {FIELD_GROUPS[group]?.map((field) => {
                         const isDateField = DATE_FIELD_KEYS.has(field.key);
 
                         if (isDateField) {
@@ -420,20 +607,113 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
               background: "radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px) 0 0 / 24px 24px, #08090B",
             }}
           >
-            {/* Document Header Status Pill */}
-            <div className="sticky top-0 z-20 flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-[#16171B]/90 border border-white/[0.10] backdrop-blur-md shadow-xl text-[11px] font-medium text-[#8B919C]">
-              <FileText className="w-3.5 h-3.5 text-[#A78BFA]" />
-              <span className="text-[#E6E8EB] font-semibold">{DOC_OPTIONS.find(o => o.value === docType)?.label}</span>
-              <span className="w-1 h-1 rounded-full bg-[#70747D]"></span>
-              <span className="font-mono text-[10px] text-[#70747D]">A4 · 210mm × 297mm</span>
-              <span className="w-1 h-1 rounded-full bg-[#70747D]"></span>
-              <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Live Preview
+            {/* Top Toolbar: Mode Controls + Status + Direct Editing Pill */}
+            <div className="sticky top-0 z-30 w-full max-w-[850px] flex flex-col sm:flex-row items-center justify-between gap-3 p-3 px-4 rounded-2xl bg-[#13151A]/95 border border-white/[0.12] backdrop-blur-xl shadow-2xl">
+              {/* Left: Document info */}
+              <div className="flex items-center gap-2 text-xs">
+                <div className="flex items-center gap-1.5 font-bold text-white">
+                  <FileText className="w-3.5 h-3.5 text-[#A78BFA]" />
+                  <span>{DOC_OPTIONS.find((o) => o.value === docType)?.label}</span>
+                </div>
+                <span className="text-[#555]">·</span>
+                <span className="font-mono text-[10px] text-[#70747D]">A4 · 210mm × 297mm</span>
+                <span className="text-[#555]">·</span>
+                <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Live Preview
+                </span>
+              </div>
+
+              {/* Right: Temporary vs Permanent Edit controls */}
+              <div className="flex items-center gap-2">
+                {templateHasOverrides && (
+                  <button
+                    type="button"
+                    onClick={handleResetTemplate}
+                    className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium text-[#8B919C] hover:text-amber-300 hover:bg-amber-500/10 border border-transparent hover:border-amber-500/25 rounded-lg transition-all cursor-pointer"
+                    title="Reset this template back to factory default"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Reset Template</span>
+                  </button>
+                )}
+
+                <div className="flex items-center bg-[#0C0D10] p-1 rounded-xl border border-white/[0.08] shadow-inner">
+                  <button
+                    type="button"
+                    onClick={() => handleModeToggle("temporary")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                      editMode === "temporary"
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.25)]"
+                        : "text-[#8B919C] hover:text-white border border-transparent"
+                    }`}
+                    title="Edits apply ONLY to this session and document. Does not modify saved templates."
+                  >
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>TEMPORARY CHANGE</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleModeToggle("permanent")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wider uppercase transition-all cursor-pointer ${
+                      editMode === "permanent"
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[0_0_12px_rgba(16,185,129,0.25)]"
+                        : "text-[#8B919C] hover:text-white border border-transparent"
+                    }`}
+                    title="Save edited document/template changes persistently for future documents."
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    <span>PERMANENT CHANGE</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Active Mode Indication Banner */}
+            <div
+              className="w-full max-w-[850px] flex items-center justify-between px-3.5 py-1.5 rounded-xl text-[11px] font-medium transition-all"
+              style={{
+                background: editMode === "temporary" ? "rgba(245, 158, 11, 0.09)" : "rgba(16, 185, 129, 0.09)",
+                border: `1px solid ${editMode === "temporary" ? "rgba(245, 158, 11, 0.28)" : "rgba(16, 185, 129, 0.28)"}`,
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className="w-2 h-2 rounded-full animate-pulse"
+                  style={{ background: editMode === "temporary" ? "#F59E0B" : "#10B981" }}
+                />
+                <span style={{ color: editMode === "temporary" ? "#FCD34D" : "#6EE7B7" }}>
+                  {editMode === "temporary" ? (
+                    <>
+                      <strong>Mode: Temporary Change</strong> — Edits apply only to current Document Studio session. Base template is untouched.
+                    </>
+                  ) : (
+                    <>
+                      <strong>Mode: Permanent Change</strong> — Edits are saved persistently. Future documents generated from this template will use these changes.
+                    </>
+                  )}
+                </span>
+                {editMode === "permanent" && hasPermanentSaved && (
+                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded border border-emerald-500/30 ml-1">
+                    <Check className="w-2.5 h-2.5" /> Saved
+                  </span>
+                )}
+              </div>
+
+              <span className="text-[10px] text-[#8B919C] hidden sm:flex items-center gap-1">
+                <Edit3 className="w-3 h-3 text-[#A78BFA]" />
+                <span>Click anywhere on document to edit text directly</span>
               </span>
             </div>
 
-            <DocumentPreview documentType={docType} data={data} />
+            {/* Document Preview Component with Direct Cursor-Based Text Editing */}
+            <DocumentPreview
+              documentType={docType}
+              data={data}
+              onFieldChange={handleFieldChange}
+              onContentChange={handleContentChange}
+            />
           </div>
         </div>
 
@@ -442,7 +722,17 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({ candid
           <div className="flex items-center gap-2 text-xs text-[#8B919C]">
             <span className="text-[#606060]">Active Template:</span>
             <span className="font-semibold text-white px-2.5 py-1 rounded-md bg-white/[0.05] border border-white/[0.08]">
-              {DOC_OPTIONS.find(o => o.value === docType)?.label}
+              {DOC_OPTIONS.find((o) => o.value === docType)?.label}
+            </span>
+            <span className="text-[#606060] ml-2">Mode:</span>
+            <span
+              className={`font-semibold px-2 py-0.5 rounded-md border text-[11px] ${
+                editMode === "temporary"
+                  ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                  : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+              }`}
+            >
+              {editMode === "temporary" ? "Temporary" : "Permanent"}
             </span>
           </div>
 

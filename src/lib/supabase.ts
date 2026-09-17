@@ -107,18 +107,31 @@ export async function updateDBCandidate(id: string, patch: Partial<Candidate>): 
 }
 
 export async function deleteDBCandidate(id: string): Promise<void> {
-  const { error } = await supabase.from("candidates").delete().eq("id", id);
-  if (error) {
-    console.error("Error deleting candidate from Supabase:", error);
-    throw error;
+  // Use API route for cascading deletion (handles FK constraints with interviews, offers, documents, employees)
+  const res = await fetch("/api/candidates/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ids: [id] }),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    console.error("Error deleting candidate:", errData);
+    throw new Error(errData.error || "Failed to delete candidate");
   }
 }
 
 export async function deleteDBCandidates(ids: string[]): Promise<void> {
-  const { error } = await supabase.from("candidates").delete().in("id", ids);
-  if (error) {
-    console.error("Error deleting bulk candidates from Supabase:", error);
-    throw error;
+  if (!ids.length) return;
+  // Use API route for cascading deletion (handles FK constraints with interviews, offers, documents, employees)
+  const res = await fetch("/api/candidates/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ids }),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}));
+    console.error("Error deleting bulk candidates:", errData);
+    throw new Error(errData.error || "Failed to delete candidates");
   }
 }
 
@@ -400,18 +413,60 @@ export async function getDBRoles(): Promise<any[]> {
 
 export async function insertDBRoles(roles: any[]): Promise<void> {
   if (roles.length === 0) return;
-  const { error } = await supabase.from("roles").upsert(roles);
-  if (error) throw error;
+  try {
+    const res = await fetch("/api/roles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(roles),
+    });
+    if (!res.ok) throw new Error("API roles insert failed");
+  } catch {
+    const { error } = await supabase.from("roles").upsert(roles);
+    if (error) console.warn("Fallback direct upsert roles error:", error);
+  }
 }
 
 export async function updateDBRole(id: string, patch: any): Promise<void> {
-  const { error } = await supabase.from("roles").update(patch).eq("id", id);
-  if (error) throw error;
+  try {
+    const res = await fetch("/api/roles", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, patch }),
+    });
+    if (!res.ok) throw new Error("API role update failed");
+  } catch {
+    const { error } = await supabase.from("roles").update(patch).eq("id", id);
+    if (error) console.warn("Fallback direct update role error:", error);
+  }
 }
 
 export async function deleteDBRole(id: string): Promise<void> {
-  const { error } = await supabase.from("roles").delete().eq("id", id);
-  if (error) throw error;
+  try {
+    const res = await fetch("/api/roles", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: [id] }),
+    });
+    if (!res.ok) throw new Error("API role delete failed");
+  } catch {
+    const { error } = await supabase.from("roles").delete().eq("id", id);
+    if (error) console.warn("Fallback direct delete role error:", error);
+  }
+}
+
+export async function deleteDBRoles(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  try {
+    const res = await fetch("/api/roles", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    if (!res.ok) throw new Error("API roles bulk delete failed");
+  } catch {
+    const { error } = await supabase.from("roles").delete().in("id", ids);
+    if (error) console.warn("Fallback direct bulk delete roles error:", error);
+  }
 }
 
 // ─── CONTRACTS DB ───────────────────────────────────────────────────────────
