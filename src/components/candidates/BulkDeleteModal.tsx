@@ -38,15 +38,15 @@ export default function BulkDeleteModal({ open, onClose }: Props) {
     <Modal
       open={open}
       onClose={onClose}
-      className="!max-w-[380px] w-full !bg-[#111315] !border-[#2A2E35] !rounded-[14px] !p-[26px] sm:!p-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
+      className="!max-w-[380px] w-full !bg-[var(--card-bg)] !border-[#2A2E35] !rounded-[14px] !p-[26px] sm:!p-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
     >
       {/* Modal Title */}
-      <h3 className="text-[17.5px] font-bold text-[#E7E9ED] leading-[1.2] text-left">
+      <h3 className="text-[17.5px] font-bold text-[var(--text)] leading-[1.2] text-left">
         Bulk Delete by Score
       </h3>
 
       {/* Description */}
-      <p className="text-[11.5px] text-[#737983] leading-[1.5] mt-1.5 text-left">
+      <p className="text-[11.5px] text-[var(--text-3)] leading-[1.5] mt-1.5 text-left">
         Remove all candidates scoring below the threshold
       </p>
 
@@ -55,7 +55,7 @@ export default function BulkDeleteModal({ open, onClose }: Props) {
         <div className="text-[48px] font-bold text-[#F5C542] leading-none select-none tracking-tight">
           {threshold}
         </div>
-        <div className="text-[11.5px] text-[#70757F] mt-2.5">
+        <div className="text-[11.5px] text-[var(--text-3)] mt-2.5">
           {willDelete} candidate{willDelete !== 1 ? "s" : ""} will be deleted
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function BulkDeleteModal({ open, onClose }: Props) {
           }}
         />
         {/* Scale labels */}
-        <div className="flex justify-between text-[11px] font-medium text-[#70757F] mt-2 select-none">
+        <div className="flex justify-between text-[15px] font-medium text-[var(--text-3)] mt-2 select-none">
           <span>0</span>
           <span>50</span>
           <span>100</span>
@@ -90,7 +90,7 @@ export default function BulkDeleteModal({ open, onClose }: Props) {
           type="button"
           onClick={onClose}
           disabled={isDeleting}
-          className="h-[35px] px-4 rounded-[8px] text-[11.5px] font-semibold uppercase tracking-wider bg-[#151719] border border-[#2B2F35] text-[#9A9FA8] hover:bg-[#1D2024] hover:text-[#E1E4E8] hover:border-[#383D45] transition-all duration-150 cursor-pointer select-none active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-[35px] px-4 rounded-[8px] text-[11.5px] font-semibold uppercase tracking-wider bg-[var(--input-bg)] border border-[var(--input-border)] text-[#9A9FA8] hover:bg-[var(--table-row-hover)] hover:text-[#E1E4E8] hover:border-[#383D45] transition-all duration-150 cursor-pointer select-none active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Cancel
         </button>

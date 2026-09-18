@@ -11,14 +11,16 @@ interface FiltersBarProps {
 }
 
 export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
-  const { filters, setFilters, clearFilters, roles } = useStore();
-  const hasActive =
+  const { filters, setFilters, clearFilters, roles, candidates } = useStore();
+  const hasActive = Boolean(
     filters.search ||
     filters.roleId !== "all" ||
     filters.status !== "all" ||
     filters.city ||
     filters.gender !== "all" ||
-    filters.exp !== "all";
+    filters.exp !== "all" ||
+    (filters.employmentStatus && filters.employmentStatus !== "all")
+  );
 
   // ─── Local search state: debounce 200ms before pushing to global filter ─────
   const [localSearch, setLocalSearch] = useState(filters.search);
@@ -28,6 +30,13 @@ export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
   useEffect(() => {
     setLocalSearch(filters.search);
   }, [filters.search]);
+
+  // Sanitize status if legacy or external source set status to "hired"
+  useEffect(() => {
+    if (filters.status === "hired") {
+      setFilters({ status: "all" });
+    }
+  }, [filters.status, setFilters]);
 
   const handleSearchChange = useCallback(
     (val: string) => {
@@ -41,39 +50,89 @@ export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
   );
 
   // ─── Filter Options ────────────────────────────────────────────────────────
-  const roleOptions: FilterOption[] = useMemo(() => [
-    { value: "all", label: "All Roles" },
-    ...roles.map(r => ({ value: r.id, label: r.name })),
-  ], [roles]);
+  const roleOptions: FilterOption[] = useMemo(() => {
+    const list = [...roles];
+    candidates.forEach(c => {
+      if (c.roleId && !list.some(r => r.id === c.roleId)) {
+        list.push({
+          id: c.roleId,
+          name: c.roleName || c.roleId,
+          type: "Full-time",
+          count: 0,
+          isActive: true,
+          keywords: [],
+        });
+      }
+    });
+    return [
+      { value: "all", label: "All Roles" },
+      ...list.map(r => ({ value: r.id, label: r.name })),
+    ];
+  }, [roles, candidates]);
 
   const statusOptions: FilterOption[] = useMemo(() => [
     { value: "all", label: "All Status" },
     { value: "new", label: "New" },
     { value: "review", label: "In Review" },
+    { value: "shortlisted", label: "Shortlisted" },
+    { value: "interview_1", label: "Interview R1" },
+    { value: "interview_2", label: "Interview R2" },
+    { value: "offer", label: "Offer Prep" },
+    { value: "offer_sent", label: "Offer Sent" },
+    { value: "offer_accepted", label: "Offer Accepted" },
+    { value: "offer_rejected", label: "Offer Rejected" },
+    { value: "onboarding_requested", label: "Onboarding Required" },
+    { value: "onboarding_review", label: "Onboarding Review" },
+    { value: "onboarding_verified", label: "Onboarding Verified" },
+    { value: "onboarding_rejected", label: "Onboarding Rejected" },
     { value: "approved", label: "Approved" },
     { value: "rejected", label: "Rejected" },
   ], []);
 
-  const genderOptions: FilterOption[] = useMemo(() => [
-    { value: "all", label: "All Genders" },
-    ...GENDERS.map(g => ({ value: g, label: g })),
-  ], []);
+  const genderOptions: FilterOption[] = useMemo(() => {
+    const seen = new Set<string>(["Male", "Female", "Non-binary", "Prefer not to say"]);
+    candidates.forEach(c => {
+      const g = (c.gender || "").trim();
+      if (g && g !== "—") seen.add(g);
+    });
+    return [
+      { value: "all", label: "All Genders" },
+      ...Array.from(seen).map(g => ({ value: g, label: g })),
+    ];
+  }, [candidates]);
 
-  const expOptions: FilterOption[] = useMemo(() => [
-    { value: "all", label: "All Exp." },
-    ...EXP_LEVELS.map(e => ({ value: e, label: e })),
-  ], []);
+  const expOptions: FilterOption[] = useMemo(() => {
+    const seen = new Set<string>(EXP_LEVELS);
+    candidates.forEach(c => {
+      const e = (c.exp || "").trim();
+      if (e && e !== "—" && !EXP_LEVELS.includes(e)) seen.add(e);
+    });
+    return [
+      { value: "all", label: "All Exp." },
+      ...Array.from(seen).map(e => ({ value: e, label: e })),
+    ];
+  }, [candidates]);
 
-  const cityOptions: FilterOption[] = useMemo(() => [
-    { value: "", label: "All Cities" },
-    ...CITIES.map(c => ({ value: c, label: c })),
-  ], []);
+  const cityOptions: FilterOption[] = useMemo(() => {
+    const citySet = new Set<string>();
+    candidates.forEach(c => {
+      const ct = (c.city || "").trim();
+      if (ct && ct !== "—" && ct.toLowerCase() !== "not specified") citySet.add(ct);
+    });
+    CITIES.forEach(c => citySet.add(c));
+    const sorted = Array.from(citySet).sort((a, b) => a.localeCompare(b));
+    return [
+      { value: "", label: "All Cities" },
+      ...sorted.map(c => ({ value: c, label: c })),
+      { value: "Not specified", label: "Not Specified" },
+    ];
+  }, [candidates]);
 
   const sortOptions: FilterOption[] = useMemo(() => [
-    { value: "newest", label: "Newest First", icon: <ArrowDown size={13} className="text-[#8A8F98]" /> },
-    { value: "oldest", label: "Oldest First", icon: <ArrowUp size={13} className="text-[#8A8F98]" /> },
+    { value: "newest", label: "Newest First", icon: <ArrowDown size={13} className="text-[var(--text-3)]" /> },
+    { value: "oldest", label: "Oldest First", icon: <ArrowUp size={13} className="text-[var(--text-3)]" /> },
     { value: "score-desc", label: "Score High–Low", icon: <Star size={13} className="text-[#F5C542]" /> },
-    { value: "score-asc", label: "Score Low–High", icon: <Star size={13} className="text-[#8A8F98]" /> },
+    { value: "score-asc", label: "Score Low–High", icon: <Star size={13} className="text-[var(--text-3)]" /> },
     { value: "name-az", label: "A–Z Name" },
   ], []);
 
@@ -99,7 +158,7 @@ export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
       {/* 3. All Status */}
       <FilterSelect
         options={statusOptions}
-        value={filters.status}
+        value={filters.status === "hired" ? "all" : filters.status}
         onChange={val => setFilters({ status: val })}
         placeholder="All Status"
         containerClassName="flex-1 min-w-[100px]"
@@ -175,7 +234,7 @@ export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
         <button
           type="button"
           onClick={clearFilters}
-          className="h-[40px] px-3 rounded-[9px] border border-[#303238] hover:border-[#EF4444]/40 bg-[#151719] hover:bg-[#1A1D21] text-[#8A8F98] hover:text-[#EF4444] text-[12px] font-medium transition-all duration-150 inline-flex items-center justify-center gap-1.5 cursor-pointer flex-shrink-0"
+          className="h-[40px] px-3 rounded-[9px] border border-[var(--border-2)] hover:border-[#EF4444]/40 bg-[var(--input-bg)] hover:bg-[var(--card-bg)] text-[var(--text-3)] hover:text-[#EF4444] text-[16px] font-medium transition-all duration-150 inline-flex items-center justify-center gap-1.5 cursor-pointer flex-shrink-0"
           title="Clear all active filters"
         >
           <X size={13} />

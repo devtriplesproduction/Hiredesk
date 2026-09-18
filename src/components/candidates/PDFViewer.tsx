@@ -282,7 +282,7 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
       )}
     >
       {/* Modern High-Performance Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 px-3.5 py-2 rounded-xl border border-[#23262D] bg-[#111214] shadow-md select-none flex-shrink-0">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 px-3.5 py-2 rounded-xl border border-[var(--border-2)] bg-[#111214] shadow-md select-none flex-shrink-0">
         {/* Left Section: Document Title & Pagination */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 max-w-[240px] sm:max-w-[320px]">
@@ -329,7 +329,7 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
               <button
                 type="button"
                 onClick={handleZoomOut}
-                className="w-6 h-6 rounded flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                className="w-6 h-6 rounded flex items-center justify-center text-zinc-400 hover:text-[var(--text)] hover:bg-white/10 transition-colors"
                 title="Zoom Out"
               >
                 <ZoomOut className="w-3.5 h-3.5" />
@@ -337,7 +337,7 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
               <button
                 type="button"
                 onClick={handleResetZoom}
-                className="text-[11px] font-mono text-zinc-300 hover:text-white px-2 py-0.5 rounded transition-colors"
+                className="text-[15px] font-mono text-zinc-300 hover:text-[var(--text)] px-2 py-0.5 rounded transition-colors"
                 title="Reset Zoom (100%)"
               >
                 {Math.round(scale * 100)}%
@@ -345,7 +345,7 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
               <button
                 type="button"
                 onClick={handleZoomIn}
-                className="w-6 h-6 rounded flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+                className="w-6 h-6 rounded flex items-center justify-center text-zinc-400 hover:text-[var(--text)] hover:bg-white/10 transition-colors"
                 title="Zoom In"
               >
                 <ZoomIn className="w-3.5 h-3.5" />
@@ -359,7 +359,7 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
                 "px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-150",
                 isFitWidth
                   ? "bg-[rgba(0,217,255,0.12)] text-[#00D9FF] border border-[rgba(0,217,255,0.35)] shadow-[0_0_10px_rgba(0,217,255,0.1)]"
-                  : "text-zinc-400 hover:text-white bg-black/40 border border-white/5 hover:border-white/15"
+                  : "text-zinc-400 hover:text-[var(--text)] bg-black/40 border border-white/5 hover:border-white/15"
               )}
               title="Fit to Width"
             >
@@ -369,7 +369,7 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
             <button
               type="button"
               onClick={handleFitPageClick}
-              className="px-2.5 py-1 rounded-lg text-xs font-medium text-zinc-400 hover:text-white bg-black/40 border border-white/5 hover:border-white/15 transition-all duration-150"
+              className="px-2.5 py-1 rounded-lg text-xs font-medium text-zinc-400 hover:text-[var(--text)] bg-black/40 border border-white/5 hover:border-white/15 transition-all duration-150"
               title="Fit Page to Screen"
             >
               Fit Page
@@ -413,7 +413,7 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
           <button
             type="button"
             onClick={() => setIsFullscreen((prev) => !prev)}
-            className="w-7 h-7 rounded-lg bg-[#181a20] hover:bg-white/10 border border-white/10 flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
+            className="w-7 h-7 rounded-lg bg-[#181a20] hover:bg-white/10 border border-white/10 flex items-center justify-center text-zinc-300 hover:text-[var(--text)] transition-colors"
             title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Preview"}
           >
             {isFullscreen ? (
@@ -428,7 +428,7 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-7 h-7 rounded-lg bg-[#181a20] hover:bg-white/10 border border-white/10 flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
+            className="w-7 h-7 rounded-lg bg-[#181a20] hover:bg-white/10 border border-white/10 flex items-center justify-center text-zinc-300 hover:text-[var(--text)] transition-colors"
             title="Open PDF in new browser tab"
           >
             <ExternalLink className="w-3.5 h-3.5" />
@@ -450,7 +450,7 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
       </div>
 
       {/* Main Viewport Container */}
-      <div className="relative w-full flex-1 min-h-0 rounded-xl border border-[#23262D] bg-[#070809] overflow-hidden flex flex-col items-center justify-center shadow-inner">
+      <div className="relative w-full flex-1 min-h-0 rounded-xl border border-[var(--border-2)] bg-[#070809] overflow-hidden flex flex-col items-center justify-center shadow-inner">
         {/* Loading Spinner */}
         {loading && (
           <div className="absolute inset-0 bg-[#070809]/90 z-20 flex flex-col items-center justify-center gap-3 animate-fade-in">
@@ -491,7 +491,7 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
 
                       {/* Subtle Page Footer Label */}
                       {numPages > 1 && (
-                        <div className="mt-2 text-[11px] font-mono text-zinc-500 select-none">
+                        <div className="mt-2 text-[15px] font-mono text-zinc-500 select-none">
                           Page {pageNum} of {numPages}
                         </div>
                       )}

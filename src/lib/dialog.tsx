@@ -312,7 +312,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
                   ref={cancelBtnRef}
                   type="button"
                   onClick={() => handleClose(false)}
-                  className="h-[36px] px-3.5 rounded-[8px] text-[13px] font-semibold uppercase tracking-wider bg-[#151719] border border-[#343941] text-[#D1D5DB] hover:bg-[#1D2024] hover:text-[#E7E9ED] hover:border-[#444A54] transition-all duration-150 cursor-pointer inline-flex items-center justify-center active:scale-[0.98]"
+                  className="h-[36px] px-3.5 rounded-[8px] text-[15px] font-semibold uppercase tracking-wider bg-[#151719] border border-[#343941] text-[#D1D5DB] hover:bg-[#1D2024] hover:text-[#E7E9ED] hover:border-[#444A54] transition-all duration-150 cursor-pointer inline-flex items-center justify-center active:scale-[0.98]"
                 >
                   {current.cancelText || "Cancel"}
                 </button>
@@ -323,7 +323,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
                 type="button"
                 onClick={() => handleClose(true)}
                 className={clsx(
-                  "min-w-[78px] h-[36px] px-3.5 rounded-[8px] text-[13px] font-semibold uppercase tracking-wider transition-all duration-150 cursor-pointer inline-flex items-center justify-center active:scale-[0.98]",
+                  "min-w-[78px] h-[36px] px-3.5 rounded-[8px] text-[15px] font-semibold uppercase tracking-wider transition-all duration-150 cursor-pointer inline-flex items-center justify-center active:scale-[0.98]",
                   isConfirm
                     ? isDestructive
                       ? "bg-red-500/10 border border-[#EF4444] text-[#EF4444] hover:bg-red-500/20"

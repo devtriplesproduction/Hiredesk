@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useStore } from "@/lib/store";
 import { parseResumeFile } from "@/lib/parser";
 import type { Candidate } from "@/types";
@@ -14,7 +14,6 @@ import {
   X,
   FolderOpen,
   Sparkles,
-  Database,
 } from "lucide-react";
 
 interface QueueItem {
@@ -23,8 +22,6 @@ interface QueueItem {
   result?: Candidate;
   errorMsg?: string;
 }
-
-type CloudStatus = "checking" | "connected" | "not_connected" | "error";
 
 // ─── Concurrency-limited async runner ────────────────────────────────────────
 // Prevents browser from being overwhelmed by processing too many PDFs simultaneously
@@ -96,51 +93,6 @@ export default function UploadZone() {
   const [isDrag, setIsDrag] = useState(false);
   const [processing, setProcessing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Cloud status state
-  const [cloudStatus, setCloudStatus] = useState<CloudStatus>("checking");
-  const [statusDetail, setStatusDetail] = useState<string>("Checking...");
-
-  // Verify Supabase Cloud connection status on mount
-  useEffect(() => {
-    let isMounted = true;
-    async function checkSupabase() {
-      try {
-        const { supabase } = await import("@/lib/supabase");
-        const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        if (!url || !key) {
-          if (isMounted) {
-            setCloudStatus("not_connected");
-            setStatusDetail("Not connected");
-          }
-          return;
-        }
-
-        const { error } = await supabase.storage.from("resumes").list("", { limit: 1 });
-        if (error) {
-          if (isMounted) {
-            setCloudStatus("error");
-            setStatusDetail("Error");
-          }
-        } else {
-          if (isMounted) {
-            setCloudStatus("connected");
-            setStatusDetail("Supabase Connected");
-          }
-        }
-      } catch {
-        if (isMounted) {
-          setCloudStatus("error");
-          setStatusDetail("Error");
-        }
-      }
-    }
-    checkSupabase();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   // ─── Single-pass queue stats ──────────────────────────────────────────────
   const { waitCount, doneCount } = useMemo(() => {
@@ -260,7 +212,7 @@ export default function UploadZone() {
               "rounded-2xl p-6 sm:p-8 lg:p-9 text-center transition-all duration-200 relative overflow-hidden border",
               isDrag
                 ? "border-[#00D9FF] bg-[#00D9FF]/[0.04] shadow-[0_0_32px_rgba(0,217,255,0.12)] scale-[1.005]"
-                : "border-[#24282F] bg-[#111316] hover:border-[#00D9FF]/40 hover:bg-[#131519] shadow-xl"
+                : "border-[var(--border-2)] bg-[var(--card-bg)] hover:border-[#00D9FF]/40 hover:bg-[var(--table-row-hover)] shadow-xl"
             )}
             onDragOver={e => {
               e.preventDefault();
@@ -279,7 +231,7 @@ export default function UploadZone() {
                   "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-4 transition-all duration-200 border shadow-inner",
                   isDrag
                     ? "bg-[#00D9FF]/10 text-[#00D9FF] border-[#00D9FF]/40 scale-110"
-                    : "bg-[#16181D] text-[#00D9FF] border-[#292D35]"
+                    : "bg-[var(--card-bg)] text-[#00D9FF] border-[var(--border-2)]"
                 )}
               >
                 <UploadCloud size={28} className="transition-transform duration-200" />
@@ -291,12 +243,12 @@ export default function UploadZone() {
               </h3>
 
               {/* Secondary Text */}
-              <p className="text-xs sm:text-sm text-[#9AA0AA] mb-3 max-w-md">
+              <p className="text-xs sm:text-sm text-[var(--text-3)] mb-3 max-w-md">
                 Drag &amp; drop PDF resumes here, or browse your files
               </p>
 
               {/* Tertiary Information Pills */}
-              <div className="inline-flex flex-wrap items-center justify-center gap-2 text-[11px] sm:text-xs text-[#7A808C] font-medium bg-[#16181C] px-3.5 py-1.5 rounded-full border border-[#242830] mb-6">
+              <div className="inline-flex flex-wrap items-center justify-center gap-2 text-[15px] sm:text-xs text-[var(--text-3)] font-medium bg-[var(--card-bg)] px-3.5 py-1.5 rounded-full border border-[var(--border-2)] mb-6">
                 <span>PDF files only</span>
                 <span className="text-[#454B55]">•</span>
                 <span>Multiple files supported</span>
@@ -342,7 +294,7 @@ export default function UploadZone() {
                     type="button"
                     onClick={clearAll}
                     disabled={processing}
-                    className="h-9 px-3.5 rounded-xl text-xs font-semibold uppercase tracking-wider text-[var(--text-2)] hover:text-white bg-[var(--glass-2)] hover:bg-[var(--glass-3)] border border-[var(--border)] hover:border-[var(--border-2)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none"
+                    className="h-9 px-3.5 rounded-xl text-xs font-semibold uppercase tracking-wider text-[var(--text-2)] hover:text-[var(--text)] bg-[var(--glass-2)] hover:bg-[var(--glass-3)] border border-[var(--border)] hover:border-[var(--border-2)] transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed select-none"
                   >
                     Clear All
                   </button>
@@ -371,11 +323,11 @@ export default function UploadZone() {
               </div>
 
               {/* Single Clean Container for Resume Rows */}
-              <div className="rounded-2xl border border-[#23272F] bg-[#111316] divide-y divide-[#1D2127] overflow-hidden shadow-lg">
+              <div className="rounded-2xl border border-[var(--border-2)] bg-[var(--card-bg)] divide-y divide-[var(--border-2)] overflow-hidden shadow-lg">
                 {queue.map((item, i) => (
                   <div
                     key={`${item.file.name}-${i}`}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 p-4 sm:p-5 hover:bg-[#13161B] hover:shadow-[inset_0_0_0_1px_rgba(0,217,255,0.18)] transition-all duration-200 group"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 p-4 sm:p-5 hover:bg-[var(--table-row-hover)] hover:shadow-[inset_0_0_0_1px_rgba(0,217,255,0.18)] transition-all duration-200 group"
                   >
                     {/* Left: PDF Icon + Prominent Filename + Muted Metadata */}
                     <div className="flex items-start sm:items-center gap-4 min-w-0 flex-1">
@@ -385,7 +337,7 @@ export default function UploadZone() {
 
                       <div className="min-w-0 flex-1">
                         <div
-                          className="text-[13.5px] sm:text-sm font-semibold text-white group-hover:text-white transition-colors truncate max-w-full"
+                          className="text-[13.5px] sm:text-sm font-semibold text-white group-hover:text-[var(--text)] transition-colors truncate max-w-full"
                           title={item.file.name}
                         >
                           {item.file.name}
@@ -409,7 +361,7 @@ export default function UploadZone() {
 
                         {item.status === "done" && item.result && (
                           <div className="text-xs text-[var(--text-2)] mt-1 flex flex-wrap items-center gap-2">
-                            <span className="font-semibold text-[#E6E8EB]">
+                            <span className="font-semibold text-[var(--text)]">
                               {item.result.name}
                             </span>
                             <span className="text-[#3A3F48]">•</span>
@@ -419,7 +371,7 @@ export default function UploadZone() {
                             <span className="text-[#3A3F48]">•</span>
                             <span
                               className={clsx(
-                                "text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-[5px] border inline-flex items-center justify-center",
+                                "text-[15px] font-mono font-bold px-1.5 py-0.5 rounded-[5px] border inline-flex items-center justify-center",
                                 item.result.score.total >= 70
                                   ? "score-hi"
                                   : item.result.score.total >= 45
@@ -502,7 +454,7 @@ export default function UploadZone() {
                       {doneCount} {doneCount === 1 ? "resume" : "resumes"} successfully added to
                       the candidate pipeline
                     </div>
-                    <div className="text-[11px] sm:text-xs text-[var(--text-2)] mt-0.5">
+                    <div className="text-[15px] sm:text-xs text-[var(--text-2)] mt-0.5">
                       Review profile details, update hiring stages, and generate contracts in the
                       Candidates tab.
                     </div>
@@ -516,7 +468,7 @@ export default function UploadZone() {
         {/* ─── RIGHT / SECONDARY AREA ────────────────────────────────────── */}
         <div className="lg:col-span-4 flex flex-col gap-5 w-full">
           {/* How Parsing Works Card */}
-          <div className="p-4 sm:p-5 rounded-2xl border border-[#24282E] bg-[#111316] flex flex-col gap-4 shadow-xl">
+          <div className="p-4 sm:p-5 rounded-2xl border border-[var(--border-2)] bg-[var(--card-bg)] flex flex-col gap-4 shadow-xl">
             <div className="flex items-center gap-2 pb-2.5 border-b border-[#20242A]">
               <Sparkles size={16} className="text-[#00D9FF]" />
               <h3 className="text-sm font-bold text-white tracking-tight">How parsing works</h3>
@@ -527,7 +479,7 @@ export default function UploadZone() {
                 <div key={item.step} className="flex items-start gap-3">
                   <span
                     className={clsx(
-                      "text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border flex-shrink-0 mt-0.5 select-none",
+                      "text-[16px] font-mono font-bold px-1.5 py-0.5 rounded border flex-shrink-0 mt-0.5 select-none",
                       item.color,
                       item.badgeBg
                     )}
@@ -538,7 +490,7 @@ export default function UploadZone() {
                     <div className="text-xs font-semibold text-white tracking-tight">
                       {item.title}
                     </div>
-                    <div className="text-[11px] text-[#8A909B] mt-0.5 leading-relaxed">
+                    <div className="text-[15px] text-[var(--text-3)] mt-0.5 leading-relaxed">
                       {item.desc}
                     </div>
                   </div>
@@ -548,16 +500,16 @@ export default function UploadZone() {
           </div>
 
           {/* ATS Scoring Breakdown Card */}
-          <div className="p-4 sm:p-5 rounded-2xl border border-[#24282E] bg-[#111316] flex flex-col gap-3.5 shadow-xl">
+          <div className="p-4 sm:p-5 rounded-2xl border border-[var(--border-2)] bg-[var(--card-bg)] flex flex-col gap-3.5 shadow-xl">
             <div className="flex items-center justify-between pb-2 border-b border-[#20242A]">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-[#8A909B]">
+              <div className="text-[15px] font-bold uppercase tracking-wider text-[var(--text-3)]">
                 ATS Score
               </div>
-              <span className="text-[10px] font-mono text-[#6A717E]">100% Total</span>
+              <span className="text-[16px] font-mono text-[#6A717E]">100% Total</span>
             </div>
 
             {/* Segmented multi-colored progress bar */}
-            <div className="h-2 w-full rounded-full bg-[#17191E] overflow-hidden flex gap-0.5 p-0.5 border border-[#242830]">
+            <div className="h-2 w-full rounded-full bg-[var(--card-bg)] overflow-hidden flex gap-0.5 p-0.5 border border-[var(--border-2)]">
               {ATS_WEIGHTS.map(w => (
                 <div
                   key={w.label}
@@ -579,51 +531,6 @@ export default function UploadZone() {
                   <span className="font-mono font-semibold text-white text-xs">{w.weight}</span>
                 </div>
               ))}
-            </div>
-          </div>
-
-          {/* Cloud Integration Card */}
-          <div className="p-4 sm:p-5 rounded-2xl border border-[#24282E] bg-[#111316] flex flex-col gap-3.5 shadow-xl">
-            <div className="flex items-center justify-between pb-2 border-b border-[#20242A]">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-[#8A909B]">
-                Cloud Integration
-              </div>
-              <Database size={14} className="text-[#6A717E]" />
-            </div>
-
-            <div>
-              <div className="text-xs font-semibold text-white tracking-tight">
-                Resume storage
-              </div>
-              <div className="text-xs text-[#8A909B] mt-1 leading-relaxed">
-                Automatically stores parsed resumes in the configured Supabase Storage bucket.
-              </div>
-            </div>
-
-            {/* Dynamic Status Pill */}
-            <div
-              className={clsx(
-                "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border transition-colors select-none",
-                cloudStatus === "connected" &&
-                  "bg-emerald-500/10 border-emerald-500/25 text-emerald-400",
-                cloudStatus === "checking" &&
-                  "bg-[#17191E] border-[#252932] text-[#8A909B]",
-                cloudStatus === "not_connected" &&
-                  "bg-amber-500/10 border-amber-500/25 text-amber-400",
-                cloudStatus === "error" &&
-                  "bg-rose-500/10 border-rose-500/25 text-rose-400"
-              )}
-            >
-              <span
-                className={clsx(
-                  "w-2 h-2 rounded-full",
-                  cloudStatus === "connected" && "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]",
-                  cloudStatus === "checking" && "bg-[#8A909B] animate-pulse",
-                  cloudStatus === "not_connected" && "bg-amber-400",
-                  cloudStatus === "error" && "bg-rose-400"
-                )}
-              />
-              <span className="font-semibold text-[11.5px]">{statusDetail}</span>
             </div>
           </div>
         </div>

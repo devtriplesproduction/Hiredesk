@@ -125,19 +125,19 @@ export function FilterSelect({
         aria-expanded={isOpen}
         className={clsx(
           "h-[40px] px-3 rounded-[9px] text-[12.5px] font-medium transition-all duration-150 flex items-center justify-between gap-1.5 outline-none select-none text-left w-full cursor-pointer",
-          "bg-[#151719] hover:bg-[#1A1D21] border",
+          "bg-[var(--input-bg)] hover:bg-[var(--card-bg)] border",
           isOpen
-            ? "border-[#00D9FF] ring-1 ring-[#00D9FF]/20 text-[#E8E8E8]"
+            ? "border-[#00D9FF] ring-1 ring-[#00D9FF]/20 text-[var(--text)]"
             : !isDefault
-            ? "border-[#00D9FF]/50 text-[#F2F2F2] bg-[#16191D]"
-            : "border-[#303238] hover:border-[#3E434D] text-[#E8E8E8]",
+            ? "border-[#00D9FF]/50 text-[var(--text)] bg-[var(--card-bg)]"
+            : "border-[var(--border-2)] hover:border-[var(--border-2)] text-[var(--text)]",
           disabled && "opacity-50 cursor-not-allowed",
           className
         )}
       >
         <div className="flex items-center gap-1.5 min-w-0 flex-1">
-          {icon && <span className="flex-shrink-0 text-[#8A8F98]">{icon}</span>}
-          <span className={clsx("truncate", !isDefault ? "text-[#F2F2F2] font-semibold" : "text-[#E8E8E8]")}>
+          {icon && <span className="flex-shrink-0 text-[var(--text-3)]">{icon}</span>}
+          <span className={clsx("truncate", !isDefault ? "text-[var(--text)] font-semibold" : "text-[var(--text)]")}>
             {displayText}
           </span>
         </div>
@@ -145,7 +145,7 @@ export function FilterSelect({
           size={13}
           className={clsx(
             "flex-shrink-0 transition-transform duration-150",
-            isOpen ? "rotate-180 text-[#00D9FF]" : "text-[#8A8F98]"
+            isOpen ? "rotate-180 text-[#00D9FF]" : "text-[var(--text-3)]"
           )}
         />
       </button>
@@ -154,7 +154,7 @@ export function FilterSelect({
         <div
           role="listbox"
           className={clsx(
-            "absolute top-[calc(100%+5px)] py-1.5 bg-[#151719] border border-[#303238] rounded-[10px] shadow-2xl shadow-black/80 max-h-[300px] overflow-y-auto z-50",
+            "absolute top-[calc(100%+5px)] py-1.5 bg-[var(--input-bg)] border border-[var(--border-2)] rounded-[10px] shadow-2xl shadow-black/80 max-h-[300px] overflow-y-auto z-50",
             align === "right" ? "right-0" : "left-0",
             menuClassName ? menuClassName : "min-w-full w-max max-w-[300px]"
           )}
@@ -169,8 +169,8 @@ export function FilterSelect({
                 {showGroupHeader && (
                   <div
                     className={clsx(
-                      "px-3 pb-1 text-[10.5px] font-bold uppercase tracking-wider text-[#8A8F98] select-none",
-                      idx === 0 ? "pt-1" : "pt-2.5 border-t border-[#26282E] mt-1"
+                      "px-3 pb-1 text-[10.5px] font-bold uppercase tracking-wider text-[var(--text-3)] select-none",
+                      idx === 0 ? "pt-1" : "pt-2.5 border-t border-[var(--border-2)] mt-1"
                     )}
                   >
                     {opt.group}
@@ -189,8 +189,8 @@ export function FilterSelect({
                     isSelected
                       ? "bg-[rgba(0,217,255,0.08)] text-[#00D9FF] font-semibold"
                       : isFocused
-                      ? "bg-[#1C2025] text-[#00D9FF]"
-                      : "text-[#E8E8E8] hover:bg-[#1C2025] hover:text-[#00D9FF]"
+                      ? "bg-[var(--card-bg)] text-[#00D9FF]"
+                      : "text-[var(--text)] hover:bg-[var(--card-bg)] hover:text-[#00D9FF]"
                   )}
                 >
                   <div className="flex items-center gap-2 truncate">
@@ -225,14 +225,14 @@ export function FilterSearch({
   return (
     <div
       className={clsx(
-        "h-[40px] bg-[#151719] hover:bg-[#1A1D21] border border-[#303238] hover:border-[#3E434D] focus-within:border-[#00D9FF] focus-within:ring-1 focus-within:ring-[#00D9FF]/20 rounded-[9px] flex items-center transition-all duration-150",
+        "h-[40px] bg-[var(--input-bg)] hover:bg-[var(--card-bg)] border border-[var(--border-2)] hover:border-[var(--border-2)] focus-within:border-[#00D9FF] focus-within:ring-1 focus-within:ring-[#00D9FF]/20 rounded-[9px] flex items-center transition-all duration-150",
         className
       )}
     >
-      <Search size={14} className="text-[#8A8F98] ml-3 flex-shrink-0" />
+      <Search size={14} className="text-[var(--text-3)] ml-3 flex-shrink-0" />
       <input
         type="text"
-        className="h-full w-full bg-transparent text-[#E8E8E8] text-[12.5px] font-medium px-2.5 py-2 placeholder:text-[#8A8F98] outline-none"
+        className="h-full w-full bg-transparent text-[var(--text)] text-[12.5px] font-medium px-2.5 py-2 placeholder:text-[var(--text-3)] outline-none"
         placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -241,7 +241,7 @@ export function FilterSearch({
         <button
           type="button"
           onClick={() => onChange("")}
-          className="mr-2.5 text-[#8A8F98] hover:text-[#E8E8E8] p-1 transition-colors flex-shrink-0 cursor-pointer"
+          className="mr-2.5 text-[var(--text-3)] hover:text-[var(--text)] p-1 transition-colors flex-shrink-0 cursor-pointer"
           title="Clear search"
         >
           <X size={13} />

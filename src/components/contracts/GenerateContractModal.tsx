@@ -36,11 +36,19 @@ const DOC_GROUPS: Record<string, string[]> = {
   "continuing-obligation": ["candidate"]
 };
 
+const CONTRACT_TO_DOCTYPE: Record<string, string> = {
+  "exp_letter": "experience-letter",
+  "rel_letter": "relieving-letter",
+  "emp-ft": "offer-fulltime",
+  "intern": "offer-internship",
+  "freelance": "employee-agreement",
+};
+
 export default function GenerateContractModal({ contract, preselectedCandidateId = "", onClose, onEdit }: Props) {
-  const { candidates, updateContract } = useStore();
+  const { candidates } = useStore();
 
   const [form, setForm] = useState({
-    docType: "offer-fulltime",
+    docType: CONTRACT_TO_DOCTYPE[contract.id] || "offer-fulltime",
     candidateId: "",
     candidateName: "",
     designation: "",
@@ -69,9 +77,9 @@ export default function GenerateContractModal({ contract, preselectedCandidateId
     bondAmount: "",
     bondDurationMonths: "12",
     resignationDate: "",
-    lastWorkingDay: "",
-    keyResponsibilities: "",
-    performanceNote: "",
+    lastWorkingDay: "[LAST WORKING DAY]",
+    keyResponsibilities: "software development, code review, and quality assurance tasks",
+    performanceNote: "was diligent, professional, and a valued member of the team",
     proprietorName: "",
     noticePeriod: "1 Month",
     officeAddress: "Rajdhani Towers, Rajwada, Satara"
@@ -82,11 +90,23 @@ export default function GenerateContractModal({ contract, preselectedCandidateId
   function selectCandidate(id: string) {
     const c = candidates.find(x => x.id === id);
     if (!c) { set("candidateName", ""); set("candidateId", ""); set("designation", ""); return; }
+    const isDev = (c.roleName || "").toLowerCase().includes("dev");
+    const isContent = (c.roleName || "").toLowerCase().includes("content");
+    const defaultResp = isDev
+      ? "software development, code review, and quality assurance tasks"
+      : isContent
+      ? "content creation, design, and campaign execution tasks"
+      : "assigned tasks and responsibilities";
+
     setForm(prev => ({
       ...prev,
       candidateId: id,
       candidateName: c.name,
-      designation: c.roleName,
+      designation: c.roleName || prev.designation,
+      department: isDev ? "Development" : isContent ? "Content" : prev.department,
+      keyResponsibilities: defaultResp,
+      performanceNote: "was diligent, professional, and a valued member of the team",
+      lastWorkingDay: prev.lastWorkingDay || "[LAST WORKING DAY]",
     }));
   }
 
@@ -99,8 +119,11 @@ export default function GenerateContractModal({ contract, preselectedCandidateId
   function generateAndPreview() {
     const builder = (builders as any)[form.docType];
     const filled = builder ? builder(form) : contract.body;
-    updateContract(contract.id, filled);
-    onEdit({ ...contract, body: filled, name: DOC_TITLES[form.docType] || contract.name });
+    onEdit({
+      ...contract,
+      body: filled,
+      name: `${DOC_TITLES[form.docType] || contract.name}${form.candidateName ? ` — ${form.candidateName}` : ""}`,
+    });
   }
 
   const activeGroups = DOC_GROUPS[form.docType] || [];
@@ -124,7 +147,7 @@ export default function GenerateContractModal({ contract, preselectedCandidateId
             <div className="text-lg font-bold tracking-tight">Document Studio</div>
           </div>
           <Btn onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-white transition-colors"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-[var(--text)] transition-colors"
             style={{ background: "var(--glass-2)", border: "1px solid var(--border)" }}>✕</Btn>
         </div>
 

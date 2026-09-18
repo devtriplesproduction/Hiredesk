@@ -10,19 +10,48 @@ export async function GET(req: NextRequest, { params }: { params: { candidateId:
   const candidateId = params.candidateId;
   if (!candidateId) return NextResponse.json({ error: "Missing candidateId" }, { status: 400 });
 
-  // Get candidate to verify exists
-  const { data: candidate } = await supabaseAdmin.from("candidates").select("id").eq("id", candidateId).single();
+  // Get candidate details
+  const { data: candidate } = await supabaseAdmin
+    .from("candidates")
+    .select("id, name, email, phone, roleName, status")
+    .eq("id", candidateId)
+    .single();
+
   if (!candidate) return NextResponse.json({ error: "Candidate not found" }, { status: 404 });
 
   const { data: documents, error } = await supabaseAdmin
     .from("candidate_documents")
-    .select("id, fileName, type, status, createdAt")
+    .select("id, fileName, filePath, type, status, createdAt")
     .eq("candidateId", candidateId)
     .order("createdAt", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  
-  return NextResponse.json({ documents });
+
+  // Generate temporary preview signed URLs for documents
+  const docsWithSignedUrls = await Promise.all(
+    (documents || []).map(async (doc) => {
+      let previewUrl: string | null = null;
+      if (doc.filePath) {
+        try {
+          const { data: signedData } = await supabaseAdmin.storage
+            .from("onboarding-docs")
+            .createSignedUrl(doc.filePath, 3600);
+          previewUrl = signedData?.signedUrl || null;
+        } catch {
+          // Ignore signed URL failure
+        }
+      }
+      return {
+        ...doc,
+        previewUrl,
+      };
+    })
+  );
+
+  return NextResponse.json({
+    candidate,
+    documents: docsWithSignedUrls,
+  });
 }
 
 export async function POST(req: NextRequest, { params }: { params: { candidateId: string } }) {

@@ -1,7 +1,7 @@
 "use client";
-import { useState, useCallback, useMemo, memo } from "react";
+import { useState, useCallback, useMemo, memo, useEffect } from "react";
 import { useStore, useFilteredCandidates } from "@/lib/store";
-import { Btn, ScoreBadge, StatusBadge, EmptyState, dialog } from "@/components/ui";
+import { Btn, ScoreBadge, StatusBadge, EmploymentBadge, EmptyState, Pagination, dialog } from "@/components/ui";
 import { getEmploymentStatusMeta } from "@/lib/data";
 import CandidateDetail from "./CandidateDetail";
 import FiltersBar from "./FiltersBar";
@@ -10,9 +10,9 @@ import SmartMatchModal from "./SmartMatchModal";
 import type { Candidate } from "@/types";
 import { clsx } from "clsx";
 
-const thCls = "font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[#737983] px-3 py-3 text-left border-b border-[#1D2126] select-none";
-const tdCls = "px-3 py-3 border-b border-[#1D2126] align-middle";
-const tdText = clsx(tdCls, "text-[11.5px] text-[#8E949E]");
+const thCls = "font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3 py-3 text-left border-b border-[var(--table-border)] select-none";
+const tdCls = "px-3 py-3 border-b border-[var(--table-border)] align-middle";
+const tdText = clsx(tdCls, "text-[11.5px] text-[var(--text-2)]");
 
 // ─── Memoized Row: only re-renders when its own candidate or selection changes ─
 interface RowProps {
@@ -28,7 +28,7 @@ const CandidateRow = memo(function CandidateRow({ candidate: c, isSelected, onSe
 
   return (
     <tr
-      className="h-[54px] hover:bg-[#121519] transition-colors duration-150 cursor-pointer group"
+      className="h-[54px] hover:bg-[var(--table-row-hover)] transition-colors duration-150 cursor-pointer group"
       onClick={() => onView(c)}
     >
       <td className={clsx(tdCls, "w-[44px] text-center")} onClick={e => e.stopPropagation()}>
@@ -36,21 +36,21 @@ const CandidateRow = memo(function CandidateRow({ candidate: c, isSelected, onSe
           type="checkbox"
           checked={isSelected}
           onChange={() => onSelect(c.id)}
-          className="w-[16px] h-[16px] rounded border-[#2B2F35] bg-[#151719] accent-[#00D9FF] cursor-pointer"
+          className="w-[16px] h-[16px] rounded border-[var(--input-border)] bg-[var(--input-bg)] accent-[#00D9FF] cursor-pointer"
         />
       </td>
       <td className={tdCls}>
         <div className="flex flex-col justify-center min-w-0">
-          <div className="font-semibold text-[14px] text-[#E8EAED] group-hover:text-white transition-colors truncate">
+          <div className="font-semibold text-[16px] text-[var(--text)] transition-colors truncate">
             {c.name}
           </div>
-          <div className="text-[11px] text-[#666C76] mt-0.5 truncate">
+          <div className="text-[15px] text-[var(--text-2)] mt-0.5 truncate">
             {c.email}
           </div>
         </div>
       </td>
       <td className={tdCls}>
-        <div className="text-[11.5px] text-[#9AA0AA] truncate">{c.roleName}</div>
+        <div className="text-[11.5px] text-[var(--text-3)] truncate">{c.roleName}</div>
       </td>
       <td className={clsx(tdCls, "text-center")}>
         <ScoreBadge score={c.score.total} />
@@ -61,17 +61,7 @@ const CandidateRow = memo(function CandidateRow({ candidate: c, isSelected, onSe
       <td className={tdText}>{c.city || "—"}</td>
       <td className={tdText}>{c.gender || "—"}</td>
       <td className={tdCls}>
-        <div
-          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-[6px] text-[11px] font-semibold tracking-wide whitespace-nowrap"
-          style={{
-            color: statusMeta.color,
-            backgroundColor: statusMeta.bg,
-            border: `1px solid ${statusMeta.border}`,
-          }}
-        >
-          <span className="text-[10px] leading-none">{statusMeta.icon}</span>
-          <span>{statusMeta.badgeLabel}</span>
-        </div>
+        <EmploymentBadge status={c.employmentStatus} />
       </td>
       <td className={tdText}>{c.exp || "—"}</td>
       <td className={clsx(tdText, "whitespace-nowrap")}>{c.appliedAt || "—"}</td>
@@ -80,7 +70,7 @@ const CandidateRow = memo(function CandidateRow({ candidate: c, isSelected, onSe
           type="button"
           onClick={e => onDelete(e, c)}
           title={`Delete ${c.name}`}
-          className="w-7 h-7 rounded-[7px] inline-flex items-center justify-center text-[#666C76] hover:text-[#EF4444] hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-all cursor-pointer"
+          className="w-7 h-7 rounded-[7px] inline-flex items-center justify-center text-[var(--text-2)] hover:text-[#EF4444] hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-all cursor-pointer"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="3 6 5 6 21 6" />
@@ -95,25 +85,44 @@ const CandidateRow = memo(function CandidateRow({ candidate: c, isSelected, onSe
 });
 
 export default function CandidatesTable() {
-  const { candidates, updateCandidate, deleteCandidate, deleteCandidates, selectedIds, toggleSelect, toggleSelectAll, clearSelection } = useStore();
+  const { candidates, updateCandidate, deleteCandidate, deleteCandidates, selectedIds, toggleSelect, toggleSelectAll, clearSelection, clearFilters, filters } = useStore();
   const filtered = useFilteredCandidates();
   const [activeCandidate, setActiveCandidate] = useState<Candidate | null>(null);
   const [showBulkDelete, setShowBulkDelete] = useState(false);
   const [showSmartMatch, setShowSmartMatch] = useState(false);
 
+  // ─── Pagination (10 entries per page) ──────────────────────────────────────
+  const PAGE_SIZE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const paginatedCandidates = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, safePage]);
+
+  const pageIds = useMemo(() => paginatedCandidates.map(c => c.id), [paginatedCandidates]);
+
   // ─── Memoized derived selection state ───────────────────────────────────────
-  const { allSelected, selCount } = useMemo(() => {
+  const { allPageSelected, selCount } = useMemo(() => {
     let count = 0;
     for (const c of filtered) {
       if (selectedIds.has(c.id)) count++;
     }
+    const allPage = pageIds.length > 0 && pageIds.every(id => selectedIds.has(id));
     return {
-      allSelected: filtered.length > 0 && count === filtered.length,
+      allPageSelected: allPage,
       selCount: count,
     };
-  }, [filtered, selectedIds]);
+  }, [filtered, pageIds, selectedIds]);
 
-  const filteredIds = useMemo(() => filtered.map(c => c.id), [filtered]);
   const [isDeletingSelected, setIsDeletingSelected] = useState(false);
 
   // ─── Stable row action handlers ─────────────────────────────────────────────
@@ -187,7 +196,7 @@ export default function CandidatesTable() {
       <div className="flex items-start sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-[22px] font-extrabold tracking-tight text-white">Candidates</h1>
-          <div className="font-mono text-[10px] text-[var(--text-3)] mt-1 uppercase tracking-widest">
+          <div className="font-mono text-[16px] text-[var(--text-3)] mt-1 uppercase tracking-widest">
             All applicants · Filter · Review · Score
           </div>
         </div>
@@ -219,8 +228,8 @@ export default function CandidatesTable() {
 
       {/* Bulk action bar */}
       {selCount > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-2.5 rounded-[10px] mb-3.5 bg-[#151719] border border-[#2B2F35]">
-          <span className="text-[12px] font-medium text-[#E1E4E8]">{selCount} selected</span>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-2.5 rounded-[10px] mb-3.5 bg-[var(--input-bg)] border border-[var(--input-border)]">
+          <span className="text-[16px] font-medium text-[#E1E4E8]">{selCount} selected</span>
           <div className="flex flex-wrap gap-2">
             <Btn variant="ghost" size="sm" onClick={handleApproveSelected} disabled={isDeletingSelected}>✓ Approve All</Btn>
             <Btn variant="danger" size="sm" onClick={handleDeleteSelected} disabled={isDeletingSelected}>
@@ -232,22 +241,32 @@ export default function CandidatesTable() {
       )}
 
       {/* Results count */}
-      <div className="text-[12px] text-[#858B95] font-medium mb-3.5">
+      <div className="text-[16px] text-[var(--text-3)] font-medium mb-3.5">
         {filtered.length} result{filtered.length !== 1 ? "s" : ""}
       </div>
 
-      {filtered.length === 0
-        ? <EmptyState message="No candidates match the current filters" />
-        : (
+      {filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="text-4xl mb-3 opacity-20">◌</div>
+          <div className="text-sm font-medium text-[var(--text-3)] mb-3">No candidates match the current filters</div>
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="px-3.5 py-1.5 rounded-[8px] bg-[var(--input-bg)] hover:bg-[var(--card-bg)] border border-[var(--border-2)] text-[12px] font-semibold text-[#00D9FF] hover:border-[#00D9FF]/40 transition-all cursor-pointer"
+          >
+            Clear Filters
+          </button>
+        </div>
+      ) : (
           <>
             {/* Mobile-First Candidate Cards */}
             <div className="flex flex-col gap-3 md:hidden">
-              {filtered.map(c => {
+              {paginatedCandidates.map(c => {
                 const isSel = selectedIds.has(c.id);
                 return (
                   <div
                     key={c.id}
-                    className="p-4 rounded-[11px] border border-[#24282E] flex flex-col gap-3"
+                    className="p-4 rounded-[11px] border border-[var(--border-2)] flex flex-col gap-3"
                     style={{ background: "rgba(10, 11, 13, 0.55)" }}
                   >
                     <div className="flex justify-between items-start gap-3">
@@ -256,42 +275,33 @@ export default function CandidatesTable() {
                           type="checkbox"
                           checked={isSel}
                           onChange={() => toggleSelect(c.id)}
-                          className="w-[16px] h-[16px] rounded border-[#2B2F35] bg-[#151719] accent-[#00D9FF] cursor-pointer shrink-0"
+                          className="w-[16px] h-[16px] rounded border-[var(--input-border)] bg-[var(--input-bg)] accent-[#00D9FF] cursor-pointer shrink-0"
                         />
                         <div className="min-w-0">
                           <div 
-                            className="font-semibold text-[14px] text-[#E8EAED] cursor-pointer hover:text-white truncate"
+                            className="font-semibold text-[16px] text-[var(--text)] cursor-pointer hover:text-[var(--text)] truncate"
                             onClick={() => handleView(c)}
                           >
                             {c.name}
                           </div>
-                          <div className="text-[11px] text-[#70757F] mt-0.5 truncate">{c.email}</div>
+                          <div className="text-[15px] text-[var(--text-3)] mt-0.5 truncate">{c.email}</div>
                         </div>
                       </div>
                       <StatusBadge status={c.status} />
                     </div>
 
-                    <div className="flex justify-between items-center gap-3 border-t border-[#1D2126] pt-3">
+                    <div className="flex justify-between items-center gap-3 border-t border-[var(--table-border)] pt-3">
                       <div className="min-w-0">
-                        <div className="text-[11.5px] text-[#9AA0AA] truncate">{c.roleName}</div>
-                        <div className="text-[11px] text-[#8E949E] mt-0.5">
-                          {c.city} · {c.exp} · {
-                            (() => {
-                              const statusMeta = getEmploymentStatusMeta(c.employmentStatus);
-                              return (
-                                <span className="inline-flex items-center gap-1" style={{ color: statusMeta.color }}>
-                                  <span>{statusMeta.icon}</span>
-                                  <span>{statusMeta.badgeLabel}</span>
-                                </span>
-                              );
-                            })()
-                          }
+                        <div className="text-[11.5px] text-[var(--text-3)] truncate">{c.roleName}</div>
+                        <div className="text-[12px] text-[var(--text-3)] mt-1 flex items-center gap-2">
+                          <span>{c.city} · {c.exp}</span>
+                          <EmploymentBadge status={c.employmentStatus} />
                         </div>
                       </div>
                       <ScoreBadge score={c.score.total} />
                     </div>
 
-                    <div className="flex justify-end gap-2 border-t border-[#1D2126] pt-3">
+                    <div className="flex justify-end gap-2 border-t border-[var(--table-border)] pt-3">
                       <Btn variant="ghost" size="sm" onClick={() => handleView(c)}>View Profile</Btn>
                       <Btn variant="danger" size="sm" onClick={(e) => handleDeleteCandidate(e, c)}>✕ Delete</Btn>
                     </div>
@@ -302,7 +312,7 @@ export default function CandidatesTable() {
 
             {/* Desktop Candidate Table */}
             <div
-              className="hidden md:block rounded-[11px] overflow-hidden border border-[#24282E]"
+              className="hidden md:block rounded-[11px] overflow-hidden border border-[var(--border-2)]"
               style={{ background: "rgba(10, 11, 13, 0.55)" }}
             >
               <div className="overflow-x-auto">
@@ -312,9 +322,9 @@ export default function CandidatesTable() {
                       <th className={clsx(thCls, "w-[44px] text-center")}>
                         <input
                           type="checkbox"
-                          checked={allSelected}
-                          onChange={() => toggleSelectAll(filteredIds)}
-                          className="w-[16px] h-[16px] rounded border-[#2B2F35] bg-[#151719] accent-[#00D9FF] cursor-pointer"
+                          checked={allPageSelected}
+                          onChange={() => toggleSelectAll(pageIds)}
+                          className="w-[16px] h-[16px] rounded border-[var(--input-border)] bg-[var(--input-bg)] accent-[#00D9FF] cursor-pointer"
                         />
                       </th>
                       <th className={clsx(thCls, "w-[23%]")}>Candidate</th>
@@ -330,7 +340,7 @@ export default function CandidatesTable() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map(c => (
+                    {paginatedCandidates.map(c => (
                       <CandidateRow
                         key={c.id}
                         candidate={c}
@@ -344,6 +354,15 @@ export default function CandidatesTable() {
                 </table>
               </div>
             </div>
+
+            {/* Pagination Controls */}
+            <Pagination
+              currentPage={safePage}
+              totalItems={filtered.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setCurrentPage}
+              itemName="candidates"
+            />
           </>
         )}
 

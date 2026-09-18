@@ -221,13 +221,10 @@ export function ChecklistClient({
             <img src="/logo.png" alt="HireDesk Logo" className="w-full h-full object-cover" />
           </div>
           <div>
-            <div className="text-sm sm:text-base font-bold tracking-tight leading-tight text-white flex items-center gap-2">
+            <div className="text-sm sm:text-base font-bold tracking-tight leading-tight text-white">
               HireDesk
-              <span className="hidden xs:inline-block text-[10px] uppercase font-mono tracking-widest text-[#00D9FF] bg-[#00D9FF]/10 border border-[#00D9FF]/20 px-1.5 py-0.5 rounded">
-                Portal
-              </span>
             </div>
-            <div className="text-[10px] sm:text-[11px] text-[var(--text-3)] font-medium leading-tight">
+            <div className="text-[16px] sm:text-[15px] text-[var(--text-3)] font-medium leading-tight">
               Triple S Production
             </div>
           </div>
@@ -261,7 +258,7 @@ export function ChecklistClient({
         {/* Hero Card matching HireDesk glass card design */}
         <div className="bg-[var(--glass)] border border-[var(--border)] rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-xl flex flex-col items-center text-center animate-fade-in print-hide">
           {/* Pill Header */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--glass-2)] border border-[var(--border-2)] text-[11px] font-mono uppercase tracking-widest text-[#00D9FF] mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--glass-2)] border border-[var(--border-2)] text-[15px] font-mono uppercase tracking-widest text-[#00D9FF] mb-3">
             <Sparkles size={12} className="text-[#00D9FF]" />
             <span>Pre-Employment Verification</span>
           </div>
@@ -303,7 +300,7 @@ export function ChecklistClient({
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--text-2)]">
               <FileText size={14} className="text-[#00D9FF]" />
               <span className="hidden sm:inline">Verification Checklist</span>
-              <span className="text-[11px] font-normal normal-case text-[var(--text-3)]">· A4</span>
+              <span className="text-[15px] font-normal normal-case text-[var(--text-3)]">· A4</span>
             </div>
 
             {/* Right: Zoom controls, Download, and Print */}

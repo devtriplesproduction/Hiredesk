@@ -26,7 +26,7 @@ function ensureA4Pages(content: string, contractId?: string): string {
   if (!content) return "";
 
   // If already structured with .page elements, preserve as is
-  if (content.includes('class="page') || content.includes("class='page'")) {
+  if (/\bclass=["'][^"']*\bpage(?=[\s"'])/i.test(content)) {
     return content;
   }
 
@@ -184,10 +184,38 @@ export default function ContractEditor({ contract, onBack }: Props) {
     return () => document.removeEventListener("selectionchange", handleSelectionChange);
   }, []);
 
-  // Reset editor HTML ONLY when switching to a different contract.
-  // Never reset while editing the current contract, which would destroy the user's cursor!
+  // Reset editor HTML when switching contracts or when self-healing corrupted templates
   useEffect(() => {
     if (!editorRef.current) return;
+
+    // Self-heal exp_letter if DOM has header title, non-centered title, or old logo/sign sizes
+    if (
+      contract.id === "exp_letter" &&
+      (!editorRef.current.innerHTML.includes("exp-cert-page") ||
+        !editorRef.current.innerHTML.includes("Shital Khulape") ||
+        editorRef.current.innerHTML.includes("translateX(-50%)") ||
+        !editorRef.current.innerHTML.includes("text-align:center") ||
+        editorRef.current.innerHTML.includes("height:48px") ||
+        editorRef.current.innerHTML.includes("height: 48px") ||
+        editorRef.current.innerHTML.includes("height:50px") ||
+        editorRef.current.innerHTML.includes("margin-top:auto") ||
+        editorRef.current.innerHTML.includes(">Triple S</span>") ||
+        editorRef.current.innerHTML.includes("height:28px"))
+    ) {
+      import("@/lib/data").then(({ getContractTemplates }) => {
+        const freshTpl = getContractTemplates().find(t => t.id === "exp_letter");
+        if (freshTpl && editorRef.current) {
+          const fresh = ensureA4Pages(ensureCurrentDate(freshTpl.body), "exp_letter");
+          const rendered = renderContractHtml(fresh, resolvedAssets);
+          editorRef.current.innerHTML = rendered;
+          lastHtmlRef.current = rendered;
+          savedRangeRef.current = null;
+          updateContract("exp_letter", freshTpl.body);
+        }
+      });
+      return;
+    }
+
     if (currentLoadedIdRef.current !== contract.id) {
       currentLoadedIdRef.current = contract.id;
       const fresh = ensureA4Pages(ensureCurrentDate(currentContract.body), currentContract.id);
@@ -196,7 +224,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
       lastHtmlRef.current = rendered;
       savedRangeRef.current = null;
     }
-  }, [contract.id, currentContract.body, resolvedAssets]);
+  }, [contract.id, currentContract.body, resolvedAssets, updateContract]);
 
   // Dynamically update DOM asset slots when resolved assets change
   useEffect(() => {
@@ -482,6 +510,11 @@ export default function ContractEditor({ contract, onBack }: Props) {
         .page { width: 210mm; min-height: 297mm; position: relative; margin: 0 auto; box-sizing: border-box; background: #fff; }
         .page.a4-flow-page { padding: 20mm 25mm; height: auto; min-height: 297mm; box-sizing: border-box; }
         .page.a4-flow-page .a4-flow-content { width: 100%; box-sizing: border-box; }
+        .page.exp-cert-page { width: 210mm !important; height: 297mm !important; min-height: 297mm !important; padding: 14mm 24mm 16mm 24mm !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important; background: #ffffff !important; color: #111111 !important; overflow: hidden !important; box-sizing: border-box !important; }
+        .page.exp-cert-page .contract-sign-slot { height: 75px !important; min-height: 75px !important; max-height: 75px !important; margin-bottom: 6px !important; }
+        .page.exp-cert-page .contract-sign-slot img { height: 70px !important; max-height: 70px !important; max-width: 220px !important; }
+        .page.exp-cert-page .contract-sign-empty { height: 40px !important; min-height: 40px !important; }
+        .page.exp-cert-page .header-logo { height: 58px !important; max-width: 280px !important; object-fit: contain !important; }
         @media print {
           @page { size: A4; margin: 0mm; }
           body { margin: 0 !important; padding: 0 !important; }
@@ -489,6 +522,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
           .page:last-child { page-break-after: auto; }
           .page.a4-flow-page { padding: 20mm 25mm !important; }
           .page.a4-flow-page .a4-flow-content { width: 100% !important; }
+          .page.exp-cert-page { width: 210mm !important; height: 297mm !important; padding: 14mm 24mm 16mm 24mm !important; page-break-after: always; }
           .no-print { display: none !important; }
         }
         ${DOCUMENT_STUDIO_CSS}
@@ -499,15 +533,36 @@ export default function ContractEditor({ contract, onBack }: Props) {
     win.document.close();
   }
 
+  const handleResetToDefault = useCallback(async () => {
+    if (confirm(`Reset "${contract.name}" to its official default system template? Any unsaved edits will be replaced.`)) {
+      const { getContractTemplates } = await import("@/lib/data");
+      const defaults = getContractTemplates();
+      const defaultTpl = defaults.find(d => d.id === contract.id);
+      if (defaultTpl) {
+        const fresh = ensureA4Pages(ensureCurrentDate(defaultTpl.body), contract.id);
+        const rendered = renderContractHtml(fresh, resolvedAssets);
+        if (editorRef.current) {
+          editorRef.current.innerHTML = rendered;
+        }
+        lastHtmlRef.current = rendered;
+        updateContract(contract.id, defaultTpl.body);
+        setIsSaved(true);
+        setTimeout(() => setIsSaved(false), 2000);
+      }
+    }
+  }, [contract.id, contract.name, resolvedAssets, updateContract]);
+
   const FIELDS = [
     "[CANDIDATE NAME]", "[ROLE]", "[START DATE]", "[END DATE]",
-    "[AMOUNT ₹]", "[REF NO]", "[X months]", "[NOTICE PERIOD]",
+    "[LAST WORKING DAY]", "[AMOUNT ₹]", "[REF NO]", "[X months]",
+    "[NOTICE PERIOD]", "[PROPRIETOR NAME]", "[DATE]",
   ];
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 relative isolation-auto w-full">
       {/* Editor Scoped CSS */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         ${DOCUMENT_STUDIO_CSS}
 
         /* ─── A4 Document Model & Editor Canvas ─────────────────── */
@@ -517,6 +572,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
           align-items: center;
           width: 100%;
           counter-reset: a4page;
+          position: relative;
         }
 
         .a4-editor-canvas .page {
@@ -532,6 +588,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
           box-sizing: border-box !important;
           flex-shrink: 0 !important;
           counter-increment: a4page;
+          overflow: hidden;
         }
 
         .a4-editor-canvas .page::after {
@@ -570,6 +627,45 @@ export default function ContractEditor({ contract, onBack }: Props) {
           display: flex;
           flex-direction: column;
           box-sizing: border-box;
+        }
+
+        /* ─── Exact Experience Certificate Page (matches PDF 1-to-1) ── */
+        .a4-editor-canvas .page.exp-cert-page {
+          width: 210mm !important;
+          height: 297mm !important;
+          min-height: 297mm !important;
+          padding: 14mm 24mm 16mm 24mm !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: space-between !important;
+          background: #ffffff !important;
+          color: #111111 !important;
+          overflow: hidden !important;
+          box-sizing: border-box !important;
+        }
+
+        .a4-editor-canvas .page.exp-cert-page .contract-sign-slot {
+          height: 75px !important;
+          min-height: 75px !important;
+          max-height: 75px !important;
+          margin-bottom: 6px !important;
+        }
+
+        .a4-editor-canvas .page.exp-cert-page .contract-sign-slot img {
+          height: 70px !important;
+          max-height: 70px !important;
+          max-width: 220px !important;
+        }
+
+        .a4-editor-canvas .page.exp-cert-page .contract-sign-empty {
+          height: 40px !important;
+          min-height: 40px !important;
+        }
+
+        .a4-editor-canvas .page.exp-cert-page .header-logo {
+          height: 58px !important;
+          max-width: 280px !important;
+          object-fit: contain !important;
         }
 
         /* ─── Standard Flowing Contract Page ─────────────────────── */
@@ -750,16 +846,16 @@ export default function ContractEditor({ contract, onBack }: Props) {
       `}} />
 
       {/* Back + title */}
-      <div className="flex items-center justify-between gap-4 pb-2 border-b border-white/[0.06]">
+      <div className="relative z-20 flex items-center justify-between gap-4 pb-2 border-b border-white/[0.06] bg-[#0A0B0E]">
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer select-none outline-none flex-shrink-0 bg-[#14161A] hover:bg-[#1D2128] active:bg-[#16181F] text-[#E8EAED] hover:text-white active:text-white border-[#2A2E36] hover:border-[#00D9FF]/60 focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer select-none outline-none flex-shrink-0 bg-[#14161A] hover:bg-[#1D2128] active:bg-[#16181F] text-[var(--text)] hover:text-[var(--text)] active:text-white border-[var(--border-2)] hover:border-[#00D9FF]/60 focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
         >
           <span className="text-sm leading-none text-[#00D9FF]">←</span>
           <span>BACK</span>
         </button>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#121418] border border-[#23272F]">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#121418] border border-[var(--border-2)]">
           <span className="w-2 h-2 rounded-full bg-[#00D9FF] shadow-[0_0_8px_rgba(0,217,255,0.6)]" />
           <span className="text-xs text-[#8E95A2] font-semibold uppercase tracking-wider">Template:</span>
           <span className="text-sm font-bold tracking-tight text-white">{contract.name}</span>
@@ -769,22 +865,22 @@ export default function ContractEditor({ contract, onBack }: Props) {
       <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
         {/* Controls Sidebar - Solid Dark Panel */}
         <div className="w-full lg:w-72 flex-shrink-0">
-          <div className="rounded-2xl border border-[#24282E] bg-[#111316] p-4 sm:p-5 flex flex-col gap-5 shadow-2xl">
+          <div className="rounded-2xl border border-[var(--border-2)] bg-[var(--card-bg)] p-4 sm:p-5 flex flex-col gap-5 shadow-2xl">
 
             {/* Company Logo Upload */}
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-[#8A909B] mb-2.5 flex items-center justify-between">
+              <div className="text-[15px] font-bold uppercase tracking-wider text-[var(--text-3)] mb-2.5 flex items-center justify-between">
                 <span>Company Logo</span>
                 {resolvedAssets.isSpecificLogo ? (
-                  <span className="text-[10px] text-emerald-400 font-semibold tracking-normal px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                  <span className="text-[16px] text-emerald-400 font-semibold tracking-normal px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
                     Doc Specific
                   </span>
                 ) : resolvedAssets.logoUrl ? (
-                  <span className="text-[10px] text-[#00D9FF] font-semibold tracking-normal px-1.5 py-0.5 rounded bg-[#00D9FF]/10 border border-[#00D9FF]/20">
+                  <span className="text-[16px] text-[#00D9FF] font-semibold tracking-normal px-1.5 py-0.5 rounded bg-[#00D9FF]/10 border border-[#00D9FF]/20">
                     Inherited Global
                   </span>
                 ) : (
-                  <span className="text-[10px] text-[#8E95A2] font-semibold tracking-normal">
+                  <span className="text-[16px] text-[#8E95A2] font-semibold tracking-normal">
                     Default
                   </span>
                 )}
@@ -805,7 +901,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                   <button
                     type="button"
                     onClick={() => logoRef.current?.click()}
-                    className="mt-2 w-full py-1.5 rounded-lg text-[11px] font-semibold text-[#8E949E] hover:text-white bg-[#15171B] hover:bg-[#1f2229] border border-[#2A2F37] transition-all text-center cursor-pointer"
+                    className="mt-2 w-full py-1.5 rounded-lg text-[15px] font-semibold text-[var(--text-3)] hover:text-[var(--text)] bg-[#15171B] hover:bg-[#1f2229] border border-[#2A2F37] transition-all text-center cursor-pointer"
                   >
                     {resolvedAssets.isSpecificLogo ? "Change Document Logo" : "Upload Custom for this Doc"}
                   </button>
@@ -814,7 +910,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                 <button
                   type="button"
                   onClick={() => logoRef.current?.click()}
-                  className="w-full py-3 rounded-xl text-xs font-semibold text-[#9AA0AA] hover:text-white transition-all text-center border-2 border-dashed border-[#2B3038] hover:border-[#00D9FF]/60 bg-[#15171B] hover:bg-[#1A1D23] cursor-pointer"
+                  className="w-full py-3 rounded-xl text-xs font-semibold text-[var(--text-3)] hover:text-[var(--text)] transition-all text-center border-2 border-dashed border-[#2B3038] hover:border-[#00D9FF]/60 bg-[#15171B] hover:bg-[#1A1D23] cursor-pointer"
                 >
                   + UPLOAD LOGO
                 </button>
@@ -830,18 +926,18 @@ export default function ContractEditor({ contract, onBack }: Props) {
 
             {/* Authorized Signature Upload */}
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-[#8A909B] mb-2.5 flex items-center justify-between">
+              <div className="text-[15px] font-bold uppercase tracking-wider text-[var(--text-3)] mb-2.5 flex items-center justify-between">
                 <span>Authorized Signature</span>
                 {resolvedAssets.isSpecificSign ? (
-                  <span className="text-[10px] text-emerald-400 font-semibold tracking-normal px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                  <span className="text-[16px] text-emerald-400 font-semibold tracking-normal px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
                     Doc Specific
                   </span>
                 ) : resolvedAssets.signUrl ? (
-                  <span className="text-[10px] text-[#00D9FF] font-semibold tracking-normal px-1.5 py-0.5 rounded bg-[#00D9FF]/10 border border-[#00D9FF]/20">
+                  <span className="text-[16px] text-[#00D9FF] font-semibold tracking-normal px-1.5 py-0.5 rounded bg-[#00D9FF]/10 border border-[#00D9FF]/20">
                     Inherited Global
                   </span>
                 ) : (
-                  <span className="text-[10px] text-[#8E95A2] font-semibold tracking-normal">
+                  <span className="text-[16px] text-[#8E95A2] font-semibold tracking-normal">
                     Empty
                   </span>
                 )}
@@ -862,7 +958,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                   <button
                     type="button"
                     onClick={() => signRef.current?.click()}
-                    className="mt-2 w-full py-1.5 rounded-lg text-[11px] font-semibold text-[#8E949E] hover:text-white bg-[#15171B] hover:bg-[#1f2229] border border-[#2A2F37] transition-all text-center cursor-pointer"
+                    className="mt-2 w-full py-1.5 rounded-lg text-[15px] font-semibold text-[var(--text-3)] hover:text-[var(--text)] bg-[#15171B] hover:bg-[#1f2229] border border-[#2A2F37] transition-all text-center cursor-pointer"
                   >
                     {resolvedAssets.isSpecificSign ? "Change Document Sign" : "Upload Custom for this Doc"}
                   </button>
@@ -871,7 +967,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                 <button
                   type="button"
                   onClick={() => signRef.current?.click()}
-                  className="w-full py-3 rounded-xl text-xs font-semibold text-[#9AA0AA] hover:text-white transition-all text-center border-2 border-dashed border-[#2B3038] hover:border-[#00D9FF]/60 bg-[#15171B] hover:bg-[#1A1D23] cursor-pointer"
+                  className="w-full py-3 rounded-xl text-xs font-semibold text-[var(--text-3)] hover:text-[var(--text)] transition-all text-center border-2 border-dashed border-[#2B3038] hover:border-[#00D9FF]/60 bg-[#15171B] hover:bg-[#1A1D23] cursor-pointer"
                 >
                   + UPLOAD SIGNATURE
                 </button>
@@ -887,7 +983,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
 
             {/* Insert Fields */}
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-[#8A909B] mb-2.5">
+              <div className="text-[15px] font-bold uppercase tracking-wider text-[var(--text-3)] mb-2.5">
                 Insert Field
               </div>
               <div className="flex flex-col gap-1.5 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
@@ -897,10 +993,10 @@ export default function ContractEditor({ contract, onBack }: Props) {
                     type="button"
                     onMouseDown={e => e.preventDefault()}
                     onClick={() => insertField(f)}
-                    className="text-left text-[11.5px] font-mono px-3 py-2 rounded-lg bg-[#16181C] hover:bg-[#1E222A] text-[#A6ADB8] hover:text-[#00D9FF] border border-[#262A32] hover:border-[#00D9FF]/40 transition-all duration-150 flex items-center justify-between group cursor-pointer"
+                    className="text-left text-[11.5px] font-mono px-3 py-2 rounded-lg bg-[var(--card-bg)] hover:bg-[#1E222A] text-[#A6ADB8] hover:text-[#00D9FF] border border-[#262A32] hover:border-[#00D9FF]/40 transition-all duration-150 flex items-center justify-between group cursor-pointer"
                   >
                     <span>{f}</span>
-                    <span className="text-[10px] text-[#636A75] group-hover:text-[#00D9FF] transition-colors">+</span>
+                    <span className="text-[16px] text-[#636A75] group-hover:text-[#00D9FF] transition-colors">+</span>
                   </button>
                 ))}
               </div>
@@ -919,14 +1015,22 @@ export default function ContractEditor({ contract, onBack }: Props) {
               <button
                 type="button"
                 onClick={handleSave}
-                className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider border transition-all text-center flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] ${
-                  isSaved
+                className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider border transition-all text-center flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] ${isSaved
                     ? "bg-emerald-600/20 text-emerald-400 border-emerald-500/50"
-                    : "bg-[#17191D] hover:bg-[#20242C] text-[#E8EAED] hover:text-white border-[#2A2F37] hover:border-[#00D9FF]"
-                }`}
+                    : "bg-[#17191D] hover:bg-[#20242C] text-[var(--text)] hover:text-[var(--text)] border-[#2A2F37] hover:border-[#00D9FF]"
+                  }`}
               >
                 <span>{isSaved ? "✅" : "💾"}</span>
                 <span>{isSaved ? "SAVED TO SYSTEM" : "SAVE TEMPLATE"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleResetToDefault}
+                className="w-full py-2 px-3 rounded-xl text-[15px] font-semibold uppercase tracking-wider text-[var(--text-3)] hover:text-[#EF4444] hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
+                title="Revert this template to the factory default"
+              >
+                <span>↺</span>
+                <span>Reset to Default</span>
               </button>
             </div>
           </div>
@@ -935,18 +1039,18 @@ export default function ContractEditor({ contract, onBack }: Props) {
         {/* Professional A4 Paper Editor Canvas */}
         <div className="flex-1 min-w-0 flex flex-col w-full">
           <div className="flex items-center justify-between gap-3 mb-3.5">
-            <div className="text-xs text-[#9AA0AA] font-semibold uppercase tracking-wider flex items-center gap-2">
+            <div className="text-xs text-[var(--text-3)] font-semibold uppercase tracking-wider flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
               <span>A4 Document Editor — Click Paper to Edit</span>
             </div>
 
             {/* Visual Zoom Controls */}
-            <div className="flex items-center gap-1 bg-[#121417] px-2.5 py-1.5 rounded-xl border border-[#24282E]">
-              <span className="text-[11px] font-semibold text-[#8A909B] mr-1">Zoom:</span>
+            <div className="flex items-center gap-1 bg-[var(--card-bg)] px-2.5 py-1.5 rounded-xl border border-[var(--border-2)]">
+              <span className="text-[15px] font-semibold text-[var(--text-3)] mr-1">Zoom:</span>
               <button
                 type="button"
                 onClick={handleFitZoom}
-                className="text-[11.5px] px-2.5 py-1 rounded-lg text-[#9AA0AA] hover:text-white hover:bg-white/10 font-medium transition-all cursor-pointer"
+                className="text-[11.5px] px-2.5 py-1 rounded-lg text-[var(--text-3)] hover:text-[var(--text)] hover:bg-white/10 font-medium transition-all cursor-pointer"
                 title="Fit Document to Window Width"
               >
                 Fit
@@ -956,11 +1060,10 @@ export default function ContractEditor({ contract, onBack }: Props) {
                   key={z}
                   type="button"
                   onClick={() => setZoom(z)}
-                  className={`text-[11.5px] px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${
-                    zoom === z
+                  className={`text-[11.5px] px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${zoom === z
                       ? "bg-white text-black font-bold shadow-sm"
-                      : "text-[#9AA0AA] hover:text-white hover:bg-white/10"
-                  }`}
+                      : "text-[var(--text-3)] hover:text-[var(--text)] hover:bg-white/10"
+                    }`}
                 >
                   {Math.round(z * 100)}%
                 </button>
@@ -980,7 +1083,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                   A4 · 210mm × 297mm · {contract.name}
                 </span>
               </div>
-              <div className="text-xs font-mono text-[#8E949E] bg-[#0B0D10] px-2.5 py-0.5 rounded-md border border-[#1F232B]">
+              <div className="text-xs font-mono text-[var(--text-3)] bg-[#0B0D10] px-2.5 py-0.5 rounded-md border border-[#1F232B]">
                 {Math.round(zoom * 100)}% scale
               </div>
             </div>
@@ -1029,7 +1132,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
 
           {/* Logo/sign status */}
           {(resolvedAssets.logoUrl || resolvedAssets.signUrl) && (
-            <div className="mt-3 text-xs text-[#8A909B] font-medium px-1 flex items-center gap-2">
+            <div className="mt-3 text-xs text-[var(--text-3)] font-medium px-1 flex items-center gap-2">
               {resolvedAssets.logoUrl && (
                 <span className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>

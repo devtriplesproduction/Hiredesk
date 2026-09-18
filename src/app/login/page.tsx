@@ -135,7 +135,7 @@ export default function LoginPage() {
             </div>
             <h1 className="text-3xl font-extrabold tracking-tight text-white leading-none">HireDesk</h1>
           </div>
-          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">
+          <p className="text-[16px] text-zinc-500 font-bold uppercase tracking-widest mt-1">
             Triple S Production · Private Gateway
           </p>
         </div>
@@ -159,7 +159,7 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             {/* Work Email Field */}
             <div className="anim-stagger-email">
-              <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+              <label className="block text-[16px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
                 Work Email Address
               </label>
               <input
@@ -174,7 +174,7 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div className="anim-stagger-pass">
-              <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+              <label className="block text-[16px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
                 Security Password
               </label>
               <div className="relative">
@@ -204,7 +204,7 @@ export default function LoginPage() {
                 </div>
                 
                 {/* Premium Troubleshooting Helper panel */}
-                <div className="rounded-xl border border-white/5 bg-zinc-950/60 p-4 text-[11px] leading-relaxed text-zinc-400 flex flex-col gap-3.5 max-h-[220px] overflow-y-auto">
+                <div className="rounded-xl border border-white/5 bg-zinc-950/60 p-4 text-[15px] leading-relaxed text-zinc-400 flex flex-col gap-3.5 max-h-[220px] overflow-y-auto">
                   <div className="flex items-center justify-between border-b border-white/5 pb-2">
                     <span className="font-bold text-zinc-200 uppercase tracking-widest text-[9px]">Supabase Gateway Assistance</span>
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />

@@ -116,7 +116,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
       className="max-w-[1100px] w-full max-h-[92vh] md:h-[86vh] flex flex-col p-0 overflow-hidden bg-[#0e1013] border-[#22272e] shadow-2xl rounded-2xl"
     >
       {/* Top Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f242b] bg-[#121519]/90 backdrop-blur-md flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f242b] bg-[var(--table-row-hover)]/90 backdrop-blur-md flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-[#00D9FF]/10 border border-[#00D9FF]/30 flex items-center justify-center text-[#00D9FF] text-sm shadow-[0_0_12px_rgba(0,217,255,0.15)]">
             ✨
@@ -124,18 +124,18 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
           <div>
             <div className="text-[16px] font-bold tracking-tight text-white flex items-center gap-2">
               <span>Requirements Smart Matcher</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#00D9FF] bg-[#00D9FF]/10 border border-[#00D9FF]/25 px-2 py-0.5 rounded-md">
+              <span className="text-[16px] font-semibold uppercase tracking-wider text-[#00D9FF] bg-[#00D9FF]/10 border border-[#00D9FF]/25 px-2 py-0.5 rounded-md">
                 Live AI Match
               </span>
             </div>
-            <div className="text-[11px] text-[#78808d] mt-0.5">
+            <div className="text-[15px] text-[#78808d] mt-0.5">
               Specify target criteria to benchmark and instantly score candidates across your pool
             </div>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-[#737983] hover:text-white hover:bg-white/[0.06] border border-transparent hover:border-[#2b3038] transition-all"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-[var(--text)] hover:bg-white/[0.06] border border-transparent hover:border-[#2b3038] transition-all"
           aria-label="Close"
         >
           ✕
@@ -147,12 +147,12 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
         {/* Left Side: Filter Requirements */}
         <div className="md:col-span-5 flex flex-col min-h-0 bg-[#0c0e11] overflow-hidden">
           <div className="px-5 py-3 border-b border-[#1c2027] bg-[#111418]/60 flex items-center justify-between flex-shrink-0">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#8b93a0]">
+            <span className="text-[15px] font-bold uppercase tracking-wider text-[#8b93a0]">
               Match Criteria
             </span>
             <button
               onClick={clearAll}
-              className="text-[11px] text-[#717885] hover:text-[#00D9FF] transition-colors font-medium"
+              className="text-[15px] text-[#717885] hover:text-[#00D9FF] transition-colors font-medium"
             >
               Reset All
             </button>
@@ -175,7 +175,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                     </option>
                   ))}
                 </select>
-                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#6e7683] text-[10px]">
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#6e7683] text-[16px]">
                   ▼
                 </div>
               </div>
@@ -189,7 +189,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                   <select
                     value={prefExp}
                     onChange={e => setPrefExp(e.target.value)}
-                    className="w-full bg-[#15181d] border border-[#262c35] hover:border-[#38414e] focus:border-[#00D9FF] rounded-xl text-white text-[12px] px-3 py-2 outline-none transition-colors appearance-none cursor-pointer"
+                    className="w-full bg-[#15181d] border border-[#262c35] hover:border-[#38414e] focus:border-[#00D9FF] rounded-xl text-white text-[16px] px-3 py-2 outline-none transition-colors appearance-none cursor-pointer"
                   >
                     <option value="all">Any Exp.</option>
                     {EXP_LEVELS.map(x => (
@@ -198,7 +198,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                       </option>
                     ))}
                   </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#6e7683] text-[10px]">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#6e7683] text-[16px]">
                     ▼
                   </div>
                 </div>
@@ -210,7 +210,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                   <select
                     value={prefEdu}
                     onChange={e => setPrefEdu(e.target.value)}
-                    className="w-full bg-[#15181d] border border-[#262c35] hover:border-[#38414e] focus:border-[#00D9FF] rounded-xl text-white text-[12px] px-3 py-2 outline-none transition-colors appearance-none cursor-pointer"
+                    className="w-full bg-[#15181d] border border-[#262c35] hover:border-[#38414e] focus:border-[#00D9FF] rounded-xl text-white text-[16px] px-3 py-2 outline-none transition-colors appearance-none cursor-pointer"
                   >
                     <option value="all">Any Edu.</option>
                     {EDU.map(e => (
@@ -219,7 +219,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                       </option>
                     ))}
                   </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#6e7683] text-[10px]">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#6e7683] text-[16px]">
                     ▼
                   </div>
                 </div>
@@ -230,7 +230,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
             <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-[#13161b] border border-[#20252d]">
               <div className="flex justify-between items-center">
                 <span className="text-[11.5px] font-semibold text-[#a6adb9]">Min ATS Score</span>
-                <span className="font-mono text-[12px] text-[#00D9FF] bg-[#00D9FF]/10 border border-[#00D9FF]/25 px-2 py-0.5 rounded-md font-bold">
+                <span className="font-mono text-[16px] text-[#00D9FF] bg-[#00D9FF]/10 border border-[#00D9FF]/25 px-2 py-0.5 rounded-md font-bold">
                   {minScore}+
                 </span>
               </div>
@@ -242,7 +242,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                 onChange={e => setMinScore(Number(e.target.value))}
                 className="w-full h-1.5 bg-[#20262f] rounded-lg appearance-none cursor-pointer accent-[#00D9FF]"
               />
-              <div className="flex justify-between text-[10px] text-[#636c78] font-mono">
+              <div className="flex justify-between text-[16px] text-[#636c78] font-mono">
                 <span>0</span>
                 <span>50</span>
                 <span>100</span>
@@ -255,7 +255,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                 <div className="flex items-center gap-1.5">
                   <label className="text-[11.5px] font-semibold text-[#a6adb9]">Key Skills</label>
                   {selectedSkills.size > 0 && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#00D9FF]/15 text-[#00D9FF] font-semibold">
+                    <span className="text-[16px] font-mono px-1.5 py-0.2 rounded bg-[#00D9FF]/15 text-[#00D9FF] font-semibold">
                       {selectedSkills.size}
                     </span>
                   )}
@@ -263,7 +263,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                 {selectedSkills.size > 0 && (
                   <button
                     onClick={() => setSelectedSkills(new Set())}
-                    className="text-[10px] text-[#717885] hover:text-[#00D9FF] uppercase tracking-wider font-medium"
+                    className="text-[16px] text-[#717885] hover:text-[#00D9FF] uppercase tracking-wider font-medium"
                   >
                     Clear Skills
                   </button>
@@ -279,13 +279,13 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                         type="button"
                         onClick={() => toggleSkill(skill)}
                         className={clsx(
-                          "text-[11px] font-medium px-2.5 py-1 rounded-lg border transition-all text-left flex items-center gap-1",
+                          "text-[15px] font-medium px-2.5 py-1 rounded-lg border transition-all text-left flex items-center gap-1",
                           active
                             ? "bg-[#00D9FF]/15 text-[#00D9FF] border-[#00D9FF]/40 shadow-sm"
-                            : "bg-[#161a20] border-[#252a33] text-[#8e95a2] hover:text-white hover:border-[#373e4b]"
+                            : "bg-[#161a20] border-[#252a33] text-[#8e95a2] hover:text-[var(--text)] hover:border-[#373e4b]"
                         )}
                       >
-                        {active && <span className="text-[10px]">✓</span>}
+                        {active && <span className="text-[16px]">✓</span>}
                         {skill}
                       </button>
                     );
@@ -298,7 +298,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
           <div className="p-4 border-t border-[#1c2027] bg-[#0c0e11] flex-shrink-0">
             <button
               onClick={clearAll}
-              className="w-full py-2.5 rounded-xl border border-[#262c36] hover:border-[#38414e] bg-[#14171d] hover:bg-[#191d24] text-[#a6adb9] hover:text-white text-[12px] font-semibold transition-all"
+              className="w-full py-2.5 rounded-xl border border-[#262c36] hover:border-[#38414e] bg-[#14171d] hover:bg-[#191d24] text-[#a6adb9] hover:text-[var(--text)] text-[16px] font-semibold transition-all"
             >
               Reset Requirements
             </button>
@@ -309,14 +309,14 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
         <div className="md:col-span-7 flex flex-col min-h-0 bg-[#090b0d] overflow-hidden">
           <div className="px-6 py-3 border-b border-[#1c2027] bg-[#111418]/60 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#8b93a0]">
+              <span className="text-[15px] font-bold uppercase tracking-wider text-[#8b93a0]">
                 Ranked Matches
               </span>
-              <span className="font-mono text-[11px] bg-[#1a1f26] text-[#a6adb9] px-2 py-0.5 rounded-full font-medium">
+              <span className="font-mono text-[15px] bg-[#1a1f26] text-[#a6adb9] px-2 py-0.5 rounded-full font-medium">
                 {matchedCandidates.length}
               </span>
             </div>
-            <span className="text-[11px] text-[#5e6673]">
+            <span className="text-[15px] text-[#5e6673]">
               Sorted by highest relevance
             </span>
           </div>
@@ -327,8 +327,8 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                 <div className="w-12 h-12 rounded-2xl bg-[#14171c] border border-[#20252e] flex items-center justify-center text-xl mb-3 text-[#7f8897]">
                   🔍
                 </div>
-                <div className="text-[14px] font-semibold text-[#e1e4ea]">No candidates matched</div>
-                <div className="text-[12px] max-w-xs mt-1 text-[#6f7785]">
+                <div className="text-[16px] font-semibold text-[#e1e4ea]">No candidates matched</div>
+                <div className="text-[16px] max-w-xs mt-1 text-[#6f7785]">
                   Try loosening your ATS score threshold, role filter, or required skills criteria.
                 </div>
               </div>
@@ -384,11 +384,11 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                       {/* Match Score Badge */}
                       <div
                         className={clsx(
-                          "font-mono text-[12px] font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1.5 flex-shrink-0 shadow-sm",
+                          "font-mono text-[16px] font-bold px-2.5 py-1 rounded-lg border flex items-center gap-1.5 flex-shrink-0 shadow-sm",
                           scoreColor
                         )}
                       >
-                        <span className="text-[10px]">✨</span>
+                        <span className="text-[16px]">✨</span>
                         <span>{matchScore}%</span>
                       </div>
                     </div>
@@ -486,7 +486,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                         {matchedSkillsList.map(s => (
                           <span
                             key={s}
-                            className="text-[10px] bg-[#22c55e]/10 text-[#22c55e] font-medium border border-[#22c55e]/20 px-2 py-0.5 rounded-md flex items-center gap-1"
+                            className="text-[16px] bg-[#22c55e]/10 text-[#22c55e] font-medium border border-[#22c55e]/20 px-2 py-0.5 rounded-md flex items-center gap-1"
                           >
                             ✓ {s}
                           </span>
@@ -494,7 +494,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                         {missingSkillsList.map(s => (
                           <span
                             key={s}
-                            className="text-[10px] bg-[#ef4444]/10 text-[#ef4444] font-medium border border-[#ef4444]/20 px-2 py-0.5 rounded-md flex items-center gap-1 opacity-80"
+                            className="text-[16px] bg-[#ef4444]/10 text-[#ef4444] font-medium border border-[#ef4444]/20 px-2 py-0.5 rounded-md flex items-center gap-1 opacity-80"
                           >
                             ✕ {s}
                           </span>
@@ -504,7 +504,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
 
                     {/* Footer Action */}
                     <div className="flex items-center justify-between pt-1 border-t border-[#1a1f26]">
-                      <span className="text-[11px] text-[#555d6b]">
+                      <span className="text-[15px] text-[#555d6b]">
                         ID: <span className="font-mono text-[#78808d]">{c.id.slice(0, 8)}</span>
                       </span>
                       <button

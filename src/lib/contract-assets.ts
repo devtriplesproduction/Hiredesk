@@ -84,7 +84,12 @@ export function renderContractHtml(content: string, assets: ResolvedAssets): str
   const logoSlotHtml = `<div class="contract-logo-slot" data-slot="logo" contenteditable="false" style="height:56px;max-height:56px;display:flex;align-items:center;justify-content:flex-start;margin-bottom:8px;user-select:none;">${logoHtml}</div>`;
   const signSlotHtml = `<div class="contract-sign-slot" data-slot="sign" contenteditable="false" style="height:96px;min-height:96px;max-height:96px;display:flex;align-items:flex-end;justify-content:flex-start;margin-bottom:8px;user-select:none;">${signHtml}</div>`;
 
-  // ── 1. Top-Left Logo Position Resolution ──────────────────────────────────
+  // 1. Cover page watermark / explicit template img src replacements (MUST run before slot replacement!)
+  const effectiveLogoUrl = assets.logoUrl || "/logo.png";
+  html = html.replaceAll('src="<!--LOGO-->"', `src="${effectiveLogoUrl}"`);
+  html = html.replaceAll("src='<!--LOGO-->'", `src='${effectiveLogoUrl}'`);
+
+  // 2. Logo Slot Replacement
   if (/<div[^>]*class="[^"]*contract-logo-slot[^"]*"[^>]*>[\s\S]*?<\/div>/i.test(html)) {
     html = html.replace(
       /<div[^>]*class="[^"]*contract-logo-slot[^"]*"[^>]*>[\s\S]*?<\/div>/i,
@@ -102,15 +107,6 @@ export function renderContractHtml(content: string, assets: ResolvedAssets): str
     );
   } else if (html.includes("<!--LOGO-->")) {
     html = html.replaceAll("<!--LOGO-->", logoSlotHtml);
-  }
-
-  // Cover page watermark / explicit template replacements
-  if (assets.logoUrl) {
-    html = html.replaceAll('src="<!--LOGO-->"', `src="${assets.logoUrl}"`);
-    html = html.replaceAll("src='<!--LOGO-->'", `src='${assets.logoUrl}'`);
-  } else {
-    html = html.replaceAll('src="<!--LOGO-->"', 'src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"');
-    html = html.replaceAll("src='<!--LOGO-->'", "src='data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'");
   }
 
   // ── 2. Authorized Signatory Position Resolution ───────────────────────────
@@ -159,6 +155,9 @@ export function stripContractAssetsForStorage(html: string): string {
   clean = clean.replace(/<div\s*<div/gi, "<div");
   clean = clean.replace(/<div([^>]*>)\s*>\s*/gi, "<div$1");
   clean = clean.replace(/>\s*>\s*<img/gi, "><img");
+
+  // Restore watermark & header img src to <!--LOGO-->
+  clean = clean.replace(/(<img[^>]*class="[^"]*(?:page-wm|wm|wm8|header-logo)[^"]*"[^>]*src=")[^"]*(")/gi, '$1<!--LOGO-->$2');
 
   clean = clean.replace(
     /<div[^>]*class="[^"]*contract-logo-slot[^"]*"[^>]*>[\s\S]*?<\/div>/gi,

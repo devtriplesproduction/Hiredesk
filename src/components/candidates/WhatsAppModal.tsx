@@ -251,7 +251,7 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
         </div>
         
         <Btn onClick={onClose}
-          className="w-9 h-9 rounded-full flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 hover:rotate-90 transition-all duration-300 border border-transparent hover:border-white/20 relative z-10">
+          className="w-9 h-9 rounded-full flex items-center justify-center text-zinc-400 hover:text-[var(--text)] hover:bg-white/10 hover:rotate-90 transition-all duration-300 border border-transparent hover:border-white/20 relative z-10">
           ✕
         </Btn>
       </div>
@@ -261,7 +261,7 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
         
         {/* Recipient Details Card */}
         <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] flex flex-col gap-4 backdrop-blur-md transition-all hover:bg-white/[0.03]">
-          <div className="text-[10px] uppercase font-black tracking-[0.2em] text-emerald-500/80 flex items-center gap-2">
+          <div className="text-[16px] uppercase font-black tracking-[0.2em] text-emerald-500/80 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
             Configuration
           </div>
@@ -269,7 +269,7 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             {/* Phone Number Field */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider flex items-center justify-between">
+              <label className="text-[16px] text-zinc-400 font-bold uppercase tracking-wider flex items-center justify-between">
                 <span>Phone Number</span>
                 {isPhoneChanged && isPhoneValid && (
                   <span className="text-[9px] text-amber-500 font-extrabold uppercase bg-amber-500/5 px-1.5 py-0.2 rounded border border-amber-500/10">Unsaved Change</span>
@@ -307,7 +307,7 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
 
             {/* Hiring Role Override */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Hiring Job Title</label>
+              <label className="text-[16px] text-zinc-400 font-bold uppercase tracking-wider">Hiring Job Title</label>
               <input
                 type="text"
                 value={roleInput}
@@ -325,7 +325,7 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
 
         {/* Template Chooser */}
         <div className="space-y-2">
-          <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">Message Template</label>
+          <label className="text-[16px] text-zinc-400 font-bold uppercase tracking-wider block">Message Template</label>
           <div className="grid grid-cols-2 gap-2.5">
             {TEMPLATES.map(tmpl => {
               const active = selectedTemplate === tmpl.id;
@@ -354,7 +354,7 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
         {/* Main Message Body & Live Preview */}
         <div className="space-y-2 flex flex-col">
           <div className="flex justify-between items-center">
-            <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Hiring Message Composer</label>
+            <label className="text-[16px] text-zinc-400 font-bold uppercase tracking-wider">Hiring Message Composer</label>
             
             {isManualEdit && (
               <Btn
@@ -379,7 +379,7 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
             />
             
             {/* Tokens replacement details strip */}
-            <div className="px-4 py-2 border-t border-zinc-900 bg-zinc-950/80 flex items-center justify-between text-[10px] text-zinc-500 font-medium">
+            <div className="px-4 py-2 border-t border-zinc-900 bg-zinc-950/80 flex items-center justify-between text-[16px] text-zinc-500 font-medium">
               <div className="flex gap-2">
                 <span className={`px-1.5 py-0.2 rounded font-bold ${messageBody.includes(candidate.name) ? "text-emerald-400 bg-emerald-500/10" : "text-zinc-600 bg-zinc-900"}`}>
                   Name Replaced
@@ -404,10 +404,10 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
 
         {/* Outreach History timeline */}
         <div className="space-y-3">
-          <div className="text-[10px] uppercase font-bold tracking-widest text-zinc-500">Outreach History Audit</div>
+          <div className="text-[16px] uppercase font-bold tracking-widest text-zinc-500">Outreach History Audit</div>
           
           {history.length === 0 ? (
-            <div className="text-center py-6 bg-zinc-950/10 border border-dashed border-zinc-900 rounded-2xl text-[11px] text-zinc-600">
+            <div className="text-center py-6 bg-zinc-950/10 border border-dashed border-zinc-900 rounded-2xl text-[15px] text-zinc-600">
               No WhatsApp outreach records tracked for this candidate.
             </div>
           ) : (
@@ -420,7 +420,7 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
                   minute: "2-digit"
                 });
                 return (
-                  <div key={index} className="p-3 bg-zinc-950/50 border border-zinc-900/60 rounded-xl space-y-1.5 text-[11px]">
+                  <div key={index} className="p-3 bg-zinc-950/50 border border-zinc-900/60 rounded-xl space-y-1.5 text-[15px]">
                     <div className="flex items-center justify-between">
                       <span className="font-extrabold text-white uppercase tracking-wider text-[9px] bg-zinc-900 px-1.5 py-0.2 rounded border border-zinc-800">
                         {log.templateName}

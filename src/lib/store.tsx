@@ -199,14 +199,51 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (contractsLoaded) {
+        const defaultTemplates = getContractTemplates();
+        const pristineExp = defaultTemplates.find(t => t.id === "exp_letter");
+
+        // Self-heal exp_letter if it was accidentally overwritten with appointment letter
+        const healedDbContracts = dbContracts.map(c => {
+          if (
+            c.id === "exp_letter" &&
+            pristineExp &&
+            (
+              c.body.includes("Letter of Appointment") ||
+              c.body.includes("Acceptance of Offer") ||
+              c.body.includes('class="page cover"') ||
+              c.body.includes("buildPage8") ||
+              !c.body.includes("exp-cert-page") ||
+              !c.body.includes("Experience Certificate") ||
+              !c.body.includes("Shital Khulape") ||
+              c.body.includes("translateX(-50%)") ||
+              !c.body.includes("text-align:center") ||
+              c.body.includes("height:48px") ||
+              c.body.includes("height:50px") ||
+              c.body.includes("margin-top:auto") ||
+              c.body.includes(">Triple S</span>") ||
+              c.body.includes("height:28px")
+            )
+          ) {
+            import("@/lib/supabase").then(db => db.updateDBContract("exp_letter", { body: pristineExp.body, name: "Experience Letter" })).catch(console.error);
+            return { ...c, body: pristineExp.body, name: "Experience Letter" };
+          }
+          return c;
+        });
+
         if (dbContracts.length === 0) {
-          const defaultContracts = attachDocAssets(getContractTemplates());
+          const defaultContracts = attachDocAssets(defaultTemplates);
           setContracts(defaultContracts);
           insertDBContracts(defaultContracts).catch(err =>
             console.error("[HireDesk Store] Failed to seed default contracts to Supabase:", err)
           );
         } else {
-          setContracts(attachDocAssets(dbContracts));
+          // Merge any default templates missing from DB (e.g. exp_letter or rel_letter if added after initial seed)
+          const missing = defaultTemplates.filter(dt => !healedDbContracts.some(dc => dc.id === dt.id));
+          const fullList = [...healedDbContracts, ...missing];
+          if (missing.length > 0) {
+            insertDBContracts(missing).catch(console.error);
+          }
+          setContracts(attachDocAssets(fullList));
         }
       } else {
         setContracts(attachDocAssets(getContractTemplates()));
@@ -235,7 +272,16 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
       try {
         const dbEmps = await getDBEmployees();
-        setEmployees(dbEmps);
+        // Defensive deduplication in case of any duplicate rows
+        const seenCandidateIds = new Set<string>();
+        const uniqueEmps = dbEmps.filter(e => {
+          const cid = e.candidateId || (e as any).candidate_id;
+          if (!cid) return true;
+          if (seenCandidateIds.has(cid)) return false;
+          seenCandidateIds.add(cid);
+          return true;
+        });
+        setEmployees(uniqueEmps);
       } catch (err) {
         console.error("[HireDesk Store] Failed to load employees:", err);
       }
@@ -574,7 +620,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addEmployee = useCallback((e: Employee) => {
-    setEmployees(prev => [...prev, e]);
+    const candidateId = e.candidateId || (e as any).candidate_id;
+    setEmployees(prev => {
+      if (prev.some(x => (x.id && x.id === e.id) || (candidateId && (x.candidateId === candidateId || (x as any).candidate_id === candidateId)))) {
+        return prev.map(x => (x.id === e.id || ((x.candidateId || (x as any).candidate_id) === candidateId)) ? { ...x, ...e } : x);
+      }
+      return [...prev, e];
+    });
   }, []);
 
   const updateEmployee = useCallback((id: string, patch: Partial<Employee>) => {
@@ -631,7 +683,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (!initializedRef.current) return;
 
     const hiredWithoutEmployee = candidates.filter(
-      c => c.status === "hired" && !employees.some(e => e.candidateId === c.id) && !syncingRef.current.has(c.id)
+      c => c.status === "hired" && !employees.some(e => (e.candidateId === c.id || (e as any).candidate_id === c.id)) && !syncingRef.current.has(c.id)
     );
 
     if (hiredWithoutEmployee.length === 0) return;
@@ -658,10 +710,22 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         .then(res => res.json())
         .then(data => {
           if (data.success && data.employee) {
+            const emp: Employee = {
+              id: data.employee.id,
+              candidateId: data.employee.candidateId || data.employee.candidate_id,
+              offerId: data.employee.offerId || data.employee.offer_id,
+              name: data.employee.name,
+              email: data.employee.email,
+              phone: data.employee.phone,
+              employmentType: data.employee.employmentType || data.employee.employment_type,
+              bondRequirement: data.employee.bondRequirement || data.employee.bond_requirement || "UNKNOWN",
+              status: data.employee.status || "active",
+              createdAt: data.employee.createdAt || data.employee.created_at,
+            };
             // Only add if not already in state
             setEmployees(prev => {
-              if (prev.some(e => e.candidateId === c.id)) return prev;
-              return [...prev, data.employee];
+              if (prev.some(e => (e.candidateId === c.id || (e as any).candidate_id === c.id || e.id === emp.id))) return prev;
+              return [...prev, emp];
             });
           }
         })
@@ -692,47 +756,207 @@ function parseAgeRange(range: string): [number, number] {
   return result;
 }
 
+function normalizeStatusStr(s?: string) {
+  return (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function matchesCandidateStatus(candStatus?: string, filterStatus?: string): boolean {
+  if (!filterStatus || filterStatus === "all") return true;
+  const cNorm = normalizeStatusStr(candStatus);
+  const fNorm = normalizeStatusStr(filterStatus);
+  if (cNorm === fNorm) return true;
+
+  if (filterStatus === "review" || filterStatus === "in_review") {
+    return ["review", "inreview", "in_review"].includes(cNorm);
+  }
+  if (filterStatus === "offer" || filterStatus === "offer_prep") {
+    return ["offer", "offerprep", "offer_prep"].includes(cNorm);
+  }
+  if (filterStatus === "offer_sent") {
+    return ["offersent", "offer_sent"].includes(cNorm);
+  }
+  if (filterStatus === "offer_accepted") {
+    return ["offeraccepted", "offer_accepted"].includes(cNorm);
+  }
+  if (filterStatus === "offer_rejected") {
+    return ["offerrejected", "offer_rejected"].includes(cNorm);
+  }
+  if (filterStatus === "interview_1") {
+    return ["interview1", "interviewr1", "interview_1", "interview_r1"].includes(cNorm);
+  }
+  if (filterStatus === "interview_2") {
+    return ["interview2", "interviewr2", "interview_2", "interview_r2"].includes(cNorm);
+  }
+  if (filterStatus === "onboarding_requested") {
+    return ["onboardingrequested", "onboardingrequired", "onboarding_requested", "onboarding_required"].includes(cNorm);
+  }
+  if (filterStatus === "onboarding_review") {
+    return ["onboardingreview", "onboarding_review"].includes(cNorm);
+  }
+  if (filterStatus === "onboarding_verified") {
+    return ["onboardingverified", "onboardingverification", "onboarding_verified", "onboarding_verification"].includes(cNorm);
+  }
+  if (filterStatus === "onboarding_rejected") {
+    return ["onboardingrejected", "onboarding_rejected"].includes(cNorm);
+  }
+  if (filterStatus === "approved") {
+    return ["approved"].includes(cNorm);
+  }
+  if (filterStatus === "rejected") {
+    return ["rejected"].includes(cNorm);
+  }
+  if (filterStatus === "hired") {
+    return false;
+  }
+  if (filterStatus === "new") {
+    return ["new"].includes(cNorm);
+  }
+  if (filterStatus === "shortlisted") {
+    return ["shortlisted"].includes(cNorm);
+  }
+  return false;
+}
+
+function matchesExp(candidateExp?: string, filterExp?: string): boolean {
+  if (!filterExp || filterExp === "all") return true;
+  if (!candidateExp) return false;
+  const cExp = candidateExp.trim().toLowerCase();
+  const fExp = filterExp.trim().toLowerCase();
+  if (cExp === fExp) return true;
+
+  if (fExp === "fresher") {
+    return cExp.includes("fresh") || cExp.startsWith("0");
+  }
+  if (fExp === "1 yr" || fExp === "1 yrs" || fExp === "1 year") {
+    return cExp.startsWith("1") || cExp.includes("1 yr") || cExp.includes("1 year");
+  }
+  if (fExp === "2 yrs" || fExp === "2 yr" || fExp === "2 years") {
+    return cExp.startsWith("2") || cExp.includes("2 yr") || cExp.includes("2 year");
+  }
+  if (fExp === "3 yrs" || fExp === "3 yr" || fExp === "3 years") {
+    return cExp.startsWith("3") || cExp.startsWith("4") || cExp.includes("3 yr") || cExp.includes("3 year");
+  }
+  if (fExp === "5+ yrs" || fExp === "5+ years" || fExp === "5+") {
+    const num = parseInt(cExp, 10);
+    return cExp.includes("5+") || (!isNaN(num) && num >= 5);
+  }
+  return cExp.includes(fExp);
+}
+
 export function useFilteredCandidates() {
-  const { candidates, filters } = useStore();
+  const { candidates, filters, roles, employees } = useStore();
 
   return useMemo(() => {
     const { roleId, status, city, gender, exp, ageRange, search, sort, employmentStatus } = filters;
 
+    // Set of candidate IDs who have been added to employees list
+    const hiredCandidateIds = new Set<string>();
+    employees.forEach(e => {
+      const cid = e.candidateId || (e as any).candidate_id;
+      if (cid) hiredCandidateIds.add(cid);
+    });
+
     // Pre-compute search query once
-    const q = search ? search.toLowerCase() : null;
+    const q = search ? search.trim().toLowerCase() : null;
+    const cleanQ = q ? q.replace(/[^0-9a-z]/gi, "") : "";
     const [lo, hi] = (ageRange && ageRange !== "all") ? parseAgeRange(ageRange as string) : [0, 999];
 
     const filtered = candidates.filter(c => {
-      if (roleId !== "all" && c.roleId !== roleId) return false;
-      if (status !== "all" && c.status !== status) return false;
-      if (city && c.city !== city) return false;
-      if (gender !== "all" && c.gender !== gender) return false;
-      if (exp !== "all" && c.exp !== exp) return false;
-      if (employmentStatus && employmentStatus !== "all" && c.employmentStatus !== employmentStatus) return false;
-      if (ageRange !== "all" && (c.age < lo || c.age > hi)) return false;
-      if (q && !c.name.toLowerCase().includes(q)
-            && !c.email.toLowerCase().includes(q)
-            && !c.roleName.toLowerCase().includes(q)) return false;
+      // Exclude candidates who are hired or added to employees list
+      if (c.status === "hired" || hiredCandidateIds.has(c.id)) {
+        return false;
+      }
+
+      // 1. Role filter
+      if (roleId && roleId !== "all") {
+        const idMatch = c.roleId === roleId;
+        const roleObj = roles.find(r => r.id === roleId);
+        const nameMatch = roleObj && c.roleName
+          ? c.roleName.trim().toLowerCase() === roleObj.name.trim().toLowerCase()
+          : false;
+        if (!idMatch && !nameMatch) return false;
+      }
+
+      // 2. Status filter (with smart normalization)
+      if (status && status !== "all") {
+        if (!matchesCandidateStatus(c.status, status)) return false;
+      }
+
+      // 3. City filter (case-insensitive)
+      if (city && city !== "all" && city !== "") {
+        const cCity = (c.city || "").trim().toLowerCase();
+        const fCity = city.trim().toLowerCase();
+        if (cCity !== fCity) return false;
+      }
+
+      // 4. Gender filter (case-insensitive)
+      if (gender && gender !== "all") {
+        const cGen = (c.gender || "").trim().toLowerCase();
+        const fGen = gender.trim().toLowerCase();
+        if (cGen !== fGen) return false;
+      }
+
+      // 5. Experience filter
+      if (exp && exp !== "all") {
+        if (!matchesExp(c.exp, exp)) return false;
+      }
+
+      // 6. Employment Status filter
+      if (employmentStatus && employmentStatus !== "all") {
+        if (c.employmentStatus !== employmentStatus) return false;
+      }
+
+      // 7. Age Range filter
+      if (ageRange && ageRange !== "all") {
+        const age = Number(c.age);
+        if (isNaN(age) || age < lo || age > hi) return false;
+      }
+
+      // 8. Search query filter across multiple fields
+      if (q) {
+        const name = (c.name || "").toLowerCase();
+        const email = (c.email || "").toLowerCase();
+        const role = (c.roleName || "").toLowerCase();
+        const cCity = (c.city || "").toLowerCase();
+        const phone = (c.phone || "").replace(/[^0-9]/g, "");
+        const skills = Array.isArray(c.skills) ? c.skills.join(" ").toLowerCase() : "";
+
+        const matchesQuery =
+          name.includes(q) ||
+          email.includes(q) ||
+          role.includes(q) ||
+          cCity.includes(q) ||
+          skills.includes(q) ||
+          (cleanQ.length >= 3 && phone.includes(cleanQ));
+
+        if (!matchesQuery) return false;
+      }
+
       return true;
     });
 
-    // Apply sort
+    // 9. Apply sort safely
     return [...filtered].sort((a, b) => {
       switch (sort) {
-        case "newest":
-          // Fall back to array position (index) for old records without createdAt
-          return (b.createdAt ?? "") > (a.createdAt ?? "") ? 1 : -1;
-        case "oldest":
-          return (a.createdAt ?? "") > (b.createdAt ?? "") ? 1 : -1;
+        case "newest": {
+          const timeA = new Date(a.createdAt || a.appliedAt || 0).getTime() || 0;
+          const timeB = new Date(b.createdAt || b.appliedAt || 0).getTime() || 0;
+          return timeB - timeA;
+        }
+        case "oldest": {
+          const timeA = new Date(a.createdAt || a.appliedAt || 0).getTime() || 0;
+          const timeB = new Date(b.createdAt || b.appliedAt || 0).getTime() || 0;
+          return timeA - timeB;
+        }
         case "score-desc":
-          return b.score.total - a.score.total;
+          return (b.score?.total ?? 0) - (a.score?.total ?? 0);
         case "score-asc":
-          return a.score.total - b.score.total;
+          return (a.score?.total ?? 0) - (b.score?.total ?? 0);
         case "name-az":
-          return a.name.localeCompare(b.name);
+          return (a.name || "").localeCompare(b.name || "");
         default:
           return 0;
       }
     });
-  }, [candidates, filters]);
+  }, [candidates, filters, roles, employees]);
 }

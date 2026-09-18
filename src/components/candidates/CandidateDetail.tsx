@@ -2,7 +2,7 @@
 import { useStore } from "@/lib/store";
 import { getDocumentSignedUrl } from "@/lib/supabase";
 import { Btn, ScoreBadge, StatusBadge, SkillTag, dialog } from "@/components/ui";
-import type { Candidate, EmploymentStatus } from "@/types";
+import type { Candidate, EmploymentStatus, Employee } from "@/types";
 import { getEmploymentStatusMeta } from "@/lib/data";
 import { clsx } from "clsx";
 import { useRouter } from "next/navigation";
@@ -401,7 +401,21 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       
-      addEmployee(data.employee);
+      if (data.employee) {
+        const emp: Employee = {
+          id: data.employee.id,
+          candidateId: data.employee.candidateId || (data.employee as any).candidate_id,
+          offerId: data.employee.offerId || (data.employee as any).offer_id,
+          name: data.employee.name,
+          email: data.employee.email,
+          phone: data.employee.phone,
+          employmentType: data.employee.employmentType || (data.employee as any).employment_type,
+          bondRequirement: data.employee.bondRequirement || (data.employee as any).bond_requirement || "UNKNOWN",
+          status: data.employee.status || "active",
+          createdAt: data.employee.createdAt || (data.employee as any).created_at,
+        };
+        addEmployee(emp);
+      }
       updateCandidate(c.id, { status: "hired" });
       dialog.success("Successfully converted to Employee!");
     } catch (err: any) {
@@ -555,7 +569,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
               ) : isLowConfidence ? (
                 /* Instant low confidence fallback form field directly in the header */
                 <div className="flex flex-col gap-1.5">
-                  <div className="text-[10px] uppercase font-bold tracking-widest text-amber-500/80">Suggested Candidate Name</div>
+                  <div className="text-[16px] uppercase font-bold tracking-widest text-amber-500/80">Suggested Candidate Name</div>
                   <input
                     type="text"
                     value={editState.name || ""}
@@ -611,7 +625,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
             ) : !isLowConfidence && (
               <Btn
                 onClick={() => setIsEditing(true)}
-                className="h-[38px] text-xs font-semibold px-3.5 rounded-[10px] transition-all text-zinc-200 hover:text-white bg-[#181818] hover:bg-[#222222] border border-[#2D2D2D] hover:border-zinc-500 active:scale-95 inline-flex items-center gap-1.5 flex-shrink-0"
+                className="h-[38px] text-xs font-semibold px-3.5 rounded-[10px] transition-all text-zinc-200 hover:text-[var(--text)] bg-[#181818] hover:bg-[#222222] border border-[#2D2D2D] hover:border-zinc-500 active:scale-95 inline-flex items-center gap-1.5 flex-shrink-0"
               >
                 <Edit3 className="w-3.5 h-3.5 text-zinc-400" />
                 <span>Edit Profile</span>
@@ -645,7 +659,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     key={t.id}
                     type="button"
                     onClick={() => setActiveTab(t.id)}
-                    className="inline-flex items-center justify-center gap-[6px] h-[38px] px-3 sm:px-4 rounded-[10px] text-[13px] font-semibold tracking-normal flex-shrink-0 cursor-pointer outline-none select-none transition-all"
+                    className="inline-flex items-center justify-center gap-[6px] h-[38px] px-3 sm:px-4 rounded-[10px] text-[15px] font-semibold tracking-normal flex-shrink-0 cursor-pointer outline-none select-none transition-all"
                     style={{
                       background: isActive ? t.activeBg : "#181818",
                       border: isActive ? `1px solid ${t.activeBorder}` : "1px solid #2D2D2D",
@@ -686,11 +700,11 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="h-[38px] px-3 rounded-[10px] flex items-center justify-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-[#181818] hover:bg-[#262626] border border-[#2D2D2D] hover:border-zinc-400 active:scale-95 transition-all cursor-pointer flex-shrink-0 shadow-sm"
+              className="h-[38px] px-3 rounded-[10px] flex items-center justify-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-[var(--text)] bg-[#181818] hover:bg-[#262626] border border-[#2D2D2D] hover:border-zinc-400 active:scale-95 transition-all cursor-pointer flex-shrink-0 shadow-sm"
               title="Close (Cancel)"
               aria-label="Cancel and close"
             >
-              <X className="w-4 h-4 text-zinc-300 hover:text-white" strokeWidth={2.2} />
+              <X className="w-4 h-4 text-zinc-300 hover:text-[var(--text)]" strokeWidth={2.2} />
               <span className="hidden sm:inline text-zinc-300">Close</span>
             </button>
           </div>
@@ -706,7 +720,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                   style={{ background: "rgba(245,158,11,0.06)", borderColor: "rgba(245,158,11,0.28)", color: "#f59e0b" }}>
                   <span className="text-base leading-none mt-0.5">⚠️</span>
                   <div className="flex-1">
-                    <div className="font-extrabold text-[12px] uppercase tracking-wide">Please Verify Candidate Name ({c.extractionConfidence}% Confidence)</div>
+                    <div className="font-extrabold text-[16px] uppercase tracking-wide">Please Verify Candidate Name ({c.extractionConfidence}% Confidence)</div>
                     <div className="text-zinc-400 mt-0.5 leading-normal font-medium">
                       The parser detected this name with lower confidence. You can quickly edit the name using the form above.
                     </div>
@@ -745,7 +759,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                         <span>{tab.label}</span>
                         {tab.count !== undefined && (
                           <span className={clsx(
-                            "text-[10px] font-mono px-1.5 py-0.2 rounded-full",
+                            "text-[16px] font-mono px-1.5 py-0.2 rounded-full",
                             isCurrent ? "bg-white/10 text-zinc-200" : "bg-white/5 text-zinc-500"
                           )}>
                             {tab.count}
@@ -774,7 +788,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     <button
                       type="button"
                       onClick={() => setActiveTab("resume")}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-zinc-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all cursor-pointer select-none active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold text-zinc-300 hover:text-[var(--text)] bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all cursor-pointer select-none active:scale-95"
                       title="Preview candidate's resume"
                     >
                       <FileText className="w-3.5 h-3.5 text-cyan-400" />
@@ -788,7 +802,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                   {/* 1. Email */}
                   <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px] group">
-                    <div className="flex items-center justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                    <div className="flex items-center justify-between text-[16px] font-bold text-zinc-400 uppercase tracking-wider">
                       <div className="flex items-center gap-1.5">
                         <Mail className="w-3 h-3 text-sky-400" />
                         <span>Email</span>
@@ -821,7 +835,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                   {/* 2. Phone */}
                   <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px] group">
-                    <div className="flex items-center justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                    <div className="flex items-center justify-between text-[16px] font-bold text-zinc-400 uppercase tracking-wider">
                       <div className="flex items-center gap-1.5">
                         <PhoneIcon className="w-3 h-3 text-emerald-400" />
                         <span>Phone</span>
@@ -856,7 +870,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                   {/* 3. Location */}
                   <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px]">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 text-[16px] font-bold text-zinc-400 uppercase tracking-wider">
                       <MapPin className="w-3 h-3 text-rose-400" />
                       <span>Location</span>
                     </div>
@@ -877,7 +891,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                   {/* 4. Applied Date */}
                   <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px]">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 text-[16px] font-bold text-zinc-400 uppercase tracking-wider">
                       <Calendar className="w-3 h-3 text-blue-400" />
                       <span>Applied Date</span>
                     </div>
@@ -904,7 +918,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                   {/* 5. Employment Status */}
                   <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px]">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 text-[16px] font-bold text-zinc-400 uppercase tracking-wider">
                       <Building2 className="w-3 h-3 text-amber-400" />
                       <span>Employment Status</span>
                     </div>
@@ -928,7 +942,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                               <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: sm.color }} />
                               <span style={{ color: sm.color }} className="truncate">{sm.label}</span>
                               {(c.currentRole || c.currentCompany) && (
-                                <span className="text-[11px] text-zinc-500 font-normal truncate" title={[c.currentRole, c.currentCompany].filter(Boolean).join(" · ")}>
+                                <span className="text-[15px] text-zinc-500 font-normal truncate" title={[c.currentRole, c.currentCompany].filter(Boolean).join(" · ")}>
                                   · {[c.currentRole, c.currentCompany].filter(Boolean).join(" · ")}
                                 </span>
                               )}
@@ -941,7 +955,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                   {/* 6. Experience */}
                   <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px]">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 text-[16px] font-bold text-zinc-400 uppercase tracking-wider">
                       <Briefcase className="w-3 h-3 text-purple-400" />
                       <span>Experience</span>
                     </div>
@@ -962,7 +976,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                   {/* 7. Education */}
                   <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px]">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 text-[16px] font-bold text-zinc-400 uppercase tracking-wider">
                       <GraduationCap className="w-3 h-3 text-cyan-400" />
                       <span>Education</span>
                     </div>
@@ -983,7 +997,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                   {/* 8. Gender */}
                   <div className="flex flex-col justify-between p-2.5 px-3.5 rounded-xl bg-white/[0.025] hover:bg-white/[0.045] border border-white/[0.05] hover:border-white/[0.10] transition-all min-h-[58px]">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+                    <div className="flex items-center gap-1.5 text-[16px] font-bold text-zinc-400 uppercase tracking-wider">
                       <User className="w-3 h-3 text-pink-400" />
                       <span>Gender</span>
                     </div>
@@ -1081,7 +1095,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 min-w-0">
                       <div className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
                         <span>Candidate Activity & Notes</span>
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/[0.05] text-[#9A9DA6] border border-white/[0.08]">
+                        <span className="text-[16px] font-mono px-2 py-0.5 rounded-full bg-white/[0.05] text-[#9A9DA6] border border-white/[0.08]">
                           {timelineEvents.length} events
                         </span>
                       </div>
@@ -1109,7 +1123,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                               "px-2.5 py-1 rounded-md text-xs font-semibold capitalize transition-all cursor-pointer",
                               timelineTab === tabKey
                                 ? "bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-sm"
-                                : "text-[#8E929E] hover:text-white hover:bg-white/[0.04] border border-transparent"
+                                : "text-[#8E929E] hover:text-[var(--text)] hover:bg-white/[0.04] border border-transparent"
                             )}
                           >
                             {tabKey === "all" ? "All Activity" : tabKey === "timeline" ? "Timeline" : "Notes Only"}
@@ -1121,7 +1135,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     {/* Expand / Collapse Button */}
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-300 hover:text-[var(--text)] bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] transition-all cursor-pointer"
                     >
                       <span>{isDetailsVisible ? "Hide Details" : "View Details"}</span>
                       {isDetailsVisible ? (
@@ -1147,7 +1161,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                             "px-2.5 py-1 rounded-md text-xs font-semibold capitalize transition-all cursor-pointer",
                             timelineTab === tabKey
                               ? "bg-purple-600/20 text-purple-300 border border-purple-500/30 shadow-sm"
-                              : "text-[#8E929E] hover:text-white hover:bg-white/[0.04] border border-transparent"
+                              : "text-[#8E929E] hover:text-[var(--text)] hover:bg-white/[0.04] border border-transparent"
                           )}
                         >
                           {tabKey === "all" ? "All Activity" : tabKey === "timeline" ? "Timeline" : "Notes Only"}
@@ -1168,7 +1182,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                               <History className="w-3.5 h-3.5 text-purple-400" />
                               <span>Activity Timeline ({timelineEvents.length})</span>
                             </span>
-                            <span className="text-[11px] text-[#606573]">Auto-recorded</span>
+                            <span className="text-[15px] text-[#606573]">Auto-recorded</span>
                           </div>
 
                           <div className="flex flex-col gap-0 relative pl-4 sm:pl-5 before:absolute before:left-[11px] sm:before:left-[15px] before:top-2 before:bottom-2 before:w-[2px] before:bg-white/[0.08] max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
@@ -1190,7 +1204,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                   <div key={evt.id} className="relative flex items-start gap-3.5 py-3 group">
                                     {/* Dot / Icon */}
                                     <div
-                                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 z-10 text-[11px] transition-transform group-hover:scale-110"
+                                      className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 z-10 text-[15px] transition-transform group-hover:scale-110"
                                       style={{
                                         background: evt.color ? `${evt.color}20` : "rgba(167, 139, 250, 0.15)",
                                         border: `1px solid ${evt.color ? `${evt.color}55` : "rgba(167, 139, 250, 0.4)"}`,
@@ -1204,14 +1218,14 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                     {/* Card Content */}
                                     <div className="flex-1 bg-[#16171B] hover:bg-[#1A1B20] border border-[#24272D] rounded-xl p-3 transition-colors flex flex-col gap-1">
                                       <div className="flex items-center justify-between gap-2 flex-wrap">
-                                        <span className="text-xs font-semibold text-[#E7E9ED] tracking-tight">
+                                        <span className="text-xs font-semibold text-[var(--text)] tracking-tight">
                                           {evt.title}
                                         </span>
-                                        <span className="text-[10px] font-mono text-[#7E8492]">
+                                        <span className="text-[16px] font-mono text-[#7E8492]">
                                           {timeStr}
                                         </span>
                                       </div>
-                                      <p className="text-[11px] text-[#9A9DA6] leading-relaxed">
+                                      <p className="text-[15px] text-[#9A9DA6] leading-relaxed">
                                         {evt.description}
                                       </p>
                                     </div>
@@ -1234,7 +1248,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                               <Edit3 className="w-3.5 h-3.5 text-blue-400" />
                               <span>Admin Private Note</span>
                             </span>
-                            <span className="text-[10px] font-mono text-emerald-400/80 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                            <span className="text-[16px] font-mono text-emerald-400/80 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                               Auto-saved
                             </span>
                           </div>
@@ -1258,7 +1272,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                               }}
                               className="w-full rounded-xl text-xs sm:text-sm p-4 resize-none outline-none transition-all duration-200 bg-[#0E0F12] border border-[#24272D] text-zinc-200 focus:border-purple-500/60 focus:shadow-[0_0_15px_rgba(167,139,250,0.12)] custom-scrollbar placeholder:text-zinc-600 leading-relaxed"
                             />
-                            <div className="flex items-center justify-between text-[11px] text-[#6E7380] px-1">
+                            <div className="flex items-center justify-between text-[15px] text-[#6E7380] px-1">
                               <span>💡 Stored in candidate profile record</span>
                               <span>{(isEditing ? (editState.note || "") : (c.note || "")).length} chars</span>
                             </div>
@@ -1275,7 +1289,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
               {/* Collapsible Diagnostic Panel */}
               {c.extractionMetadata && (profileSubTab === "overview" || profileSubTab === "all") && (
                 <details className="group rounded-xl border border-white/5 bg-zinc-950/40 p-4 transition-all mt-1">
-                  <summary className="flex items-center justify-between cursor-pointer list-none text-xs font-bold uppercase tracking-wider text-[var(--text-3)] hover:text-white select-none">
+                  <summary className="flex items-center justify-between cursor-pointer list-none text-xs font-bold uppercase tracking-wider text-[var(--text-3)] hover:text-[var(--text)] select-none">
                     <span>🛠️ Parser Diagnostic Metadata</span>
                     <span className="transition-transform group-open:rotate-180 text-xs">▼</span>
                   </summary>
@@ -1290,17 +1304,17 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     
                     {/* Multi-Source Candidates list */}
                     <div>
-                      <span className="text-[var(--text-3)] font-bold block mb-2.5 uppercase tracking-wide text-[10px]">Multi-Source Name Rankings:</span>
+                      <span className="text-[var(--text-3)] font-bold block mb-2.5 uppercase tracking-wide text-[16px]">Multi-Source Name Rankings:</span>
                       <div className="flex flex-col gap-2 max-h-[180px] overflow-y-auto pr-1">
                         {c.extractionMetadata.sourceRankings && c.extractionMetadata.sourceRankings.length > 0 ? (
                           c.extractionMetadata.sourceRankings.map((rank, idx) => (
                             <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-white/5">
                               <div className="flex flex-col gap-0.5">
-                                <span className="font-bold text-white text-[12px]">{rank.name}</span>
+                                <span className="font-bold text-white text-[16px]">{rank.name}</span>
                                 <span className="text-[9px] text-[var(--text-3)] font-medium">{rank.source}</span>
                               </div>
                               <span className={clsx(
-                                "font-bold text-[10px] px-2 py-0.5 rounded",
+                                "font-bold text-[16px] px-2 py-0.5 rounded",
                                 rank.confidence >= 70 ? "text-[var(--green)] bg-[var(--green)]/10" : rank.confidence >= 40 ? "text-[var(--yellow)] bg-[var(--yellow)]/10" : "text-[var(--red)] bg-[var(--red)]/10"
                               )}>
                                 {rank.confidence}% Score
@@ -1316,7 +1330,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     {/* Applied Normalizations & Splits */}
                     {c.extractionMetadata.transformations && c.extractionMetadata.transformations.length > 0 && (
                       <div>
-                        <span className="text-[var(--text-3)] font-bold block mb-2.5 uppercase tracking-wide text-[10px]">Applied Normalizations:</span>
+                        <span className="text-[var(--text-3)] font-bold block mb-2.5 uppercase tracking-wide text-[16px]">Applied Normalizations:</span>
                         <div className="flex flex-col gap-1.5 max-h-[120px] overflow-y-auto pr-1 font-mono text-[9px] text-zinc-300">
                           {c.extractionMetadata.transformations.map((t, idx) => (
                             <div key={idx} className="p-2 rounded bg-black/40 border border-white/5 leading-normal">
@@ -1330,12 +1344,12 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     {/* Rejected Candidates */}
                     {c.extractionMetadata.rejectedCandidates && c.extractionMetadata.rejectedCandidates.length > 0 && (
                       <div>
-                        <span className="text-[var(--text-3)] font-bold block mb-2.5 uppercase tracking-wide text-[10px]">Rejected Candidates:</span>
+                        <span className="text-[var(--text-3)] font-bold block mb-2.5 uppercase tracking-wide text-[16px]">Rejected Candidates:</span>
                         <div className="flex flex-col gap-2 max-h-[150px] overflow-y-auto pr-1">
                           {c.extractionMetadata.rejectedCandidates.map((rc, idx) => (
                             <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-black/40 border border-white/5">
                               <div className="flex flex-col gap-0.5">
-                                <span className="font-bold text-zinc-400 line-through text-[12px]">{rc.name}</span>
+                                <span className="font-bold text-zinc-400 line-through text-[16px]">{rc.name}</span>
                                 <span className="text-[9px] text-[var(--text-3)] font-medium">{rc.source}</span>
                               </div>
                               <span className="text-[9px] text-[var(--red)] font-semibold bg-[var(--red)]/10 px-2 py-0.5 rounded leading-none">
@@ -1350,7 +1364,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     {/* Visual Layout Bounding Box Inspector */}
                     {c.extractionMetadata.firstPageLines && c.extractionMetadata.firstPageLines.length > 0 && (
                       <div className="mt-3">
-                        <span className="text-[var(--text-3)] font-bold block mb-2.5 uppercase tracking-wide text-[10px]">PDF Layout Bounding Boxes (Page 1):</span>
+                        <span className="text-[var(--text-3)] font-bold block mb-2.5 uppercase tracking-wide text-[16px]">PDF Layout Bounding Boxes (Page 1):</span>
                         <div className="flex flex-col gap-1.5 max-h-[180px] overflow-y-auto pr-1">
                           <div className="grid grid-cols-5 gap-1 text-[9px] font-bold text-[var(--text-3)] pb-1.5 border-b border-white/5 uppercase tracking-wide">
                             <span className="col-span-2">Text Content</span>
@@ -1370,7 +1384,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                   : "bg-black/30 border-white/5 text-zinc-300 font-mono"
                               )} title={tooltip}>
                                 <span className="col-span-2 truncate flex items-center gap-1">
-                                  {isBold && <span className="text-[10px] text-amber-400 font-bold select-none" title="Bold styling detected">★</span>}
+                                  {isBold && <span className="text-[16px] text-amber-400 font-bold select-none" title="Bold styling detected">★</span>}
                                   <span className={clsx(isBold && "font-bold text-white")}>{line.text}</span>
                                 </span>
                                 <span className="text-right">{Math.round(line.fontSize)}pt</span>
@@ -1486,7 +1500,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                             dialog.alert("Resume text copied to clipboard!");
                           }
                         }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-[var(--text)] border border-white/10 transition-colors"
                       >
                         <Copy className="w-3.5 h-3.5" />
                         <span>Copy Text</span>
@@ -1516,7 +1530,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                         dialog.alert("Resume text copied to clipboard!");
                       }
                     }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white border border-white/10 transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-[var(--text)] border border-white/10 transition-colors"
                   >
                     <Copy className="w-3.5 h-3.5" />
                     <span>Copy Text</span>
@@ -1563,7 +1577,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="text-xs font-bold text-white tracking-tight">Interview Evaluations</span>
-                      <span className="text-[11px] text-zinc-400 truncate">
+                      <span className="text-[15px] text-zinc-400 truncate">
                         {isR2Completed ? "R1 & R2 Completed" : isR1Passed ? "R1 Cleared · R2 Next" : isR1Scheduled ? "R1 Scheduled" : "Screening & Rounds"}
                       </span>
                     </div>
@@ -1589,7 +1603,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="text-xs font-bold text-white tracking-tight">Offer Extension</span>
-                      <span className="text-[11px] text-zinc-400 truncate">
+                      <span className="text-[15px] text-zinc-400 truncate">
                         {candidateOffer?.status === "accepted" ? "Offer Accepted" : candidateOffer?.status === "sent" ? "Offer Sent · Awaiting Response" : candidateOffer ? "Offer Draft Prepared" : "Draft & Extension"}
                       </span>
                     </div>
@@ -1615,7 +1629,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="text-xs font-bold text-white tracking-tight">Onboarding & Hire</span>
-                      <span className="text-[11px] text-zinc-400 truncate">
+                      <span className="text-[15px] text-zinc-400 truncate">
                         {c.status === "hired" || candidateEmployee ? "Official Employee" : `${candidateDocs.filter(d => d.status === "verified").length}/${candidateDocs.length || 0} Docs Verified`}
                       </span>
                     </div>
@@ -1635,12 +1649,12 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                         <span className="text-xs font-bold uppercase tracking-wider text-zinc-300">
                           Interview Evaluations
                         </span>
-                        <span className="text-[10px] text-zinc-500">
+                        <span className="text-[16px] text-zinc-500">
                           Screening & Technical Rounds Progression
                         </span>
                       </div>
                     </div>
-                    <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-400">
+                    <span className="text-[15px] font-mono px-2.5 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.08] text-zinc-400">
                       {isR2Completed ? "All Rounds Completed" : isR1Passed ? "Round 1 Cleared" : isR1Scheduled ? "Round 1 Scheduled" : "Progression Active"}
                     </span>
                   </div>
@@ -1706,7 +1720,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                           </div>
                           <div>
                             <div className="font-bold text-xs sm:text-sm text-zinc-100">Round 1</div>
-                            <div className="text-[10px] text-zinc-500">Screening & Technical</div>
+                            <div className="text-[16px] text-zinc-500">Screening & Technical</div>
                           </div>
                         </div>
 
@@ -1810,7 +1824,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                               </Btn>
                             </div>
                             {scheduleR1Error && (
-                              <div className="text-[11px] font-mono text-red-400 mt-0.5 px-0.5">
+                              <div className="text-[15px] font-mono text-red-400 mt-0.5 px-0.5">
                                 ⚠ {scheduleR1Error}
                               </div>
                             )}
@@ -1822,7 +1836,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                         <div className="flex flex-col gap-3">
                           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-zinc-300 flex-wrap">
                             <Calendar className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
-                            <span className="font-mono text-[11px] text-zinc-500">Scheduled:</span>
+                            <span className="font-mono text-[15px] text-zinc-500">Scheduled:</span>
                             <span className="font-medium text-zinc-200">{r1.scheduledAt ? new Date(r1.scheduledAt).toLocaleString() : "Date not set"}</span>
                           </div>
 
@@ -1876,17 +1890,17 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                     <Check className="w-3.5 h-3.5" />
                                   </div>
                                   <div>
-                                    <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-400/80">Evaluation Outcome</div>
+                                    <div className="text-[16px] uppercase font-bold tracking-wider text-emerald-400/80">Evaluation Outcome</div>
                                     <div className="text-xs font-semibold text-emerald-300">Selected for Next Round</div>
                                   </div>
                                 </div>
-                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                <span className="text-[16px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                                   PASSED
                                 </span>
                               </div>
                               {r1.notes && (
                                 <div className="text-xs text-zinc-300 bg-[#0A0B0D] p-3 rounded-xl border border-white/[0.06]">
-                                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Interview Notes:</span>
+                                  <span className="text-[16px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Interview Notes:</span>
                                   <p className="leading-relaxed text-zinc-300">{r1.notes}</p>
                                 </div>
                               )}
@@ -1902,17 +1916,17 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                     <X className="w-3.5 h-3.5" />
                                   </div>
                                   <div>
-                                    <div className="text-[10px] uppercase font-bold tracking-wider text-red-400/80">Evaluation Outcome</div>
+                                    <div className="text-[16px] uppercase font-bold tracking-wider text-red-400/80">Evaluation Outcome</div>
                                     <div className="text-xs font-semibold text-red-300">Candidate Rejected</div>
                                   </div>
                                 </div>
-                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-red-500/20 text-red-300 border border-red-500/30">
+                                <span className="text-[16px] font-mono font-bold px-2 py-0.5 rounded-md bg-red-500/20 text-red-300 border border-red-500/30">
                                   DECLINED
                                 </span>
                               </div>
                               {r1.notes && (
                                 <div className="text-xs text-zinc-300 bg-[#0A0B0D] p-3 rounded-xl border border-white/[0.06]">
-                                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Notes:</span>
+                                  <span className="text-[16px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Notes:</span>
                                   <p className="leading-relaxed text-zinc-300">{r1.notes}</p>
                                 </div>
                               )}
@@ -1929,11 +1943,11 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                               <Check className="w-3.5 h-3.5" />
                             </div>
                             <div>
-                              <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-400/80">Evaluation Outcome</div>
+                              <div className="text-[16px] uppercase font-bold tracking-wider text-emerald-400/80">Evaluation Outcome</div>
                               <div className="text-xs font-semibold text-emerald-300">Selected (Stage: {c.status})</div>
                             </div>
                           </div>
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          <span className="text-[16px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                             PASSED
                           </span>
                         </div>
@@ -1988,7 +2002,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                             <div className={clsx("font-bold text-xs sm:text-sm", isR2Locked ? "text-zinc-500" : "text-zinc-100")}>
                               Round 2
                             </div>
-                            <div className="text-[10px] text-zinc-500">Technical & Leadership</div>
+                            <div className="text-[16px] text-zinc-500">Technical & Leadership</div>
                           </div>
                         </div>
 
@@ -2037,7 +2051,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                           <div className="text-xs font-semibold text-zinc-400">
                             {isR1Rejected ? "Process Stopped" : "Round 2 Locked"}
                           </div>
-                          <div className="text-[11px] text-zinc-500 max-w-[220px]">
+                          <div className="text-[15px] text-zinc-500 max-w-[220px]">
                             {isR1Rejected
                               ? "Candidate was rejected in Round 1. Round 2 is not available."
                               : "Complete and select candidate in Round 1 first."}
@@ -2099,7 +2113,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                             </Btn>
                           </div>
                           {scheduleR2Error && (
-                            <div className="text-[11px] font-mono text-red-400 mt-0.5 px-0.5">
+                            <div className="text-[15px] font-mono text-red-400 mt-0.5 px-0.5">
                               ⚠ {scheduleR2Error}
                             </div>
                           )}
@@ -2110,7 +2124,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                         <div className="flex flex-col gap-3">
                           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-zinc-300 flex-wrap">
                             <Calendar className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
-                            <span className="font-mono text-[11px] text-zinc-500">Scheduled:</span>
+                            <span className="font-mono text-[15px] text-zinc-500">Scheduled:</span>
                             <span className="font-medium text-zinc-200">{r2.scheduledAt ? new Date(r2.scheduledAt).toLocaleString() : "Date not set"}</span>
                           </div>
 
@@ -2168,17 +2182,17 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                     <Check className="w-3.5 h-3.5" />
                                   </div>
                                   <div>
-                                    <div className="text-[10px] uppercase font-bold tracking-wider text-emerald-400/80">Evaluation Outcome</div>
+                                    <div className="text-[16px] uppercase font-bold tracking-wider text-emerald-400/80">Evaluation Outcome</div>
                                     <div className="text-xs font-semibold text-emerald-300">Selected / Approved for Offer</div>
                                   </div>
                                 </div>
-                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                <span className="text-[16px] font-mono font-bold px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                                   APPROVED
                                 </span>
                               </div>
                               {r2.notes && (
                                 <div className="text-xs text-zinc-300 bg-[#0A0B0D] p-3 rounded-xl border border-white/[0.06]">
-                                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Interview Notes:</span>
+                                  <span className="text-[16px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Interview Notes:</span>
                                   <p className="leading-relaxed text-zinc-300">{r2.notes}</p>
                                 </div>
                               )}
@@ -2194,17 +2208,17 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                     <X className="w-3.5 h-3.5" />
                                   </div>
                                   <div>
-                                    <div className="text-[10px] uppercase font-bold tracking-wider text-red-400/80">Evaluation Outcome</div>
+                                    <div className="text-[16px] uppercase font-bold tracking-wider text-red-400/80">Evaluation Outcome</div>
                                     <div className="text-xs font-semibold text-red-300">Candidate Rejected</div>
                                   </div>
                                 </div>
-                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-red-500/20 text-red-300 border border-red-500/30">
+                                <span className="text-[16px] font-mono font-bold px-2 py-0.5 rounded-md bg-red-500/20 text-red-300 border border-red-500/30">
                                   DECLINED
                                 </span>
                               </div>
                               {r2.notes && (
                                 <div className="text-xs text-zinc-300 bg-[#0A0B0D] p-3 rounded-xl border border-white/[0.06]">
-                                  <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Notes:</span>
+                                  <span className="text-[16px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Notes:</span>
                                   <p className="leading-relaxed text-zinc-300">{r2.notes}</p>
                                 </div>
                               )}
@@ -2252,7 +2266,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       </div>
                       <div>
                         <div className="font-bold text-xs sm:text-sm text-zinc-100">Offer Extension</div>
-                        <div className="text-[10px] text-zinc-500">Contracts & Acceptance Portal</div>
+                        <div className="text-[16px] text-zinc-500">Contracts & Acceptance Portal</div>
                       </div>
                     </div>
 
@@ -2317,7 +2331,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                             <span className="font-semibold text-zinc-100 uppercase tracking-wide">{candidateOffer.status}</span>
                           </div>
                           {candidateOffer.sentAt && (
-                            <span className="text-[11px] font-mono text-zinc-500">
+                            <span className="text-[15px] font-mono text-zinc-500">
                               Sent: {new Date(candidateOffer.sentAt).toLocaleDateString()}
                             </span>
                           )}
@@ -2410,7 +2424,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       </div>
                       <div>
                         <div className="font-bold text-xs sm:text-sm text-zinc-400">Offer Extension</div>
-                        <div className="text-[10px] text-zinc-500">Contracts & Acceptance Portal</div>
+                        <div className="text-[16px] text-zinc-500">Contracts & Acceptance Portal</div>
                       </div>
                     </div>
                     <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.10] text-zinc-500">
@@ -2422,7 +2436,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       <Briefcase className="w-4 h-4" />
                     </div>
                     <div className="text-xs font-semibold text-zinc-400">Candidate not yet in offer stage</div>
-                    <div className="text-[11px] text-zinc-500 max-w-[260px]">
+                    <div className="text-[15px] text-zinc-500 max-w-[260px]">
                       Complete Round 1 & Round 2 evaluations to unlock offer letter drafting and dispatch.
                     </div>
                   </div>
@@ -2451,12 +2465,12 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-xs sm:text-sm text-zinc-100">Onboarding & Compliance</span>
                         {candidateDocs.length > 0 && (
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-zinc-300">
+                          <span className="text-[16px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/[0.05] border border-white/[0.08] text-zinc-300">
                             {candidateDocs.filter(d => d.status === "verified").length}/{candidateDocs.length} Verified
                           </span>
                         )}
                       </div>
-                      <div className="text-[10px] text-zinc-500">Candidate Documents & Verification</div>
+                      <div className="text-[16px] text-zinc-500">Candidate Documents & Verification</div>
                     </div>
                   </div>
 
@@ -2468,7 +2482,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       setTimeout(() => setCopiedUploadLink(false), 2000);
                       dialog.success("Candidate upload link copied to clipboard.");
                     }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.10] hover:border-white/[0.20] active:scale-95 transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-300 hover:text-[var(--text)] bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.10] hover:border-white/[0.20] active:scale-95 transition-all cursor-pointer"
                   >
                     {copiedUploadLink ? (
                       <Check className="w-3.5 h-3.5 text-emerald-400" />
@@ -2486,7 +2500,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       <FileText className="w-4 h-4" />
                     </div>
                     <div className="text-xs font-semibold text-zinc-400">No documents uploaded yet</div>
-                    <div className="text-[11px] text-zinc-500 max-w-[280px]">
+                    <div className="text-[15px] text-zinc-500 max-w-[280px]">
                       Share the upload link above to collect candidate onboarding and identity documents.
                     </div>
                   </div>
@@ -2500,7 +2514,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       return (
                         <div
                           key={doc.id}
-                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:px-4 sm:py-3 rounded-xl transition-all duration-150 group bg-[#14161A] hover:bg-[#17191E] border border-white/[0.06]"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:px-4 sm:py-3 rounded-xl transition-all duration-150 group bg-[#14161A] hover:bg-[var(--card-bg)] border border-white/[0.06]"
                         >
                           {/* File Details */}
                           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -2511,18 +2525,18 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                             <div className="flex flex-col min-w-0 flex-1 gap-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span
-                                  className="text-xs sm:text-[13px] font-semibold text-zinc-100 truncate max-w-[220px] sm:max-w-[340px]"
+                                  className="text-xs sm:text-[15px] font-semibold text-zinc-100 truncate max-w-[220px] sm:max-w-[340px]"
                                   title={doc.fileName}
                                 >
                                   {doc.fileName}
                                 </span>
 
-                                <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-zinc-400">
+                                <span className="text-[16px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/[0.05] border border-white/[0.08] text-zinc-400">
                                   {doc.type || "Document"}
                                 </span>
                               </div>
 
-                              <div className="flex items-center gap-2 text-[11px]">
+                              <div className="flex items-center gap-2 text-[15px]">
                                 {isPending && (
                                   <span className="inline-flex items-center gap-1 font-medium text-amber-400">
                                     <Clock className="w-3 h-3 text-amber-400" />
@@ -2554,7 +2568,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                 if (url) window.open(url, '_blank');
                                 else dialog.error("Failed to open document securely.");
                               }}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.10] hover:border-white/[0.20] active:scale-95 transition-all cursor-pointer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-300 hover:text-[var(--text)] bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.10] hover:border-white/[0.20] active:scale-95 transition-all cursor-pointer"
                               title="View document in new tab"
                             >
                               <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
@@ -2625,7 +2639,6 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                   type="button"
                   onClick={() => {
                     handleConvertToEmployee();
-                    updateCandidate(c.id, { status: "hired" });
                   }}
                   disabled={convertingToEmployee || candidateDocs.length === 0 || !candidateDocs.every(d => d.status === "verified")}
                   className="w-full h-11 px-4 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2.5 text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-[0.99] border border-emerald-400/30 hover:border-emerald-300/50 shadow-[0_0_20px_rgba(16,185,129,0.22)] hover:shadow-[0_0_25px_rgba(16,185,129,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 disabled:opacity-40 disabled:pointer-events-none disabled:shadow-none transition-all duration-150 cursor-pointer mt-2"
@@ -2661,17 +2674,17 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       <div className="text-xs font-semibold text-zinc-200">Bond Status</div>
                       <button
                         type="button"
-                        className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-white/[0.08] hover:bg-white/[0.14] text-zinc-200 border border-white/[0.10] transition-all cursor-pointer"
+                        className="text-[16px] font-semibold px-2.5 py-1 rounded-md bg-white/[0.08] hover:bg-white/[0.14] text-zinc-200 border border-white/[0.10] transition-all cursor-pointer"
                         onClick={() => handleToggleBond(employeeBond?.isRequired || false)}>
                         Toggle
                       </button>
                     </div>
                     {employeeBond?.isRequired ? (
-                      <div className="text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/25 p-2.5 rounded-lg">
+                      <div className="text-[15px] bg-amber-500/10 text-amber-400 border border-amber-500/25 p-2.5 rounded-lg">
                         <strong>Required.</strong> (Amount: {employeeBond.amount}, Duration: {employeeBond.duration})
                       </div>
                     ) : (
-                      <div className="text-[11px] text-zinc-500">No bond required.</div>
+                      <div className="text-[15px] text-zinc-500">No bond required.</div>
                     )}
                   </div>
 
@@ -2680,9 +2693,9 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     {employeeResignation ? (
                       <div className="bg-red-500/10 border border-red-500/20 p-2.5 rounded-lg">
                         <div className="text-xs font-bold text-red-400">Resigned / Terminated</div>
-                        <div className="text-[11px] text-zinc-300 mt-1">Reason: {employeeResignation.resignationReason}</div>
+                        <div className="text-[15px] text-zinc-300 mt-1">Reason: {employeeResignation.resignationReason}</div>
                         {employeeResignation.isBreach && (
-                          <div className="text-[11px] text-red-400 font-semibold mt-1">⚠️ BREACH: {employeeResignation.breachReason}</div>
+                          <div className="text-[15px] text-red-400 font-semibold mt-1">⚠️ BREACH: {employeeResignation.breachReason}</div>
                         )}
                         <div className="mt-3 flex flex-col gap-2">
                           <button

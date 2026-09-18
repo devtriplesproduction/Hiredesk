@@ -68,8 +68,8 @@ const HIRING_STAGES: StageGroup[] = [
   {
     category: "Completed",
     items: [
-      { key: "hired", label: "Hired", color: "#22C55E", matchValues: ["hired"] },
-      { key: "rejected", label: "Rejected", color: "#EF4444", matchValues: ["rejected"] },
+      { key: "hired", label: "Hired", color: "#22C55E", matchValues: ["hired", "offer_accepted", "approved"] },
+      { key: "rejected", label: "Rejected", color: "#EF4444", matchValues: ["rejected", "offer_rejected", "onboarding_rejected"] },
     ],
   },
 ];
@@ -91,7 +91,28 @@ function isStageActive(item: StageItem, filterStatus?: string) {
 export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { candidates, roles, filters, setFilters, exportCSV } = useStore();
+  const { candidates, roles, filters, setFilters, clearFilters, exportCSV, employees } = useStore();
+
+  const hiredCandidateIds = useMemo(() => {
+    const ids = new Set<string>();
+    employees.forEach(e => {
+      const cid = e.candidateId || (e as any).candidate_id;
+      if (cid) ids.add(cid);
+    });
+    return ids;
+  }, [employees]);
+
+  const activeCandidates = useMemo(() => {
+    return candidates.filter(c => c.status !== "hired" && !hiredCandidateIds.has(c.id));
+  }, [candidates, hiredCandidateIds]);
+
+  const roleCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    activeCandidates.forEach(c => {
+      counts[c.roleId] = (counts[c.roleId] || 0) + 1;
+    });
+    return counts;
+  }, [activeCandidates]);
 
   const stageCounts = useMemo(() => {
     const res: Record<string, number> = {};
@@ -101,7 +122,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
       });
     });
 
-    candidates.forEach(c => {
+    activeCandidates.forEach(c => {
       for (const grp of HIRING_STAGES) {
         for (const item of grp.items) {
           if (candidateMatchesStage(c.status, item)) {
@@ -112,8 +133,10 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
       }
     });
 
+    res["hired"] = employees.length;
+
     return res;
-  }, [candidates]);
+  }, [activeCandidates, employees]);
 
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
   const [activeMainMenu, setActiveMainMenu] = useState<string | null>(null);
@@ -129,7 +152,12 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
   }
 
   function go(status: string, category?: string) {
-    setFilters({ status });
+    if (status === "hired") {
+      router.push("/employees");
+      onClose?.();
+      return;
+    }
+    setFilters({ status, roleId: "all" });
     if (category) {
       setExpandedMenu(category);
       setActiveMainMenu(category);
@@ -137,7 +165,12 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
     router.push("/candidates");
     onClose?.();
   }
-  function goRole(id: string) { setFilters({ roleId: id }); router.push("/candidates"); onClose?.(); }
+
+  function goRole(id: string) {
+    setFilters({ roleId: id, status: "all" });
+    router.push("/candidates");
+    onClose?.();
+  }
 
   function handleLogout() {
     localStorage.removeItem("tsp_auth");
@@ -157,15 +190,15 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
 
       <aside className={clsx(
         "flex flex-col gap-0.5 p-3 overflow-y-auto h-full flex-shrink-0 transition-transform duration-250 ease-in-out z-50",
-        "fixed inset-y-0 left-0 bg-[#080808] w-[230px] border-r border-[var(--border)] lg:static lg:flex lg:translate-x-0 lg:w-[220px]",
+        "fixed inset-y-0 left-0 w-[230px] border-r border-[var(--border)] lg:static lg:flex lg:translate-x-0 lg:w-[220px]",
         isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
-      )}>
+      )} style={{ background: "var(--sidebar-bg)" }}>
         {/* Mobile Header with close button */}
         <div className="flex items-center justify-between px-2.5 py-2 lg:hidden mb-2 border-b border-[var(--border)]">
-          <div className="text-xs font-extrabold tracking-tight uppercase text-[#8B919C]">Navigation</div>
+          <div className="text-xs font-extrabold tracking-tight uppercase text-[var(--text-2)]">Navigation</div>
           <Btn
             onClick={onClose}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-white hover:bg-[var(--glass-2)] border border-[var(--border)]"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-[var(--text)] hover:bg-[var(--glass-2)] border border-[var(--border)]"
           >
             <X size={15} />
           </Btn>
@@ -182,8 +215,8 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
                 className={clsx(
                   "flex items-center justify-between px-3 py-2.5 rounded-xl w-full text-left transition-all duration-150 border",
                   isActive
-                    ? "text-white font-semibold bg-[#1F2228] border-[#383D48] shadow-sm"
-                    : "text-[var(--text-2)] bg-transparent border-transparent hover:text-white hover:bg-[var(--glass-2)]"
+                    ? "text-white font-semibold bg-[var(--nav-active-bg)] border-[var(--border-2)] shadow-sm"
+                    : "text-[var(--text-2)] bg-transparent border-transparent hover:text-[var(--text)] hover:bg-[var(--glass-2)]"
                 )}
               >
                 <div className="flex items-center gap-2.5">
@@ -195,7 +228,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
                   <span className="text-xs font-semibold">{n.label}</span>
                 </div>
                 {isActive && (
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-[#00D9FF] bg-[#00D9FF]/10 px-1.5 py-0.5 rounded border border-[#00D9FF]/20">
+                  <span className="text-[16px] font-mono font-bold tracking-wider text-[#00D9FF] bg-[#00D9FF]/10 px-1.5 py-0.5 rounded border border-[#00D9FF]/20">
                     Active
                   </span>
                 )}
@@ -212,11 +245,13 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
         {HIRING_STAGES.map(grp => {
           const isExpanded = expandedMenu === grp.category;
           const isMainActive = activeMainMenu === grp.category;
+          const groupTotal = grp.items.reduce((sum, item) => sum + (stageCounts[item.key] ?? 0), 0);
 
           return (
             <div key={grp.category} className="flex flex-col gap-0.5">
               <SItem
                 label={grp.category}
+                badge={groupTotal}
                 active={isMainActive}
                 activeColor="#00D9FF"
                 onClick={() => handleMainMenuClick(grp.category)}
@@ -227,7 +262,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
                     className={clsx(
                       "transition-transform duration-200 flex-shrink-0",
                       isExpanded ? "rotate-90" : "",
-                      isMainActive ? "text-[#00D9FF]" : "text-[#B0B0B0] group-hover:text-white"
+                      isMainActive ? "text-[#00D9FF]" : "text-[#B0B0B0] group-hover:text-[var(--text)]"
                     )}
                   />
                 }
@@ -258,15 +293,15 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
         <SLabel>All Roles</SLabel>
         <SItem
           label="All Candidates"
-          badge={candidates.length}
-          active={(filters?.roleId ?? "all") === "all"}
-          onClick={() => { setFilters({ roleId: "all" }); router.push("/candidates"); onClose?.(); }}
+          badge={activeCandidates.length}
+          active={(filters?.roleId ?? "all") === "all" && (filters?.status ?? "all") === "all"}
+          onClick={() => { clearFilters(); router.push("/candidates"); onClose?.(); }}
         />
         {roles.map(r => (
           <SItem
             key={r.id}
             label={r.name}
-            badge={r.count}
+            badge={roleCounts[r.id] ?? 0}
             active={filters?.roleId === r.id}
             onClick={() => goRole(r.id)}
             small
@@ -281,7 +316,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
 }
 
 function SLabel({ children }: { children: React.ReactNode }) {
-  return <div className="text-[10.5px] font-semibold text-[#B0B0B0] uppercase tracking-widest px-2.5 pt-2 pb-1">{children}</div>;
+  return <div className="text-[10.5px] font-semibold uppercase tracking-widest px-2.5 pt-2 pb-1" style={{ color: "var(--text-2)" }}>{children}</div>;
 }
 
 function SItem({ label, badge, onClick, small, accent, active, activeColor, rightElement }: {
@@ -305,19 +340,19 @@ function SItem({ label, badge, onClick, small, accent, active, activeColor, righ
             ? ""
             : accent
               ? ""
-              : "text-[#F2F2F2] group-hover:text-[#FFFFFF] hover:text-[#FFFFFF]"
+              : ""
         )}
         style={{
           fontSize: small ? "12px" : "13px",
           fontWeight: 500,
-          color: active ? effectiveActiveColor : (accent || "#F2F2F2"),
+          color: active ? effectiveActiveColor : (accent || "var(--text)"),
         }}
       >
         {label}
       </span>
       {badge !== undefined && (
         <span
-          className="text-[10px] font-semibold px-1.5 py-0.5 rounded-lg flex-shrink-0"
+          className="text-[16px] font-semibold px-1.5 py-0.5 rounded-lg flex-shrink-0"
           style={
             active && activeColor
               ? {
@@ -326,9 +361,9 @@ function SItem({ label, badge, onClick, small, accent, active, activeColor, righ
                 color: effectiveActiveColor,
               }
               : {
-                background: "#292929",
-                border: "1px solid #3A3A3A",
-                color: "#D4D4D8",
+                background: "var(--badge-bg)",
+                border: "1px solid var(--badge-border)",
+                color: "var(--badge-text)",
               }
           }
         >

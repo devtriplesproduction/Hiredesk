@@ -320,14 +320,14 @@ export default function DateTimePicker({
           hasError
             ? "border border-red-500/50 bg-red-500/5"
             : isOpen
-            ? "border-[#A78BFA]/50 bg-[#161619] shadow-[0_0_12px_rgba(167,139,250,0.15)]"
+            ? "border-[#A78BFA]/50 bg-[var(--card-bg)] shadow-[0_0_12px_rgba(167,139,250,0.15)]"
             : "border-[var(--border)] bg-[var(--glass-3)] hover:border-[var(--border-2)] hover:bg-[var(--glass-2)]"
         } ${className}`}
       >
-        <span className={displayString ? "text-[#E6E8EB] font-medium" : "text-[var(--text-3)]"}>
+        <span className={displayString ? "text-[var(--text)] font-medium" : "text-[var(--text-3)]"}>
           {displayString ? `📅  ${displayString}` : effectivePlaceholder}
         </span>
-        <span className="text-[10px] text-[var(--text-3)]">
+        <span className="text-[16px] text-[var(--text-3)]">
           {isOpen ? "▲" : "▼"}
         </span>
       </button>
@@ -348,14 +348,14 @@ export default function DateTimePicker({
         >
           {/* Header: Month & Year Navigation */}
           <div className="flex items-center justify-between px-1">
-            <div className="text-xs font-bold tracking-tight text-[#E6E8EB]">
+            <div className="text-xs font-bold tracking-tight text-[var(--text)]">
               {MONTH_NAMES[viewMonth]} {viewYear}
             </div>
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-[#8B919C] hover:text-white hover:bg-white/10 transition-colors"
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-[var(--text-2)] hover:text-[var(--text)] hover:bg-white/10 transition-colors"
                 title="Previous Month"
               >
                 ‹
@@ -363,7 +363,7 @@ export default function DateTimePicker({
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-[#8B919C] hover:text-white hover:bg-white/10 transition-colors"
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-[var(--text-2)] hover:text-[var(--text)] hover:bg-white/10 transition-colors"
                 title="Next Month"
               >
                 ›
@@ -374,7 +374,7 @@ export default function DateTimePicker({
           {/* Days of Week Header */}
           <div className="grid grid-cols-7 gap-1 text-center">
             {DAYS_SHORT.map(d => (
-              <div key={d} className="text-[10px] font-mono font-semibold text-[#8B919C] uppercase tracking-wider py-0.5">
+              <div key={d} className="text-[16px] font-mono font-semibold text-[var(--text-2)] uppercase tracking-wider py-0.5">
                 {d}
               </div>
             ))}
@@ -396,7 +396,7 @@ export default function DateTimePicker({
                     isSelected
                       ? "text-[#00D9FF] bg-[rgba(0,217,255,0.15)] border border-[rgba(0,217,255,0.45)] font-bold shadow-[0_0_8px_rgba(0,217,255,0.2)]"
                       : isCurrent
-                      ? "text-[#E6E8EB] hover:bg-white/10 hover:text-white"
+                      ? "text-[var(--text)] hover:bg-white/10 hover:text-[var(--text)]"
                       : "text-[#474D57] hover:bg-white/5"
                   }`}
                 >
@@ -417,10 +417,10 @@ export default function DateTimePicker({
               {/* Time Selector */}
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-[#8B919C]">
+                  <span className="text-[16px] font-mono font-bold uppercase tracking-widest text-[var(--text-2)]">
                     Time
                   </span>
-                  <span className="text-[10px] font-mono text-[#A78BFA]">
+                  <span className="text-[16px] font-mono text-[#A78BFA]">
                     {String(hour).padStart(2, "0")}:{String(minute).padStart(2, "0")} {period}
                   </span>
                 </div>
@@ -434,54 +434,54 @@ export default function DateTimePicker({
                     <button
                       type="button"
                       onClick={() => handleTimeChange(hour === 1 ? 12 : hour - 1, minute, period)}
-                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[#8B919C] hover:text-white hover:bg-white/10 transition-colors"
+                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[var(--text-2)] hover:text-[var(--text)] hover:bg-white/10 transition-colors"
                     >
                       ▼
                     </button>
-                    <div className="font-mono text-sm font-bold text-[#E6E8EB] w-7 text-center select-none">
+                    <div className="font-mono text-sm font-bold text-[var(--text)] w-7 text-center select-none">
                       {String(hour).padStart(2, "0")}
                     </div>
                     <button
                       type="button"
                       onClick={() => handleTimeChange(hour === 12 ? 1 : hour + 1, minute, period)}
-                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[#8B919C] hover:text-white hover:bg-white/10 transition-colors"
+                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[var(--text-2)] hover:text-[var(--text)] hover:bg-white/10 transition-colors"
                     >
                       ▲
                     </button>
                   </div>
 
-                  <span className="text-sm font-bold text-[#8B919C] select-none">:</span>
+                  <span className="text-sm font-bold text-[var(--text-2)] select-none">:</span>
 
                   {/* Minute Selector (15-min intervals or steppers) */}
                   <div className="flex items-center gap-1.5 flex-1 justify-center">
                     <button
                       type="button"
                       onClick={() => handleTimeChange(hour, (minute - 15 + 60) % 60, period)}
-                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[#8B919C] hover:text-white hover:bg-white/10 transition-colors"
+                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[var(--text-2)] hover:text-[var(--text)] hover:bg-white/10 transition-colors"
                     >
                       ▼
                     </button>
-                    <div className="font-mono text-sm font-bold text-[#E6E8EB] w-7 text-center select-none">
+                    <div className="font-mono text-sm font-bold text-[var(--text)] w-7 text-center select-none">
                       {String(minute).padStart(2, "0")}
                     </div>
                     <button
                       type="button"
                       onClick={() => handleTimeChange(hour, (minute + 15) % 60, period)}
-                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[#8B919C] hover:text-white hover:bg-white/10 transition-colors"
+                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[var(--text-2)] hover:text-[var(--text)] hover:bg-white/10 transition-colors"
                     >
                       ▲
                     </button>
                   </div>
 
                   {/* AM / PM Toggle */}
-                  <div className="flex rounded-lg overflow-hidden border border-[#333333] p-0.5 bg-[#121212]">
+                  <div className="flex rounded-lg overflow-hidden border border-[var(--border-2)] p-0.5 bg-[var(--card-bg)]">
                     <button
                       type="button"
                       onClick={() => handleTimeChange(hour, minute, "AM")}
-                      className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition-all ${
+                      className={`px-2 py-1 rounded text-[16px] font-mono font-bold transition-all ${
                         period === "AM"
                           ? "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border border-[rgba(167,139,250,0.35)] shadow-sm"
-                          : "text-[#8B919C] hover:text-white border border-transparent"
+                          : "text-[var(--text-2)] hover:text-[var(--text)] border border-transparent"
                       }`}
                     >
                       AM
@@ -489,10 +489,10 @@ export default function DateTimePicker({
                     <button
                       type="button"
                       onClick={() => handleTimeChange(hour, minute, "PM")}
-                      className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition-all ${
+                      className={`px-2 py-1 rounded text-[16px] font-mono font-bold transition-all ${
                         period === "PM"
                           ? "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border border-[rgba(167,139,250,0.35)] shadow-sm"
-                          : "text-[#8B919C] hover:text-white border border-transparent"
+                          : "text-[var(--text-2)] hover:text-[var(--text)] border border-transparent"
                       }`}
                     >
                       PM
@@ -509,7 +509,7 @@ export default function DateTimePicker({
               <button
                 type="button"
                 onClick={handleClear}
-                className="text-[11px] font-mono text-[#8B919C] hover:text-white transition-colors"
+                className="text-[15px] font-mono text-[var(--text-2)] hover:text-[var(--text)] transition-colors"
               >
                 Clear
               </button>
@@ -517,7 +517,7 @@ export default function DateTimePicker({
               <button
                 type="button"
                 onClick={handleToday}
-                className="text-[11px] font-mono text-[#00D9FF] hover:text-[#00D9FF]/80 transition-colors"
+                className="text-[15px] font-mono text-[#00D9FF] hover:text-[#00D9FF]/80 transition-colors"
               >
                 Today
               </button>

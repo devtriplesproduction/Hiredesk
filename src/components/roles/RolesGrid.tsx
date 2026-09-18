@@ -223,21 +223,21 @@ export default function RolesGrid() {
     switch (roleType) {
       case "Full-time":
         return (
-          <span className="inline-flex items-center gap-1.5 font-mono text-[10px] px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-medium">
+          <span className="inline-flex items-center gap-1.5 font-mono text-[16px] px-2 py-0.5 rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-medium whitespace-nowrap">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
             Full-time
           </span>
         );
       case "Intern":
         return (
-          <span className="inline-flex items-center gap-1.5 font-mono text-[10px] px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium">
+          <span className="inline-flex items-center gap-1.5 font-mono text-[16px] px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 font-medium whitespace-nowrap">
             <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
             Intern
           </span>
         );
       case "Freelance":
         return (
-          <span className="inline-flex items-center gap-1.5 font-mono text-[10px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
+          <span className="inline-flex items-center gap-1.5 font-mono text-[16px] px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium whitespace-nowrap">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
             Freelance
           </span>
@@ -249,22 +249,22 @@ export default function RolesGrid() {
     <>
       {/* Overview Stats Ribbon */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <div className="p-3.5 rounded-xl bg-[#121417] border border-[#23272F] flex flex-col justify-between shadow-sm">
-          <div className="text-[11px] font-mono text-[#8A8F98] uppercase tracking-wider flex items-center gap-1.5">
+        <div className="p-3.5 rounded-xl bg-[var(--card-bg)] border border-[var(--border-2)] flex flex-col justify-between shadow-sm">
+          <div className="text-[15px] font-mono text-[var(--text-3)] uppercase tracking-wider flex items-center gap-1.5">
             <Layers size={13} className="text-cyan-400" /> Total Roles
           </div>
           <div className="text-xl sm:text-2xl font-bold text-white mt-1.5">{roles.length}</div>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-[#121417] border border-[#23272F] flex flex-col justify-between shadow-sm">
-          <div className="text-[11px] font-mono text-[#8A8F98] uppercase tracking-wider flex items-center gap-1.5">
+        <div className="p-3.5 rounded-xl bg-[var(--card-bg)] border border-[var(--border-2)] flex flex-col justify-between shadow-sm">
+          <div className="text-[15px] font-mono text-[var(--text-3)] uppercase tracking-wider flex items-center gap-1.5">
             <Users size={13} className="text-[#3B82F6]" /> Total Candidates
           </div>
           <div className="text-xl sm:text-2xl font-bold text-white mt-1.5">{totalCandidates}</div>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-[#121417] border border-[#23272F] flex flex-col justify-between shadow-sm">
-          <div className="text-[11px] font-mono text-[#8A8F98] uppercase tracking-wider flex items-center gap-1.5">
+        <div className="p-3.5 rounded-xl bg-[var(--card-bg)] border border-[var(--border-2)] flex flex-col justify-between shadow-sm">
+          <div className="text-[15px] font-mono text-[var(--text-3)] uppercase tracking-wider flex items-center gap-1.5">
             <Briefcase size={13} className="text-cyan-400" /> Full-time
           </div>
           <div className="text-xl sm:text-2xl font-bold text-white mt-1.5">
@@ -272,8 +272,8 @@ export default function RolesGrid() {
           </div>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-[#121417] border border-[#23272F] flex flex-col justify-between shadow-sm">
-          <div className="text-[11px] font-mono text-[#8A8F98] uppercase tracking-wider flex items-center gap-1.5">
+        <div className="p-3.5 rounded-xl bg-[var(--card-bg)] border border-[var(--border-2)] flex flex-col justify-between shadow-sm">
+          <div className="text-[15px] font-mono text-[var(--text-3)] uppercase tracking-wider flex items-center gap-1.5">
             <GraduationCap size={13} className="text-purple-400" /> Intern / Freelance
           </div>
           <div className="text-xl sm:text-2xl font-bold text-white mt-1.5">
@@ -285,18 +285,18 @@ export default function RolesGrid() {
       {/* Search & Filter Toolbar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-6">
         <div className="relative flex-1 max-w-md">
-          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#70757F]" />
+          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-3)]" />
           <input
             type="text"
             placeholder="Search roles by name or skill keywords..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="w-full h-[40px] pl-9 pr-8 bg-[#151719] border border-[#2B2F35] hover:border-[#383D47] focus:border-[#00D9FF] focus:ring-1 focus:ring-[#00D9FF]/20 rounded-xl text-sm text-[#F5F5F5] placeholder:text-[#656A76] outline-none transition-all"
+            className="w-full h-[40px] pl-9 pr-8 bg-[var(--input-bg)] border border-[var(--input-border)] hover:border-[var(--border-2)] focus:border-[#00D9FF] focus:ring-1 focus:ring-[#00D9FF]/20 rounded-xl text-sm text-[var(--text)] placeholder:text-[var(--text-3)] outline-none transition-all"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#70757F] hover:text-white p-1"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-3)] hover:text-[var(--text)] p-1"
             >
               <X size={13} />
             </button>
@@ -304,7 +304,7 @@ export default function RolesGrid() {
         </div>
 
         {/* Type Tabs */}
-        <div className="flex items-center gap-1 p-1 bg-[#121417] border border-[#23272F] rounded-xl self-start sm:self-auto overflow-x-auto">
+        <div className="flex items-center gap-1 p-1 bg-[var(--card-bg)] border border-[var(--border-2)] rounded-xl self-start sm:self-auto overflow-x-auto">
           {(["All", "Full-time", "Intern", "Freelance"] as const).map(tab => (
             <button
               key={tab}
@@ -313,8 +313,8 @@ export default function RolesGrid() {
               className={clsx(
                 "px-3 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all whitespace-nowrap",
                 activeTypeFilter === tab
-                  ? "bg-[#20242B] text-[#00D9FF] shadow-sm border border-[#00D9FF]/25 font-bold"
-                  : "text-[#8E949E] hover:text-[#E1E4E8] hover:bg-[#181B20]"
+                  ? "bg-[var(--card-bg)] text-[#00D9FF] shadow-sm border border-[#00D9FF]/25 font-bold"
+                  : "text-[var(--text-3)] hover:text-[#E1E4E8] hover:bg-[var(--card-bg)]"
               )}
             >
               {tab}
@@ -325,7 +325,7 @@ export default function RolesGrid() {
 
       {/* Bulk action bar when roles are selected */}
       {selectedRoleIds.size > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-xl mb-4 bg-[#151719] border border-[#2B2F35] animate-fade-in shadow-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-xl mb-4 bg-[var(--input-bg)] border border-[var(--input-border)] animate-fade-in shadow-lg">
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#E1E4E8] uppercase tracking-wider">
               {selectedRoleIds.size} role{selectedRoleIds.size !== 1 ? "s" : ""} selected
@@ -354,8 +354,8 @@ export default function RolesGrid() {
         </div>
       )}
 
-      {/* Roles grid — 1 col on mobile, 2 on sm, 3 on lg, 4 on xl */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {/* Roles grid — 1 col on mobile, 2 on sm, 3 on desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredRoles.map(r => {
           const isSel = selectedRoleIds.has(r.id);
           const pct = totalCandidates > 0 ? Math.round(r.count / totalCandidates * 100) : 0;
@@ -367,7 +367,7 @@ export default function RolesGrid() {
                 "p-4 sm:p-5 rounded-2xl transition-all duration-200 cursor-pointer active:scale-[0.98] relative group flex flex-col justify-between",
                 isSel
                   ? "border border-[#00D9FF]/60 bg-[#00D9FF]/[0.05] shadow-[0_0_20px_rgba(0,217,255,0.08)] ring-1 ring-[#00D9FF]/30"
-                  : "bg-[#121417]/80 hover:bg-[#16191E] border border-[#23262D] hover:border-[#383D47] shadow-sm hover:shadow-lg hover:shadow-black/40 hover:-translate-y-0.5"
+                  : "bg-[var(--card-bg)]/80 hover:bg-[var(--card-bg)] border border-[var(--border-2)] hover:border-[var(--border-2)] shadow-sm hover:shadow-lg hover:shadow-black/40 hover:-translate-y-0.5"
               )}
               onClick={() => viewCandidates(r.id)}
             >
@@ -382,11 +382,11 @@ export default function RolesGrid() {
                         toggleSelectRole(r.id);
                       }}
                       onClick={(e) => e.stopPropagation()}
-                      className="w-4 h-4 mt-1 rounded border-[#2B2F35] bg-[#151719] accent-[#00D9FF] cursor-pointer shrink-0"
+                      className="w-4 h-4 mt-1 rounded border-[var(--input-border)] bg-[var(--input-bg)] accent-[#00D9FF] cursor-pointer shrink-0"
                       title={`Select ${r.name}`}
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm sm:text-base font-bold truncate text-[#F4F4F5] group-hover:text-white transition-colors">
+                      <div className="text-sm sm:text-base font-bold truncate text-[#F4F4F5] group-hover:text-[var(--text)] transition-colors">
                         {r.name}
                       </div>
                       <div className="mt-1">
@@ -398,10 +398,10 @@ export default function RolesGrid() {
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <span 
                       className={clsx(
-                        "font-mono text-[11px] px-2 py-0.5 rounded-lg border font-semibold flex items-center gap-1",
+                        "font-mono text-[15px] px-2 py-0.5 rounded-lg border font-semibold flex items-center gap-1",
                         r.count > 0 
                           ? "bg-cyan-500/10 text-cyan-300 border-cyan-500/30" 
-                          : "bg-[#1E2126] text-[#8E949E] border-[#2A2E36]"
+                          : "bg-[var(--card-bg)] text-[var(--text-3)] border-[var(--border-2)]"
                       )}
                       title={`${r.count} candidate(s) mapped`}
                     >
@@ -411,7 +411,7 @@ export default function RolesGrid() {
                     <button
                       type="button"
                       onClick={(e) => handleOpenEdit(e, r)}
-                      className="p-1.5 rounded-lg text-[#71717A] hover:text-[#00D9FF] hover:bg-[#00D9FF]/10 border border-transparent hover:border-[#00D9FF]/20 transition-all duration-150 active:scale-95"
+                      className="p-1.5 rounded-lg text-[var(--text-3)] hover:text-[#00D9FF] hover:bg-[#00D9FF]/10 border border-transparent hover:border-[#00D9FF]/20 transition-all duration-150 active:scale-95"
                       title={`Edit ${r.name}`}
                       aria-label={`Edit ${r.name}`}
                     >
@@ -420,7 +420,7 @@ export default function RolesGrid() {
                     <button
                       type="button"
                       onClick={(e) => handleDeleteRole(e, r)}
-                      className="p-1.5 rounded-lg text-[#71717A] hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all duration-150 active:scale-95"
+                      className="p-1.5 rounded-lg text-[var(--text-3)] hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all duration-150 active:scale-95"
                       title={`Delete ${r.name}`}
                       aria-label={`Delete ${r.name}`}
                     >
@@ -430,7 +430,7 @@ export default function RolesGrid() {
                 </div>
 
                 {/* Candidate Share Progress Bar */}
-                <div className="h-[3px] bg-[#1E2126] rounded-full my-3 overflow-hidden">
+                <div className="h-[3px] bg-[var(--card-bg)] rounded-full my-3 overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-[#00D9FF] to-[#3B82F6] rounded-full transition-all duration-700" 
                     style={{ width: `${pct}%` }} 
@@ -442,13 +442,13 @@ export default function RolesGrid() {
                   {r.keywords.slice(0, 4).map(k => (
                     <span 
                       key={k} 
-                      className="font-mono text-[9.5px] px-2 py-0.5 rounded-md border border-[#2A2E36] bg-[#181B20] text-[#A6ADB9] uppercase font-medium hover:text-white transition-colors"
+                      className="font-mono text-[9.5px] px-2 py-0.5 rounded-md border border-[var(--border-2)] bg-[var(--card-bg)] text-[var(--text-3)] uppercase font-medium hover:text-[var(--text)] transition-colors"
                     >
                       {k}
                     </span>
                   ))}
                   {r.keywords.length > 4 && (
-                    <span className="font-mono text-[9.5px] px-1.5 py-0.5 rounded-md bg-[#1C1F24] text-[#8A8F98] font-medium self-center">
+                    <span className="font-mono text-[9.5px] px-1.5 py-0.5 rounded-md bg-[var(--card-bg)] text-[var(--text-3)] font-medium self-center">
                       +{r.keywords.length - 4}
                     </span>
                   )}
@@ -458,7 +458,7 @@ export default function RolesGrid() {
               {/* Card Footer: Avg Score */}
               {r.count > 0 ? (
                 <div className="pt-2.5 border-t border-[#22252C] flex items-center justify-between font-mono text-[10.5px]">
-                  <span className="text-[#8A8F98]">Avg Score</span>
+                  <span className="text-[var(--text-3)]">Avg Score</span>
                   <span className={clsx(
                     "px-2 py-0.5 rounded-md font-bold text-xs",
                     avgScore >= 70 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/25" :
@@ -481,27 +481,27 @@ export default function RolesGrid() {
         {/* Existing Add Role card at the end of the grid */}
         <Btn
           onClick={() => setShowAdd(true)}
-          className="p-5 rounded-2xl border-2 border-dashed border-[#2B2F36] hover:border-[#00D9FF]/50 bg-[#121417]/50 hover:bg-[#16191E] text-[#8E949E] hover:text-[#F2F2F2] transition-all duration-200 flex flex-col items-center justify-center gap-2.5 min-h-[140px] active:scale-[0.98] group shadow-sm"
+          className="p-5 rounded-2xl border-2 border-dashed border-[var(--border-2)] hover:border-[#00D9FF]/50 bg-[var(--card-bg)]/50 hover:bg-[var(--card-bg)] text-[var(--text-3)] hover:text-[var(--text)] transition-all duration-200 flex flex-col items-center justify-center gap-2.5 min-h-[140px] active:scale-[0.98] group shadow-sm"
         >
-          <div className="w-10 h-10 rounded-xl bg-[#1C1F26] group-hover:bg-[#00D9FF]/10 border border-[#2B2F36] group-hover:border-[#00D9FF]/30 flex items-center justify-center text-xl text-[#8E949E] group-hover:text-[#00D9FF] transition-all">
+          <div className="w-10 h-10 rounded-xl bg-[var(--card-bg)] group-hover:bg-[#00D9FF]/10 border border-[var(--border-2)] group-hover:border-[#00D9FF]/30 flex items-center justify-center text-xl text-[var(--text-3)] group-hover:text-[#00D9FF] transition-all">
             +
           </div>
-          <div className="font-mono text-[11px] uppercase tracking-widest text-[#A6ADB9] group-hover:text-white font-semibold">
+          <div className="font-mono text-[15px] uppercase tracking-widest text-[var(--text-3)] group-hover:text-[var(--text)] font-semibold">
             Add Role
           </div>
         </Btn>
       </div>
 
       {filteredRoles.length === 0 && (
-        <div className="text-center py-12 p-6 rounded-2xl bg-[#121417] border border-[#23272F] mt-4">
-          <SlidersHorizontal size={28} className="mx-auto text-[#656A76] mb-3" />
+        <div className="text-center py-12 p-6 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-2)] mt-4">
+          <SlidersHorizontal size={28} className="mx-auto text-[var(--text-3)] mb-3" />
           <div className="text-base font-semibold text-[#E1E4E8]">No matching roles found</div>
-          <div className="text-xs text-[#8E949E] mt-1 max-w-sm mx-auto">
+          <div className="text-xs text-[var(--text-3)] mt-1 max-w-sm mx-auto">
             Try adjusting your search query or reset the employment type filter to view all roles.
           </div>
           <button
             onClick={() => { setSearchQuery(""); setActiveTypeFilter("All"); }}
-            className="mt-4 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#20242B] hover:bg-[#282D36] text-[#00D9FF] border border-[#00D9FF]/20 transition-all"
+            className="mt-4 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--card-bg)] hover:bg-[var(--card-bg)] text-[#00D9FF] border border-[#00D9FF]/20 transition-all"
           >
             Clear Filters
           </button>
@@ -532,7 +532,7 @@ export default function RolesGrid() {
 
           {/* Employment Type using candidate-themed FilterSelect */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-[#A8A8A8] uppercase tracking-wider">
+            <label className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">
               Employment Type
             </label>
             <FilterSelect
@@ -541,7 +541,7 @@ export default function RolesGrid() {
               onChange={val => setType(val as typeof type)}
               placeholder="Select Employment Type"
               containerClassName="w-full"
-              menuClassName="w-full max-w-none bg-[#151719] border-[#303238] shadow-2xl"
+              menuClassName="w-full max-w-none bg-[var(--input-bg)] border-[var(--border-2)] shadow-2xl"
             />
           </div>
 
@@ -555,14 +555,14 @@ export default function RolesGrid() {
 
             {/* Live keyword chip preview */}
             {skills.trim() && (
-              <div className="flex flex-wrap gap-1.5 mt-1 p-2.5 rounded-xl bg-[#14161A] border border-[#23272F]">
-                <div className="text-[10px] text-[#70757F] uppercase tracking-wider w-full mb-0.5 font-mono">
+              <div className="flex flex-wrap gap-1.5 mt-1 p-2.5 rounded-xl bg-[#14161A] border border-[var(--border-2)]">
+                <div className="text-[16px] text-[var(--text-3)] uppercase tracking-wider w-full mb-0.5 font-mono">
                   Keyword Preview ({skills.split(",").filter(s => s.trim()).length}):
                 </div>
                 {skills.split(",").map(s => s.trim()).filter(Boolean).map(tag => (
                   <span 
                     key={tag} 
-                    className="font-mono text-[10px] px-2 py-0.5 rounded-md bg-[#1C2026] text-cyan-300 border border-cyan-500/25"
+                    className="font-mono text-[16px] px-2 py-0.5 rounded-md bg-[#1C2026] text-cyan-300 border border-cyan-500/25"
                   >
                     {tag}
                   </span>
@@ -605,7 +605,7 @@ export default function RolesGrid() {
 
           {/* Employment Type using candidate-themed FilterSelect */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-[#A8A8A8] uppercase tracking-wider">
+            <label className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">
               Employment Type
             </label>
             <FilterSelect
@@ -614,7 +614,7 @@ export default function RolesGrid() {
               onChange={val => setEditType(val as typeof editType)}
               placeholder="Select Employment Type"
               containerClassName="w-full"
-              menuClassName="w-full max-w-none bg-[#151719] border-[#303238] shadow-2xl"
+              menuClassName="w-full max-w-none bg-[var(--input-bg)] border-[var(--border-2)] shadow-2xl"
             />
           </div>
 
@@ -628,14 +628,14 @@ export default function RolesGrid() {
 
             {/* Live keyword chip preview */}
             {editSkills.trim() && (
-              <div className="flex flex-wrap gap-1.5 mt-1 p-2.5 rounded-xl bg-[#14161A] border border-[#23272F]">
-                <div className="text-[10px] text-[#70757F] uppercase tracking-wider w-full mb-0.5 font-mono">
+              <div className="flex flex-wrap gap-1.5 mt-1 p-2.5 rounded-xl bg-[#14161A] border border-[var(--border-2)]">
+                <div className="text-[16px] text-[var(--text-3)] uppercase tracking-wider w-full mb-0.5 font-mono">
                   Keyword Preview ({editSkills.split(",").filter(s => s.trim()).length}):
                 </div>
                 {editSkills.split(",").map(s => s.trim()).filter(Boolean).map(tag => (
                   <span 
                     key={tag} 
-                    className="font-mono text-[10px] px-2 py-0.5 rounded-md bg-[#1C2026] text-cyan-300 border border-cyan-500/25"
+                    className="font-mono text-[16px] px-2 py-0.5 rounded-md bg-[#1C2026] text-cyan-300 border border-cyan-500/25"
                   >
                     {tag}
                   </span>

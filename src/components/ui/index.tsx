@@ -21,9 +21,9 @@ export function Btn({ variant="ghost", size="md", className, children, ...props 
 export function Input({ label, className, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label?:string }) {
   return (
     <div className="flex flex-col gap-1.5">
-      {label && <div className="text-xs font-semibold text-[#A8A8A8] uppercase tracking-wider">{label}</div>}
+      {label && <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">{label}</div>}
       <input className={clsx(
-        "bg-[var(--glass)] border border-[var(--border)] rounded-xl text-[#F5F5F5] text-sm px-3.5 py-2.5 transition-colors outline-none focus:border-[var(--border-3)] placeholder:text-[#808080]",
+        "bg-[var(--glass)] border border-[var(--border)] rounded-xl text-[var(--text)] text-sm px-3.5 py-2.5 transition-colors outline-none focus:border-[var(--border-3)] placeholder:text-[#808080]",
         className
       )} {...props} />
     </div>
@@ -33,9 +33,9 @@ export function Input({ label, className, ...props }: React.InputHTMLAttributes<
 export function Select({ label, className, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { label?:string }) {
   return (
     <div className="flex flex-col gap-1.5">
-      {label && <div className="text-xs font-semibold text-[#A8A8A8] uppercase tracking-wider">{label}</div>}
+      {label && <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">{label}</div>}
       <select className={clsx(
-        "bg-[var(--glass-2)] border border-[var(--border)] rounded-xl text-[#F5F5F5] text-sm px-3.5 py-2.5 transition-colors cursor-pointer appearance-none outline-none focus:border-[var(--border-3)] [&>option]:bg-[#1a1a1a] [&>option]:text-[#F5F5F5]",
+        "bg-[var(--glass-2)] border border-[var(--border)] rounded-xl text-[var(--text)] text-sm px-3.5 py-2.5 transition-colors cursor-pointer appearance-none outline-none focus:border-[var(--border-3)] [&>option]:bg-[#1a1a1a] [&>option]:text-[var(--text)]",
         className
       )} {...props}>{children}</select>
     </div>
@@ -68,14 +68,56 @@ export function ScoreBadge({ score, className }: { score:number; className?: str
   );
 }
 
-export function StatusBadge({ status, className }: { status:Candidate["status"]; className?: string }) {
+const STATUS_LABELS: Record<string, string> = {
+  new: "New",
+  review: "In Review",
+  shortlisted: "Shortlisted",
+  interview_1: "Interview R1",
+  interview_2: "Interview R2",
+  approved: "Approved",
+  rejected: "Rejected",
+  offer: "Offer Prep",
+  offer_sent: "Offer Sent",
+  offer_accepted: "Offer Accepted",
+  offer_rejected: "Offer Rejected",
+  onboarding_requested: "Onboarding Req.",
+  onboarding_review: "Onboarding Rev.",
+  onboarding_verified: "Verified",
+  onboarding_rejected: "Onboarding Rej.",
+  hired: "Hired",
+};
+
+import { getEmploymentStatusMeta } from "@/lib/data";
+
+export function StatusBadge({ status, className }: { status: Candidate["status"]; className?: string }) {
+  const label = STATUS_LABELS[status] || status;
   return (
     <span className={clsx(
       "text-[10.5px] font-semibold uppercase tracking-wider h-[23px] px-2.5 rounded-[6px] border inline-flex items-center justify-center whitespace-nowrap select-none overflow-hidden truncate",
       `status-${status}`,
       className
     )}>
-      {status}
+      {label}
+    </span>
+  );
+}
+
+export function EmploymentBadge({ status, className }: { status?: Candidate["employmentStatus"]; className?: string }) {
+  const meta = getEmploymentStatusMeta(status);
+  return (
+    <span
+      className={clsx(
+        "inline-flex items-center gap-1.5 h-[21px] px-2 rounded-[5px] text-[10.5px] font-medium tracking-wide whitespace-nowrap select-none",
+        className
+      )}
+      style={{
+        color: meta.color,
+        backgroundColor: meta.bg,
+        border: `1px solid ${meta.border}`,
+      }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: meta.color }} />
+      <span>{meta.badgeLabel}</span>
     </span>
   );
 }
@@ -118,3 +160,4 @@ export function SkillTag({ label }: { label:string }) {
 }
 
 export { dialog, useDialog, DialogProvider } from "@/lib/dialog";
+export { Pagination } from "./Pagination";

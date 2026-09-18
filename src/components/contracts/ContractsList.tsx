@@ -17,6 +17,8 @@ const CONTRACT_META: Record<string, { color: string; roles: string[] }> = {
   "nda":       { color: "#c084fc", roles: ["All roles — recommended"] },
   "ip":        { color: "#fb923c", roles: ["Dev", "Designer", "Content", "Marketing"] },
   "model":     { color: "#f472b6", roles: ["Model (Male)", "Model (Female)"] },
+  "exp_letter":{ color: "#38bdf8", roles: ["All Exited Employees", "Experience Certification"] },
+  "rel_letter":{ color: "#a78bfa", roles: ["All Exited Employees", "Relieving & Release"] },
 };
 
 export default function ContractsList() {
@@ -89,8 +91,8 @@ export default function ContractsList() {
         {/* Left Column: Contracts List */}
         <div className="lg:col-span-8 flex flex-col gap-3.5">
           <div className="flex items-center justify-between px-1 mb-0.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#8B919C]">Legal Templates</span>
-            <span className="text-[11px] text-[#636A75] font-mono">Select a template to generate or edit</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-2)]">Legal Templates</span>
+            <span className="text-[15px] text-[#636A75] font-mono">Select a template to generate or edit</span>
           </div>
 
           {contracts.map(c => {
@@ -108,12 +110,12 @@ export default function ContractsList() {
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <h3 className="text-[15px] sm:text-[15.5px] font-bold tracking-tight text-[#E8ECF2] group-hover:text-white transition-colors">
+                    <div className="flex items-center gap-2.5">
+                      <h3 className="text-[15px] sm:text-[15.5px] font-bold tracking-tight text-[#E8ECF2] group-hover:text-[var(--text)] transition-colors truncate">
                         {c.name}
                       </h3>
                       <span
-                        className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded uppercase tracking-wider"
+                        className="text-[11px] font-mono font-bold px-2 py-0.5 rounded uppercase tracking-wider flex-shrink-0"
                         style={{
                           background: meta.color + "14",
                           color: meta.color,
@@ -162,7 +164,7 @@ export default function ContractsList() {
                   <button
                     type="button"
                     onClick={() => setEditing(c)}
-                    className="group/edit relative h-[38px] px-3.5 rounded-xl text-[12px] font-semibold uppercase tracking-wider transition-all duration-200 flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-[#16181D]/90 hover:bg-[#1D2128] active:bg-[#121417] text-[#C4C9D4] hover:text-white border border-[#2B303A] hover:border-[#00D9FF]/40 hover:shadow-[0_2px_12px_rgba(0,0,0,0.4),0_0_12px_rgba(0,217,255,0.06)] active:scale-[0.97] select-none cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF]/30"
+                    className="group/edit relative h-[38px] px-3.5 rounded-xl text-[12.5px] font-bold uppercase tracking-wider transition-all duration-200 flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-[var(--card-bg)]/90 hover:bg-[#1D2128] active:bg-[var(--card-bg)] text-[#C4C9D4] hover:text-[var(--text)] border border-[#2B303A] hover:border-[#00D9FF]/40 hover:shadow-[0_2px_12px_rgba(0,0,0,0.4),0_0_12px_rgba(0,217,255,0.06)] active:scale-[0.97] select-none cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF]/30"
                   >
                     <FileEdit size={13.5} className="text-[#848B98] group-hover/edit:text-[#00D9FF] transition-colors duration-200" />
                     <span className="leading-none">Edit Template</span>
@@ -178,8 +180,8 @@ export default function ContractsList() {
           {/* Section 1: Legal & Brand Settings (Legal Disclaimer) */}
           <div className="flex flex-col gap-3.5">
             <div className="flex items-center justify-between px-1 mb-0.5">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#8B919C]">Legal &amp; Brand Settings</span>
-              <span className="text-[11px] text-[#636A75] font-mono">Global Configuration</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-2)]">Legal &amp; Brand Settings</span>
+              <span className="text-[15px] text-[#636A75] font-mono">Global Configuration</span>
             </div>
 
             {/* 1. Legal Disclaimer Card */}
@@ -190,14 +192,14 @@ export default function ContractsList() {
                 </div>
                 <div>
                   <h2 className="text-[14.5px] font-bold text-[#EDEDED] tracking-tight">Legal Disclaimer</h2>
-                  <p className="text-[11px] text-[#717886] font-mono uppercase tracking-wider">Indian Jurisdiction</p>
+                  <p className="text-[15px] text-[#717886] font-mono uppercase tracking-wider">Indian Jurisdiction</p>
                 </div>
               </div>
 
               <p className="text-[12.5px] text-[#9DA3AE] leading-[1.65]">
                 These templates are drafted under standard Indian employment &amp; commercial law.
                 All bracketed fields such as{" "}
-                <code className="text-[#F5C542] bg-[#F5C542]/10 px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold border border-[#F5C542]/20">
+                <code className="text-[#F5C542] bg-[#F5C542]/10 px-1.5 py-0.5 rounded text-[15px] font-mono font-semibold border border-[#F5C542]/20">
                   [BRACKETS]
                 </code>{" "}
                 must be filled and customized before issuing to candidates.
@@ -229,15 +231,15 @@ export default function ContractsList() {
                     <div className="w-6 h-6 rounded-md bg-[#22252c] border border-[#333742] flex items-center justify-center text-xs text-[#9DA3AE]">
                       <Building2 size={13} />
                     </div>
-                    <span className="text-[13px] font-semibold text-[#D8DCE3]">Company Logo</span>
+                    <span className="text-[15px] font-semibold text-[#D8DCE3]">Company Logo</span>
                   </div>
                   {hasLogo ? (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.3)] text-[#22C55E] select-none">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[15px] font-semibold bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.3)] text-[#22C55E] select-none">
                       <CheckCircle2 size={11} className="text-[#22C55E]" />
                       <span>Configured</span>
                     </div>
                   ) : (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[rgba(245,197,66,0.1)] border border-[rgba(245,197,66,0.3)] text-[#F5C542] select-none">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[15px] font-semibold bg-[rgba(245,197,66,0.1)] border border-[rgba(245,197,66,0.3)] text-[#F5C542] select-none">
                       <AlertTriangle size={11} className="text-[#F5C542]" />
                       <span>Missing</span>
                     </div>
@@ -248,9 +250,9 @@ export default function ContractsList() {
                   <button
                     type="button"
                     onClick={() => logoRef.current?.click()}
-                    className="flex-1 h-[38px] px-3 rounded-lg text-[12.5px] font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer inline-flex items-center justify-center gap-1.5 select-none outline-none bg-[#22252b] hover:bg-[#2a2e36] active:bg-[#1a1c20] text-[#D8DCE3] hover:text-white border-[#343842] hover:border-[#00D9FF]/50 focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
+                    className="flex-1 h-[38px] px-3 rounded-lg text-[12.5px] font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer inline-flex items-center justify-center gap-1.5 select-none outline-none bg-[#22252b] hover:bg-[#2a2e36] active:bg-[#1a1c20] text-[#D8DCE3] hover:text-[var(--text)] border-[#343842] hover:border-[#00D9FF]/50 focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
                   >
-                    <Upload size={13} className="text-[#8B919C]" />
+                    <Upload size={13} className="text-[var(--text-2)]" />
                     <span>{hasLogo ? "Update Logo" : "Upload Logo"}</span>
                   </button>
 
@@ -258,7 +260,7 @@ export default function ContractsList() {
                     <button
                       type="button"
                       onClick={() => handleClear("tsp_logo")}
-                      className="h-[38px] px-3 rounded-lg text-[12px] font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer inline-flex items-center justify-center gap-1 select-none outline-none bg-[#22252b] hover:bg-red-500/10 active:bg-[#1a1c20] text-[#8E949E] hover:text-[#EF4444] border-[#343842] hover:border-[#EF4444]/40 focus-visible:ring-1 focus-visible:ring-[#EF4444]/30 active:scale-[0.98]"
+                      className="h-[38px] px-3 rounded-lg text-[12.5px] font-bold uppercase tracking-wider transition-all duration-150 border cursor-pointer inline-flex items-center justify-center gap-1 select-none outline-none bg-[#22252b] hover:bg-red-500/10 active:bg-[#1a1c20] text-[var(--text-3)] hover:text-[#EF4444] border-[#343842] hover:border-[#EF4444]/40 focus-visible:ring-1 focus-visible:ring-[#EF4444]/30 active:scale-[0.98]"
                       title="Remove uploaded logo"
                     >
                       <Trash2 size={12} />
@@ -283,15 +285,15 @@ export default function ContractsList() {
                     <div className="w-6 h-6 rounded-md bg-[#22252c] border border-[#333742] flex items-center justify-center text-xs text-[#9DA3AE]">
                       <PenLine size={13} />
                     </div>
-                    <span className="text-[13px] font-semibold text-[#D8DCE3]">Authorized Signature</span>
+                    <span className="text-[15px] font-semibold text-[#D8DCE3]">Authorized Signature</span>
                   </div>
                   {hasSign ? (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.3)] text-[#22C55E] select-none">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[15px] font-semibold bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.3)] text-[#22C55E] select-none">
                       <CheckCircle2 size={11} className="text-[#22C55E]" />
                       <span>Configured</span>
                     </div>
                   ) : (
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[rgba(245,197,66,0.1)] border border-[rgba(245,197,66,0.3)] text-[#F5C542] select-none">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[15px] font-semibold bg-[rgba(245,197,66,0.1)] border border-[rgba(245,197,66,0.3)] text-[#F5C542] select-none">
                       <AlertTriangle size={11} className="text-[#F5C542]" />
                       <span>Missing</span>
                     </div>
@@ -302,9 +304,9 @@ export default function ContractsList() {
                   <button
                     type="button"
                     onClick={() => signRef.current?.click()}
-                    className="flex-1 h-[38px] px-3 rounded-lg text-[12.5px] font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer inline-flex items-center justify-center gap-1.5 select-none outline-none bg-[#22252b] hover:bg-[#2a2e36] active:bg-[#1a1c20] text-[#D8DCE3] hover:text-white border-[#343842] hover:border-[#00D9FF]/50 focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
+                    className="flex-1 h-[38px] px-3 rounded-lg text-[12.5px] font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer inline-flex items-center justify-center gap-1.5 select-none outline-none bg-[#22252b] hover:bg-[#2a2e36] active:bg-[#1a1c20] text-[#D8DCE3] hover:text-[var(--text)] border-[#343842] hover:border-[#00D9FF]/50 focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
                   >
-                    <Upload size={13} className="text-[#8B919C]" />
+                    <Upload size={13} className="text-[var(--text-2)]" />
                     <span>{hasSign ? "Update Sign" : "Upload Sign"}</span>
                   </button>
 
@@ -312,7 +314,7 @@ export default function ContractsList() {
                     <button
                       type="button"
                       onClick={() => handleClear("tsp_sign")}
-                      className="h-[38px] px-3 rounded-lg text-[12px] font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer inline-flex items-center justify-center gap-1 select-none outline-none bg-[#22252b] hover:bg-red-500/10 active:bg-[#1a1c20] text-[#8E949E] hover:text-[#EF4444] border-[#343842] hover:border-[#EF4444]/40 focus-visible:ring-1 focus-visible:ring-[#EF4444]/30 active:scale-[0.98]"
+                      className="h-[38px] px-3 rounded-lg text-[12.5px] font-bold uppercase tracking-wider transition-all duration-150 border cursor-pointer inline-flex items-center justify-center gap-1 select-none outline-none bg-[#22252b] hover:bg-red-500/10 active:bg-[#1a1c20] text-[var(--text-3)] hover:text-[#EF4444] border-[#343842] hover:border-[#EF4444]/40 focus-visible:ring-1 focus-visible:ring-[#EF4444]/30 active:scale-[0.98]"
                       title="Remove uploaded signature"
                     >
                       <Trash2 size={12} />
