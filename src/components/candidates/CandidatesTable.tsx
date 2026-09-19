@@ -195,7 +195,7 @@ export default function CandidatesTable() {
       {/* ── Candidates Title Row ────────────────────────────────────────── */}
       <div className="flex items-start sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-[22px] font-extrabold tracking-tight text-white">Candidates</h1>
+          <h1 className="text-[22px] font-extrabold tracking-tight text-text">Candidates</h1>
           <div className="font-mono text-[16px] text-[var(--text-3)] mt-1 uppercase tracking-widest">
             All applicants · Filter · Review · Score
           </div>
@@ -229,7 +229,7 @@ export default function CandidatesTable() {
       {/* Bulk action bar */}
       {selCount > 0 && (
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-2.5 rounded-[10px] mb-3.5 bg-[var(--input-bg)] border border-[var(--input-border)]">
-          <span className="text-[16px] font-medium text-[#E1E4E8]">{selCount} selected</span>
+          <span className="text-[16px] font-medium text-[var(--text)]">{selCount} selected</span>
           <div className="flex flex-wrap gap-2">
             <Btn variant="ghost" size="sm" onClick={handleApproveSelected} disabled={isDeletingSelected}>✓ Approve All</Btn>
             <Btn variant="danger" size="sm" onClick={handleDeleteSelected} disabled={isDeletingSelected}>

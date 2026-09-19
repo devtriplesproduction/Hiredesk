@@ -54,16 +54,50 @@ export function cleanNullBytes<T>(obj: T): T {
   return obj;
 }
 
+function stripOffendingColumn(data: any, errorMsg?: string): any {
+  if (errorMsg) {
+    const match = errorMsg.match(/Could not find the '([^']+)' column/i) || errorMsg.match(/column "?([^"'\s]+)"? does not exist/i);
+    if (match && match[1]) {
+      const col = match[1];
+      if (Array.isArray(data)) {
+        return data.map(item => {
+          const copy = { ...item };
+          delete copy[col];
+          return copy;
+        });
+      } else if (typeof data === "object" && data !== null) {
+        const copy = { ...data };
+        delete copy[col];
+        return copy;
+      }
+    }
+  }
+  const removeOptional = (item: any) => {
+    const {
+      extractionSource, extractionConfidence, extractionMetadata,
+      employmentStatus, employmentStatusConfidence, currentCompany, currentRole,
+      employmentStartDate, employmentEndDate, employmentStatusSource,
+      ...core
+    } = item;
+    return core;
+  };
+  return Array.isArray(data) ? data.map(removeOptional) : removeOptional(data);
+}
+
 export async function insertDBCandidate(c: Candidate): Promise<void> {
   const cleaned = cleanNullBytes(c);
-  const { error } = await supabase.from("candidates").insert(cleaned);
+  let { error } = await supabase.from("candidates").insert(cleaned);
   if (error) {
-    // If it's a missing column error (Postgres code 42703), retry without extraction fields
-    if (error.code === "42703" || error.message?.includes("column")) {
-      console.warn("[Supabase Sync] Database is missing name extraction columns. Retrying candidate insert without them...");
-      const { extractionSource, extractionConfidence, extractionMetadata, ...sanitized } = cleaned as any;
+    if (error.code === "42703" || error.code === "PGRST204" || error.message?.includes("column") || error.message?.includes("schema cache")) {
+      console.warn("[Supabase Sync] Database column mismatch detected. Stripping missing column and retrying...", error.message);
+      const sanitized = stripOffendingColumn(cleaned, error.message);
       const { error: retryError } = await supabase.from("candidates").insert(sanitized);
-      if (retryError) throw retryError;
+      if (retryError) {
+        // Last-ditch: strip all non-core metadata columns
+        const fallback = stripOffendingColumn(cleaned);
+        const { error: fallbackError } = await supabase.from("candidates").insert(fallback);
+        if (fallbackError) throw fallbackError;
+      }
     } else {
       console.error("Error inserting candidate to Supabase:", error);
       throw error;
@@ -73,16 +107,17 @@ export async function insertDBCandidate(c: Candidate): Promise<void> {
 
 export async function insertDBCandidates(candidates: Candidate[]): Promise<void> {
   const cleaned = candidates.map(c => cleanNullBytes(c));
-  const { error } = await supabase.from("candidates").insert(cleaned);
+  let { error } = await supabase.from("candidates").insert(cleaned);
   if (error) {
-    if (error.code === "42703" || error.message?.includes("column")) {
-      console.warn("[Supabase Sync] Database is missing name extraction columns. Retrying bulk insert without them...");
-      const sanitizedCandidates = cleaned.map(c => {
-        const { extractionSource, extractionConfidence, extractionMetadata, ...rest } = c as any;
-        return rest;
-      });
-      const { error: retryError } = await supabase.from("candidates").insert(sanitizedCandidates);
-      if (retryError) throw retryError;
+    if (error.code === "42703" || error.code === "PGRST204" || error.message?.includes("column") || error.message?.includes("schema cache")) {
+      console.warn("[Supabase Sync] Database column mismatch in bulk insert. Stripping missing column and retrying...", error.message);
+      const sanitized = stripOffendingColumn(cleaned, error.message);
+      const { error: retryError } = await supabase.from("candidates").insert(sanitized);
+      if (retryError) {
+        const fallback = stripOffendingColumn(cleaned);
+        const { error: fallbackError } = await supabase.from("candidates").insert(fallback);
+        if (fallbackError) throw fallbackError;
+      }
     } else {
       console.error("Error inserting bulk candidates to Supabase:", error);
       throw error;
@@ -92,13 +127,17 @@ export async function insertDBCandidates(candidates: Candidate[]): Promise<void>
 
 export async function updateDBCandidate(id: string, patch: Partial<Candidate>): Promise<void> {
   const cleaned = cleanNullBytes(patch);
-  const { error } = await supabase.from("candidates").update(cleaned).eq("id", id);
+  let { error } = await supabase.from("candidates").update(cleaned).eq("id", id);
   if (error) {
-    if (error.code === "42703" || error.message?.includes("column")) {
-      console.warn("[Supabase Sync] Database is missing name extraction columns. Retrying candidate update without them...");
-      const { extractionSource, extractionConfidence, extractionMetadata, ...sanitizedPatch } = cleaned as any;
+    if (error.code === "42703" || error.code === "PGRST204" || error.message?.includes("column") || error.message?.includes("schema cache")) {
+      console.warn("[Supabase Sync] Database column mismatch in update. Stripping missing column and retrying...", error.message);
+      const sanitizedPatch = stripOffendingColumn(cleaned, error.message);
       const { error: retryError } = await supabase.from("candidates").update(sanitizedPatch).eq("id", id);
-      if (retryError) throw retryError;
+      if (retryError) {
+        const fallback = stripOffendingColumn(cleaned);
+        const { error: fallbackError } = await supabase.from("candidates").update(fallback).eq("id", id);
+        if (fallbackError) throw fallbackError;
+      }
     } else {
       console.error("Error updating candidate in Supabase:", error);
       throw error;

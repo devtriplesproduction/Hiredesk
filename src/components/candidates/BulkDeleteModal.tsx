@@ -38,7 +38,7 @@ export default function BulkDeleteModal({ open, onClose }: Props) {
     <Modal
       open={open}
       onClose={onClose}
-      className="!max-w-[380px] w-full !bg-[var(--card-bg)] !border-[#2A2E35] !rounded-[14px] !p-[26px] sm:!p-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
+      className="!max-w-[380px] w-full !bg-[var(--card-bg)] !border-[var(--border-2)] !rounded-[14px] !p-[26px] sm:!p-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
     >
       {/* Modal Title */}
       <h3 className="text-[17.5px] font-bold text-[var(--text)] leading-[1.2] text-left">
@@ -82,7 +82,7 @@ export default function BulkDeleteModal({ open, onClose }: Props) {
       </div>
 
       {/* Subtle Divider */}
-      <div className="h-px bg-[#24282E] my-5" />
+      <div className="h-px bg-[var(--card-bg)] my-5" />
 
       {/* Actions */}
       <div className="flex justify-end items-center gap-2.5">
@@ -90,7 +90,7 @@ export default function BulkDeleteModal({ open, onClose }: Props) {
           type="button"
           onClick={onClose}
           disabled={isDeleting}
-          className="h-[35px] px-4 rounded-[8px] text-[11.5px] font-semibold uppercase tracking-wider bg-[var(--input-bg)] border border-[var(--input-border)] text-[#9A9FA8] hover:bg-[var(--table-row-hover)] hover:text-[#E1E4E8] hover:border-[#383D45] transition-all duration-150 cursor-pointer select-none active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-[35px] px-4 rounded-[8px] text-[11.5px] font-semibold uppercase tracking-wider bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--text)] hover:bg-[var(--table-row-hover)] hover:text-[var(--text)] hover:border-[var(--border-3)] transition-all duration-150 cursor-pointer select-none active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Cancel
         </button>

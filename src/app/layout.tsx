@@ -14,7 +14,24 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrains.variable}`}>
+    <html lang="en" className={`${inter.variable} ${jetbrains.variable}`} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                let theme = localStorage.getItem('hiredesk_theme');
+                if (theme === 'light' || theme === 'dark') {
+                  document.documentElement.setAttribute('data-theme', theme);
+                } else {
+                  document.documentElement.setAttribute('data-theme', 'dark');
+                  localStorage.setItem('hiredesk_theme', 'dark');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body>
         <StoreProvider>
           <ThemeProvider>{children}</ThemeProvider>

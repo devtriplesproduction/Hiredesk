@@ -6,7 +6,7 @@ export default function RolesPage() {
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Roles</h1>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text">Roles</h1>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[15px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Active System

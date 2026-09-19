@@ -355,7 +355,7 @@ export default function DateTimePicker({
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-[var(--text-2)] hover:text-[var(--text)] hover:bg-white/10 transition-colors"
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-[var(--text-2)] hover:text-[var(--text)] hover:bg-glass-2 transition-colors"
                 title="Previous Month"
               >
                 ‹
@@ -363,7 +363,7 @@ export default function DateTimePicker({
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-[var(--text-2)] hover:text-[var(--text)] hover:bg-white/10 transition-colors"
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-[var(--text-2)] hover:text-[var(--text)] hover:bg-glass-2 transition-colors"
                 title="Next Month"
               >
                 ›
@@ -396,8 +396,8 @@ export default function DateTimePicker({
                     isSelected
                       ? "text-[#00D9FF] bg-[rgba(0,217,255,0.15)] border border-[rgba(0,217,255,0.45)] font-bold shadow-[0_0_8px_rgba(0,217,255,0.2)]"
                       : isCurrent
-                      ? "text-[var(--text)] hover:bg-white/10 hover:text-[var(--text)]"
-                      : "text-[#474D57] hover:bg-white/5"
+                      ? "text-[var(--text)] hover:bg-glass-2 hover:text-[var(--text)]"
+                      : "text-[var(--text-3)] hover:bg-white/5"
                   }`}
                 >
                   <span>{c.day}</span>
@@ -412,7 +412,7 @@ export default function DateTimePicker({
           {!dateOnly && (
             <>
               {/* Divider */}
-              <div className="h-px bg-[#242424] -mx-4" />
+              <div className="h-px bg-[var(--card-bg)] -mx-4" />
 
               {/* Time Selector */}
               <div className="flex flex-col gap-2">
@@ -434,7 +434,7 @@ export default function DateTimePicker({
                     <button
                       type="button"
                       onClick={() => handleTimeChange(hour === 1 ? 12 : hour - 1, minute, period)}
-                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[var(--text-2)] hover:text-[var(--text)] hover:bg-white/10 transition-colors"
+                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[var(--text-2)] hover:text-[var(--text)] hover:bg-glass-2 transition-colors"
                     >
                       ▼
                     </button>
@@ -444,7 +444,7 @@ export default function DateTimePicker({
                     <button
                       type="button"
                       onClick={() => handleTimeChange(hour === 12 ? 1 : hour + 1, minute, period)}
-                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[var(--text-2)] hover:text-[var(--text)] hover:bg-white/10 transition-colors"
+                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[var(--text-2)] hover:text-[var(--text)] hover:bg-glass-2 transition-colors"
                     >
                       ▲
                     </button>
@@ -457,7 +457,7 @@ export default function DateTimePicker({
                     <button
                       type="button"
                       onClick={() => handleTimeChange(hour, (minute - 15 + 60) % 60, period)}
-                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[var(--text-2)] hover:text-[var(--text)] hover:bg-white/10 transition-colors"
+                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[var(--text-2)] hover:text-[var(--text)] hover:bg-glass-2 transition-colors"
                     >
                       ▼
                     </button>
@@ -467,7 +467,7 @@ export default function DateTimePicker({
                     <button
                       type="button"
                       onClick={() => handleTimeChange(hour, (minute + 15) % 60, period)}
-                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[var(--text-2)] hover:text-[var(--text)] hover:bg-white/10 transition-colors"
+                      className="w-6 h-6 rounded flex items-center justify-center text-xs text-[var(--text-2)] hover:text-[var(--text)] hover:bg-glass-2 transition-colors"
                     >
                       ▲
                     </button>
@@ -513,7 +513,7 @@ export default function DateTimePicker({
               >
                 Clear
               </button>
-              <span className="text-[#333333]">·</span>
+              <span className="text-[var(--text-3)]">·</span>
               <button
                 type="button"
                 onClick={handleToday}
@@ -526,7 +526,7 @@ export default function DateTimePicker({
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="px-3 py-1 rounded-lg text-xs font-semibold text-white bg-white/10 hover:bg-white/20 transition-colors"
+              className="px-3 py-1 rounded-lg text-xs font-semibold text-text bg-white/10 hover:bg-glass-3 transition-colors"
             >
               Done
             </button>

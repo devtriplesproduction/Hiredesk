@@ -19,10 +19,9 @@ import {
   Monitor,
 } from "lucide-react";
 
-// Configure PDFJS Worker using the unpkg CDN
-const PDFJS_VERSION = pdfjs.version || "4.4.168";
-pdfjs.GlobalWorkerOptions.workerSrc =
-  `https://unpkg.com/pdfjs-dist@${PDFJS_VERSION}/build/pdf.worker.min.mjs`;
+if (typeof window !== "undefined") {
+  pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+}
 
 interface PDFViewerProps {
   url: string;
@@ -277,12 +276,12 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
       className={clsx(
         "flex flex-col gap-2.5 w-full transition-all duration-200",
         isFullscreen
-          ? "fixed inset-3 z-50 bg-[#0a0a0b]/98 backdrop-blur-2xl p-4 rounded-2xl border border-white/15 shadow-[0_0_60px_rgba(0,0,0,0.8)]"
+          ? "fixed inset-3 z-50 bg-[var(--card-bg)]/98 backdrop-blur-2xl p-4 rounded-2xl border border-white/15 shadow-[0_0_60px_rgba(0,0,0,0.8)]"
           : "flex-1 min-h-0 h-[calc(98vh-220px)] min-h-[600px]"
       )}
     >
       {/* Modern High-Performance Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-2.5 px-3.5 py-2 rounded-xl border border-[var(--border-2)] bg-[#111214] shadow-md select-none flex-shrink-0">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 px-3.5 py-2 rounded-xl border border-[var(--border-2)] bg-[var(--card-bg)] shadow-md select-none flex-shrink-0">
         {/* Left Section: Document Title & Pagination */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 max-w-[240px] sm:max-w-[320px]">
@@ -413,7 +412,7 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
           <button
             type="button"
             onClick={() => setIsFullscreen((prev) => !prev)}
-            className="w-7 h-7 rounded-lg bg-[#181a20] hover:bg-white/10 border border-white/10 flex items-center justify-center text-zinc-300 hover:text-[var(--text)] transition-colors"
+            className="w-7 h-7 rounded-lg bg-[var(--card-bg)] hover:bg-white/10 border border-white/10 flex items-center justify-center text-zinc-300 hover:text-[var(--text)] transition-colors"
             title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Preview"}
           >
             {isFullscreen ? (
@@ -428,7 +427,7 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-7 h-7 rounded-lg bg-[#181a20] hover:bg-white/10 border border-white/10 flex items-center justify-center text-zinc-300 hover:text-[var(--text)] transition-colors"
+            className="w-7 h-7 rounded-lg bg-[var(--card-bg)] hover:bg-white/10 border border-white/10 flex items-center justify-center text-zinc-300 hover:text-[var(--text)] transition-colors"
             title="Open PDF in new browser tab"
           >
             <ExternalLink className="w-3.5 h-3.5" />
@@ -450,10 +449,10 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
       </div>
 
       {/* Main Viewport Container */}
-      <div className="relative w-full flex-1 min-h-0 rounded-xl border border-[var(--border-2)] bg-[#070809] overflow-hidden flex flex-col items-center justify-center shadow-inner">
+      <div className="relative w-full flex-1 min-h-0 rounded-xl border border-[var(--border-2)] bg-[var(--card-bg)] overflow-hidden flex flex-col items-center justify-center shadow-inner">
         {/* Loading Spinner */}
         {loading && (
-          <div className="absolute inset-0 bg-[#070809]/90 z-20 flex flex-col items-center justify-center gap-3 animate-fade-in">
+          <div className="absolute inset-0 bg-[var(--card-bg)]/90 z-20 flex flex-col items-center justify-center gap-3 animate-fade-in">
             <Loader2 className="w-8 h-8 text-[#00D9FF] animate-spin" />
             <div className="text-xs font-semibold text-zinc-400 tracking-wider">
               Rendering document pages...
@@ -466,7 +465,7 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="w-full h-full overflow-y-auto overflow-x-auto p-4 sm:p-6 bg-[#060708] custom-scrollbar flex flex-col items-center"
+            className="w-full h-full overflow-y-auto overflow-x-auto p-4 sm:p-6 bg-[var(--card-bg)] custom-scrollbar flex flex-col items-center"
           >
             {numPages > 0 ? (
               <div className="flex flex-col items-center gap-6 py-2">
@@ -524,7 +523,7 @@ export default function PDFViewer({ url, filename = "Resume.pdf" }: PDFViewerPro
 
         {/* MODE 2: NATIVE BROWSER EMBED (NO CORS/HEAD BLOCK) */}
         {viewMode === "native" && (
-          <div className="w-full h-full relative bg-[#1c1d22]">
+          <div className="w-full h-full relative bg-[var(--card-bg)]">
             <iframe
               src={`${url}#toolbar=1&navpanes=0&view=FitH`}
               className="w-full h-full border-none rounded-xl"

@@ -215,7 +215,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
                 className={clsx(
                   "flex items-center justify-between px-3 py-2.5 rounded-xl w-full text-left transition-all duration-150 border",
                   isActive
-                    ? "text-white font-semibold bg-[var(--nav-active-bg)] border-[var(--border-2)] shadow-sm"
+                    ? "text-text font-semibold bg-[var(--nav-active-bg)] border-[var(--border-2)] shadow-sm"
                     : "text-[var(--text-2)] bg-transparent border-transparent hover:text-[var(--text)] hover:bg-[var(--glass-2)]"
                 )}
               >
@@ -262,7 +262,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose
                     className={clsx(
                       "transition-transform duration-200 flex-shrink-0",
                       isExpanded ? "rotate-90" : "",
-                      isMainActive ? "text-[#00D9FF]" : "text-[#B0B0B0] group-hover:text-[var(--text)]"
+                      isMainActive ? "text-[#00D9FF]" : "text-[var(--text)] group-hover:text-[var(--text)]"
                     )}
                   />
                 }

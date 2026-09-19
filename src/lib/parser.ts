@@ -561,71 +561,206 @@ function extractOCRNameFallback(ocrText: string): string {
  * Standard utility string matching for contacts
  */
 function extractEmail(text: string): string {
-  return text.match(/[\w.+\-]+@[\w\-]+\.[a-z]{2,6}/i)?.[0] ?? "";
+  const match = text.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/);
+  if (match) return match[0].trim();
+  const fallback = text.match(/[\w.+%-]+(?:\s*@\s*|\s+at\s+)[\w.-]+(?:\s*\.\s*|\s+dot\s+)[a-z]{2,}/i);
+  if (fallback) return fallback[0].replace(/\s+at\s+/i, "@").replace(/\s+dot\s+/i, ".").replace(/\s+/g, "").trim();
+  return "";
 }
 
 function extractPhone(text: string): string {
-  return text.match(/(\+91[\s\-]?)?[6-9]\d{9}/)?.[0] ??
-    text.match(/(\+?[\d\s\-]{10,14})/)?.[0]?.trim() ?? "";
+  const inMatch = text.match(/(?:\+91[\s\-]?)?[6-9]\d{4}[\s\-]?\d{5}\b/);
+  if (inMatch) return inMatch[0].replace(/[\s\-]/g, "").replace(/^\+91/, "+91 ");
+  const tenDigit = text.match(/\b[6-9]\d{9}\b/);
+  if (tenDigit) return `+91 ${tenDigit[0]}`;
+  const genMatch = text.match(/(?:\+\d{1,3}[\s\-]?)?(?:\(?\d{3}\)?[\s\-]?)?\d{3}[\s\-]?\d{4}/);
+  if (genMatch) return genMatch[0].trim();
+  return "";
 }
 
 function extractCity(text: string): string {
-  const cities = ["Mumbai","Delhi","Pune","Bangalore","Bengaluru","Hyderabad","Chennai","Kolkata","Ahmedabad","Jaipur","Surat","Nashik","Nagpur","Vadodara","Indore","Remote","Noida","Gurugram","Gurgaon","Chandigarh"];
+  const locMatch = text.match(/\b(?:location|address|city|residence|based\s+in)\s*[:\-]\s*([^\n\r,•|]{2,40})/i);
+  if (locMatch && locMatch[1]) {
+    const candidate = locMatch[1].trim();
+    if (!/^(india|remote|na|not\s+specified)$/i.test(candidate) && candidate.length > 2) {
+      return candidate.charAt(0).toUpperCase() + candidate.slice(1);
+    }
+  }
+
+  const cities = [
+    "Mumbai", "Navi Mumbai", "Thane", "Pune", "Talegaon", "Satara", "Kolhapur", "Nashik", "Nagpur", "Aurangabad", "Solapur",
+    "Delhi", "New Delhi", "Noida", "Gurugram", "Gurgaon", "Faridabad", "Ghaziabad", "Chandigarh",
+    "Bangalore", "Bengaluru", "Hyderabad", "Secunderabad", "Chennai", "Kolkata", "Ahmedabad", "Surat", "Vadodara", "Rajkot",
+    "Jaipur", "Indore", "Bhopal", "Lucknow", "Kanpur", "Patna", "Kochi", "Cochin", "Trivandrum", "Thiruvananthapuram",
+    "Coimbatore", "Visakhapatnam", "Bhubaneswar", "Dehradun", "Goa", "Panaji", "Remote"
+  ];
   const lower = text.toLowerCase();
-  return cities.find(c => lower.includes(c.toLowerCase())) ?? "Not specified";
+  for (const c of cities) {
+    const reg = new RegExp(`\\b${c.toLowerCase().replace(/\s+/g, "\\s+")}\\b`, "i");
+    if (reg.test(lower)) return c;
+  }
+  return "Not specified";
 }
 
 function extractEducation(text: string): string {
-  const degrees = ["Ph.D","M.Tech","MCA","MBA","M.Sc","M.Com","B.Tech","BCA","BBA","B.Sc","B.Com","B.Des","BA","BE","Diploma","12th","10th"];
-  for (const d of degrees) {
-    if (text.includes(d) || text.toLowerCase().includes(d.toLowerCase())) return d;
+  const patterns = [
+    /\b(Bachelor\s+of\s+(?:Engineering|Technology|Science|Commerce|Arts|Business\s+Administration|Computer\s+Applications|Design)(?:\s+in\s+[^\n\r,•|0-9]{3,40})?)/i,
+    /\b(Master\s+of\s+(?:Engineering|Technology|Science|Commerce|Arts|Business\s+Administration|Computer\s+Applications|Design)(?:\s+in\s+[^\n\r,•|0-9]{3,40})?)/i,
+    /\b(Diploma\s+in\s+[^\n\r,•|0-9]{3,40})/i,
+    /\b(Ph\.?D(?:\s+in\s+[^\n\r,•|0-9]{3,40})?)/i,
+    /\b(B\.?E\.?|B\.?Tech\.?|M\.?Tech\.?|M\.?C\.?A\.?|B\.?C\.?A\.?|M\.?B\.?A\.?|B\.?B\.?A\.?|B\.?Sc\.?|M\.?Sc\.?|B\.?Com\.?|M\.?Com\.?|B\.?Des\.?|B\.?A\.?|M\.?A\.?)(?:\s+in\s+[^\n\r,•|0-9]{3,40})?/i,
+    /\b(12th(?:\s+Grade|\s+Pass)?|HSC|10th(?:\s+Grade|\s+Pass)?|SSC)\b/i,
+  ];
+
+  for (const p of patterns) {
+    const match = text.match(p);
+    if (match && match[1]) {
+      const clean = match[1].replace(/\s+/g, " ").trim();
+      if (clean.length >= 2) return clean;
+    }
   }
+
+  const degrees = ["B.Tech", "B.E.", "M.Tech", "MCA", "MBA", "BCA", "B.Sc", "M.Sc", "B.Com", "M.Com", "B.Des", "BA", "Diploma", "Ph.D"];
+  for (const d of degrees) {
+    const reg = new RegExp(`\\b${d.replace(".", "\\.")}\\b`, "i");
+    if (reg.test(text)) return d;
+  }
+
   return "Not specified";
 }
 
 function extractExperience(text: string): string {
   const lower = text.toLowerCase();
-  const fresher = /\b(fresher|fresh graduate|entry level|no experience|0\s*years?\s*experience)\b/i.test(lower);
-  if (fresher) return "Fresher";
+  
+  // 1. Check if fresher or entry-level explicitly stated
+  if (/\b(fresher|entry\s+level|no\s+experience|0\s*years?\s*experience)\b/i.test(lower)) {
+    if (/\b(?:intern|internship)\b/i.test(lower)) {
+      return "Intern (Fresher)";
+    }
+    return "Fresher";
+  }
 
+  // 2. Explicit Total Experience label
   const labelRegexes = [
     /\b(?:total\s+)?experience\s*[:\-]?\s*(\d+(?:\.\d+)?)\+?\s*(?:year|yr)s?/i,
     /\bwork\s+experience\s*[:\-]?\s*(\d+(?:\.\d+)?)\+?\s*(?:year|yr)s?/i,
-    /\b(?:total\s+)?exp\s*[:\-]?\s*(\d+(?:\.\d+)?)\+?\s*(?:year|yr)s?/i
+    /\b(?:total\s+)?exp\s*[:\-]?\s*(\d+(?:\.\d+)?)\+?\s*(?:year|yr)s?/i,
+    /(\d+(?:\.\d+)?)\+?\s*(?:year|yr)s?\s+(?:of\s+)?(?:experience|exp|work\s+experience|professional\s+experience)/i,
   ];
 
   for (const regex of labelRegexes) {
     const match = lower.match(regex);
     if (match) {
-      const yrs = Math.round(parseFloat(match[1]));
+      const yrs = parseFloat(match[1]);
       if (yrs === 0) return "Fresher";
+      if (yrs <= 0.5) return "6 months";
       if (yrs === 1) return "1 yr";
       if (yrs >= 5) return "5+ yrs";
       if (yrs === 2) return "2 yrs";
       if (yrs === 3 || yrs === 4) return "3 yrs";
-      return `${yrs} yrs`;
+      return `${Math.round(yrs)} yrs`;
     }
   }
 
-  const valueFirstRegexes = [
-    /(\d+(?:\.\d+)?)\+?\s*(?:year|yr)s?\s*(?:of\s*)?(?:experience|exp|work\s+exp)/i,
-    /(\d+(?:\.\d+)?)\+?\s*(?:year|yr)s?\s+(?:professional|relevant|industry)\s+experience/i
-  ];
+  // 3. Check months of experience
+  const monthsMatch = lower.match(/(\d+)\s*(?:month|mo)s?\s*(?:of\s*)?(?:experience|exp|internship)/i);
+  if (monthsMatch) {
+    const m = parseInt(monthsMatch[1], 10);
+    if (m >= 12) return `${Math.round(m / 12)} yr${Math.round(m / 12) > 1 ? "s" : ""}`;
+    return `${m} months`;
+  }
 
-  for (const regex of valueFirstRegexes) {
-    const match = lower.match(regex);
-    if (match) {
-      const yrs = Math.round(parseFloat(match[1]));
-      if (yrs === 0) return "Fresher";
-      if (yrs === 1) return "1 yr";
-      if (yrs >= 5) return "5+ yrs";
-      if (yrs === 2) return "2 yrs";
-      if (yrs === 3 || yrs === 4) return "3 yrs";
-      return `${yrs} yrs`;
+  // 4. Check for internship date range like Jan 2026 – Jun 2026
+  const internRangeMatch = lower.match(/\bintern(?:ship)?\b[^\n\r•]{0,50}(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|\d{4})[^\n\r•]{0,30}(?:present|\d{4}|jun|jul|aug|sep|oct|nov|dec)/i);
+  if (internRangeMatch) {
+    return "Intern (6 months)";
+  }
+
+  // 5. Check if currently a student
+  if (/\b(?:bachelor|master|b\.?e|b\.?tech|diploma)\b[^\n\r]{0,60}(?:202[3-9]\s*[–\-]\s*202[5-9])/i.test(lower)) {
+    if (/\bintern(?:ship)?\b/i.test(lower)) {
+      return "Intern (Fresher)";
+    }
+    return "Fresher";
+  }
+
+  // 6. Year range detection for full-time work
+  const yearRanges = Array.from(lower.matchAll(/\b(20[0-2]\d)\s*(?:–|-|to)\s*(20[0-2]\d|present)\b/g));
+  if (yearRanges.length > 0) {
+    let maxDiff = 0;
+    const currentYear = new Date().getFullYear();
+    for (const yr of yearRanges) {
+      const startYear = parseInt(yr[1], 10);
+      const endYear = yr[2] === "present" ? currentYear : parseInt(yr[2], 10);
+      const diff = endYear - startYear;
+      if (diff > maxDiff && diff <= 40) maxDiff = diff;
+    }
+    if (maxDiff > 0) {
+      if (maxDiff >= 5) return "5+ yrs";
+      if (maxDiff === 1) return "1 yr";
+      return `${maxDiff} yrs`;
     }
   }
 
-  return "Not specified";
+  // If intern mentioned anywhere
+  if (/\bintern(?:ship)?\b/i.test(lower)) {
+    return "Intern (Fresher)";
+  }
+
+  return "Fresher";
+}
+
+function extractEmploymentStatus(text: string): {
+  status: "CURRENTLY_WORKING" | "STUDENT_FRESHER" | "NOT_CURRENTLY_WORKING" | "UNKNOWN";
+  currentRole?: string;
+  currentCompany?: string;
+} {
+  const lower = text.toLowerCase();
+
+  let currentRole = "";
+  let currentCompany = "";
+
+  const isInvalidEntity = (s: string) => {
+    return !s ||
+      /education|skills|projects|languages|certifications|summary|experience|achievements|activities|contact|profile|links/i.test(s) ||
+      /linkedin|github|leetcode|hackerrank|codechef|portfolio|gmail|yahoo|outlook|mail|phone|resume|curriculum|demo|live/i.test(s);
+  };
+
+  const roleAtCompanyMatch = text.match(/([A-Z][A-Za-z\s]{3,35})\s+(?:—|-|at|@)\s+([A-Z][A-Za-z0-9\s]{2,35})/);
+  if (roleAtCompanyMatch) {
+    const r = roleAtCompanyMatch[1].trim();
+    const c = roleAtCompanyMatch[2].trim();
+    if (!isInvalidEntity(r) && !isInvalidEntity(c)) {
+      currentRole = r;
+      currentCompany = c;
+    }
+  }
+
+  const isPresent = /\b(present|currently\s+working|current\s+job|till\s+date)\b/i.test(lower);
+  const isStudent = /\b(student|studying|pursuing|undergraduate|postgraduate|fresher|batch\s+of\s+202[5-9]|202[4-9]\s*graduat)\b/i.test(lower) ||
+    /\b(?:bachelor|diploma|b\.?e|b\.?tech|mca)\b[^\n\r]{0,50}(?:202[3-9]\s*[–\-]\s*202[6-9])/i.test(lower);
+
+  if (isStudent && !isPresent) {
+    return { status: "STUDENT_FRESHER", currentRole: undefined, currentCompany: undefined };
+  }
+
+  if (isPresent) {
+    return { status: "CURRENTLY_WORKING", currentRole: currentRole || undefined, currentCompany: currentCompany || undefined };
+  }
+
+  if (/\b(?:intern|internship)\b/i.test(lower)) {
+    return { status: "STUDENT_FRESHER", currentRole: undefined, currentCompany: undefined };
+  }
+
+  if (/\b(?:ex-|former|previous|resigned|unemployed|freelanc)\b/i.test(lower)) {
+    return { status: "NOT_CURRENTLY_WORKING", currentRole: currentRole || undefined, currentCompany: currentCompany || undefined };
+  }
+
+  if (/\b(?:experience|work\s+history)\b/i.test(lower)) {
+    return { status: "CURRENTLY_WORKING", currentRole: currentRole || undefined, currentCompany: currentCompany || undefined };
+  }
+
+  return { status: "STUDENT_FRESHER", currentRole: undefined, currentCompany: undefined };
 }
 
 function extractGender(text: string, name: string): string {
@@ -645,8 +780,8 @@ function extractGender(text: string, name: string): string {
 
   if (name) {
     const firstName = name.split(/\s+/)[0].toLowerCase();
-    const femaleNames = ["priya","sneha","neha","ananya","pooja","riya","meera","shruti","zara","tanya","ayesha","simran","deepika","mitali","aditi","kavya","anushka","snehal","swati","sakshi","shreya","rashi","kirti","tripti","divya","kajal","isha","ekta","sheetal","rashmi","poornima","preeti","sonia","monika","payal","sunita","anisha"];
-    const maleNames = ["aarav","rohit","arjun","vikram","raj","dev","ishaan","siddharth","aditya","manish","omar","nikhil","dhruv","ratan","vivek","amit","abhishek","rahul","sachin","saurabh","gaurav","pankaj","sanjay","anil","sunil","vijay","raju","ram","shyam","harsh","aman","kunal","yash","amit","rohan"];
+    const femaleNames = ["priya","sneha","neha","ananya","pooja","riya","meera","shruti","zara","tanya","ayesha","simran","deepika","mitali","aditi","kavya","anushka","snehal","swati","sakshi","shreya","rashi","kirti","tripti","divya","kajal","isha","ekta","sheetal","shital","rashmi","poornima","preeti","sonia","monika","payal","sunita","anisha","priti","pritee"];
+    const maleNames = ["omkar","aarav","rohit","arjun","vikram","raj","dev","ishaan","siddharth","aditya","manish","omar","nikhil","dhruv","ratan","vivek","amit","abhishek","rahul","sachin","saurabh","gaurav","pankaj","sanjay","anil","sunil","vijay","raju","ram","shyam","harsh","aman","kunal","yash","rohan","sourabh","akshay","amol","ashish","tanmay","aniket","swapnil","chinmay","rushikesh","shubham","sanket","shantanu","mayur","chetan","suraj","prasad"];
     
     if (femaleNames.includes(firstName)) return "Female";
     if (maleNames.includes(firstName)) return "Male";
@@ -734,10 +869,30 @@ export async function parseResumeFile(
 
   // 1. Text & Layout extraction (including OCR scanner)
   const parseResult = await extractTextAndMetaFromPDF(file);
-  const text = parseResult.text;
-  const firstPageLines = parseResult.firstPageLines;
+  let text = parseResult.text;
+  let firstPageLines = parseResult.firstPageLines;
   const ocrUsed = parseResult.ocrUsed;
   const ocrText = parseResult.ocrText;
+
+  // Secondary verification: if text is sparse or defaulted to filename, invoke server-side parser
+  if (text.length < 80 || text === file.name.replace(/[_\-\.]/g, " ")) {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const resp = await fetch("/api/parse-resume", { method: "POST", body: formData });
+      if (resp.ok) {
+        const srvData = await resp.json();
+        if (srvData.text && srvData.text.length > text.length) {
+          text = srvData.text;
+          if (Array.isArray(srvData.firstPageLines) && srvData.firstPageLines.length > 0) {
+            firstPageLines = srvData.firstPageLines;
+          }
+        }
+      }
+    } catch (apiErr) {
+      console.warn("[parseResumeFile] Fallback server parse failed:", apiErr);
+    }
+  }
 
   // 2. ATS score matching
   const roleId = detectBestRole(text, roles);
@@ -872,13 +1027,14 @@ export async function parseResumeFile(
     console.log(`- Rejected Candidates Logged:`, rejectedCandidates.slice(0, 4));
   }
 
-  // Extract remaining contacts
+  // Extract remaining contacts and candidate details
   const email = extractEmail(text);
   const phone = extractPhone(text);
   const extractedCity = extractCity(text);
   const city = extractedCity && extractedCity !== "Not specified" ? extractedCity : (extractCity(resolvedName) || "Not specified");
   const education = extractEducation(text);
   const exp = extractExperience(text);
+  const empMeta = extractEmploymentStatus(text);
   const gender = extractGender(text, resolvedName);
   const age = extractAge(text);
   const skills = extractSkills(text, roleId);
@@ -893,6 +1049,9 @@ export async function parseResumeFile(
     exp,
     gender,
     age,
+    employmentStatus: empMeta.status,
+    currentRole: empMeta.currentRole,
+    currentCompany: empMeta.currentCompany,
     roleName: role.name,
     score,
     resumeFile: file.name,

@@ -1,9 +1,9 @@
 import * as pdfjs from "pdfjs-dist";
 
-// Worker configured once at module load — avoids repeated CDN negotiation
-const PDFJS_VERSION = pdfjs.version || "4.4.168";
-pdfjs.GlobalWorkerOptions.workerSrc =
-  `https://unpkg.com/pdfjs-dist@${PDFJS_VERSION}/build/pdf.worker.min.mjs`;
+// Configure worker using local static asset to prevent CDN/version mismatches and CORS issues
+if (typeof window !== "undefined") {
+  pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+}
 
 export interface PDFTextLine {
   text: string;
@@ -121,23 +121,12 @@ export async function extractTextAndMetaFromPDF(file: File): Promise<PDFParsedRe
     const arrayBuffer = await file.arrayBuffer();
     const loadingTask = pdfjs.getDocument({
       data: arrayBuffer,
-      useWorkerFetch: true,
       isEvalSupported: false,
     });
     pdf = await loadingTask.promise;
 
     const pagesToRead = Math.min(4, pdf.numPages);
     const pageNumbers = Array.from({ length: pagesToRead }, (_, i) => i + 1);
-
-    // 1. Render Page 1 to Canvas and trigger OCR for Hybrid validation on client-side
-    let imageBlob: Blob | undefined;
-    try {
-      const page1 = await pdf.getPage(1);
-      imageBlob = await renderPageToImageBlob(page1);
-      console.log("[HireDesk PDF] Page 1 successfully rendered to high-resolution Canvas Blob.");
-    } catch (renderErr) {
-      console.error("[HireDesk PDF] Canvas render failed:", renderErr);
-    }
 
     // 2. Perform Layout-Aware Geometric Text Reconstruction across all pages
     const pageTexts = await Promise.all(
@@ -288,8 +277,20 @@ export async function extractTextAndMetaFromPDF(file: File): Promise<PDFParsedRe
           firstPageLines = lines;
         }
 
+        // Extract hyperlink annotations if present (LinkedIn, GitHub, LeetCode, etc.)
+        let linkLine = "";
+        try {
+          const annotations = await page.getAnnotations();
+          const urls = annotations.map((a: any) => a.url).filter(Boolean);
+          if (urls.length > 0) {
+            linkLine = "\nLinks: " + urls.join(" ");
+          }
+        } catch {
+          // Ignore annotation error
+        }
+
         page.cleanup();
-        return lines.map(l => l.text).filter(Boolean).join("\n");
+        return lines.map(l => l.text).filter(Boolean).join("\n") + linkLine;
       })
     );
 
@@ -298,24 +299,46 @@ export async function extractTextAndMetaFromPDF(file: File): Promise<PDFParsedRe
     // Release native PDF resources
     try { await pdf.destroy(); pdf = undefined; } catch {}
 
-    // 3. Fire Hybrid Canvas OCR in parallel or as validation layer
-    if (imageBlob) {
+    // 3. If native layout extraction is sparse (< 80 chars), try OCR and server fallback
+    if (fullText.length < 80) {
       try {
-        ocrText = await performOCROnImageBlob(imageBlob);
-        
-        // If native layout text extraction is extremely sparse, merge OCR output
-        if (fullText.length < 80 && ocrText.length > 50) {
-          ocrUsed = true;
-          fullText = ocrText;
+        console.log("[HireDesk PDF] Sparse text, attempting /api/parse-resume fallback...");
+        const formData = new FormData();
+        formData.append("file", file);
+        const resp = await fetch("/api/parse-resume", { method: "POST", body: formData });
+        if (resp.ok) {
+          const srvData = await resp.json();
+          if (srvData.text && srvData.text.length > fullText.length) {
+            fullText = srvData.text;
+            if (firstPageLines.length === 0 && Array.isArray(srvData.firstPageLines)) {
+              firstPageLines = srvData.firstPageLines;
+            }
+          }
         }
-      } catch (ocrErr) {
-        console.error("[HireDesk PDF] Hybrid OCR processing failed:", ocrErr);
+      } catch (srvErr) {
+        console.warn("[HireDesk PDF] Server parse fallback failed:", srvErr);
       }
     }
 
   } catch (error) {
-    console.error("[HireDesk PDF] Native PDF.js processing failed completely.", error);
-    fullText = file.name.replace(/[_\-\.]/g, " ");
+    console.error("[HireDesk PDF] Native PDF.js processing failed, attempting server parse fallback...", error);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const resp = await fetch("/api/parse-resume", { method: "POST", body: formData });
+      if (resp.ok) {
+        const srvData = await resp.json();
+        if (srvData.text) {
+          fullText = srvData.text;
+          firstPageLines = srvData.firstPageLines || [];
+        }
+      }
+    } catch (srvErr) {
+      console.error("[HireDesk PDF] Server parse fallback also failed:", srvErr);
+    }
+    if (!fullText.trim()) {
+      fullText = file.name.replace(/[_\-\.]/g, " ");
+    }
   } finally {
     if (pdf) {
       try { await pdf.destroy(); } catch {}

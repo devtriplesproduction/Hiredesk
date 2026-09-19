@@ -46,7 +46,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-[#020202]">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-[var(--card-bg)]">
       
       {/* Premium Micro-Animations & Dynamic Glowing Layouts */}
       <style jsx global>{`
@@ -130,12 +130,12 @@ export default function LoginPage() {
         {/* Company Header Block: Logo at Left Side of the Name */}
         <div className="flex flex-col items-center gap-1.5 anim-stagger-logo">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 flex items-center justify-center bg-black transition-transform hover:rotate-12 duration-300">
+            <div className="w-10 h-10 rounded-xl overflow-hidden border border-border flex items-center justify-center bg-bg transition-transform hover:rotate-12 duration-300">
               <img src="/logo.png" alt="HireDesk Logo" className="w-full h-full object-cover" />
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white leading-none">HireDesk</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight text-text leading-none">HireDesk</h1>
           </div>
-          <p className="text-[16px] text-zinc-500 font-bold uppercase tracking-widest mt-1">
+          <p className="text-[16px] text-text-3 font-bold uppercase tracking-widest mt-1">
             Triple S Production · Private Gateway
           </p>
         </div>
@@ -150,8 +150,8 @@ export default function LoginPage() {
           <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/15 to-transparent" />
           
           <div className="mb-6 anim-stagger-header">
-            <h2 className="text-lg font-bold text-zinc-200">Welcome Back, Admin</h2>
-            <p className="text-xs text-zinc-500 mt-0.5 font-medium leading-relaxed">
+            <h2 className="text-lg font-bold text-text">Welcome Back, Admin</h2>
+            <p className="text-xs text-text-3 mt-0.5 font-medium leading-relaxed">
               Verify your staffing node credentials securely via Supabase Auth.
             </p>
           </div>
@@ -159,7 +159,7 @@ export default function LoginPage() {
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             {/* Work Email Field */}
             <div className="anim-stagger-email">
-              <label className="block text-[16px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+              <label className="block text-[16px] font-bold text-text-3 uppercase tracking-widest mb-2">
                 Work Email Address
               </label>
               <input
@@ -168,13 +168,13 @@ export default function LoginPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder="admin@triplesproduction.com"
-                className="w-full rounded-xl text-sm px-4 py-3.5 outline-none transition-all placeholder:text-zinc-700 bg-zinc-950/40 border border-white/5 text-white focus:border-white/20 focus:bg-zinc-900/40"
+                className="w-full rounded-xl text-sm px-4 py-3.5 outline-none transition-all placeholder:text-zinc-700 bg-[var(--card-bg)]/40 border border-border text-text focus:border-border-2 focus:bg-[var(--card-bg)]/40"
               />
             </div>
 
             {/* Password Field */}
             <div className="anim-stagger-pass">
-              <label className="block text-[16px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+              <label className="block text-[16px] font-bold text-text-3 uppercase tracking-widest mb-2">
                 Security Password
               </label>
               <div className="relative">
@@ -184,12 +184,12 @@ export default function LoginPage() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-xl text-sm pl-4 pr-12 py-3.5 outline-none transition-all placeholder:text-zinc-700 bg-zinc-950/40 border border-white/5 text-white focus:border-white/20 focus:bg-zinc-900/40"
+                  className="w-full rounded-xl text-sm pl-4 pr-12 py-3.5 outline-none transition-all placeholder:text-zinc-700 bg-[var(--card-bg)]/40 border border-border text-text focus:border-border-2 focus:bg-[var(--card-bg)]/40"
                 />
                 <Btn
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors p-1"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-3 hover:text-text-2 transition-colors p-1"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -204,27 +204,27 @@ export default function LoginPage() {
                 </div>
                 
                 {/* Premium Troubleshooting Helper panel */}
-                <div className="rounded-xl border border-white/5 bg-zinc-950/60 p-4 text-[15px] leading-relaxed text-zinc-400 flex flex-col gap-3.5 max-h-[220px] overflow-y-auto">
-                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                    <span className="font-bold text-zinc-200 uppercase tracking-widest text-[9px]">Supabase Gateway Assistance</span>
+                <div className="rounded-xl border border-border bg-[var(--card-bg)]/60 p-4 text-[15px] leading-relaxed text-text-2 flex flex-col gap-3.5 max-h-[220px] overflow-y-auto">
+                  <div className="flex items-center justify-between border-b border-border pb-2">
+                    <span className="font-bold text-text uppercase tracking-widest text-[9px]">Supabase Gateway Assistance</span>
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                   </div>
                   
                   <div className="flex flex-col gap-2.5 text-left">
                     <div>
-                      <span className="text-white font-semibold block mb-0.5">Option A: Disable Email Confirmation (Simplest)</span>
-                      <p className="text-zinc-500">
-                        In your Supabase Dashboard, go to <span className="text-zinc-300">Authentication → Providers → Email</span> and turn OFF <span className="text-zinc-300">"Confirm email"</span>. Then retry logging in!
+                      <span className="text-text font-semibold block mb-0.5">Option A: Disable Email Confirmation (Simplest)</span>
+                      <p className="text-text-3">
+                        In your Supabase Dashboard, go to <span className="text-text-2">Authentication → Providers → Email</span> and turn OFF <span className="text-text-2">"Confirm email"</span>. Then retry logging in!
                       </p>
                     </div>
 
                     <div>
-                      <span className="text-white font-semibold block mb-0.5">Option B: Run Direct SQL Seed (Instant)</span>
-                      <p className="text-zinc-500 mb-1.5">
-                        Paste this query into your <span className="text-zinc-300">Supabase SQL Editor</span> and click <span className="text-zinc-300">Run</span> to instantly seed & confirm the admin user:
+                      <span className="text-text font-semibold block mb-0.5">Option B: Run Direct SQL Seed (Instant)</span>
+                      <p className="text-text-3 mb-1.5">
+                        Paste this query into your <span className="text-text-2">Supabase SQL Editor</span> and click <span className="text-text-2">Run</span> to instantly seed & confirm the admin user:
                       </p>
                       <div className="relative">
-                        <pre className="p-2 rounded bg-black text-[9px] font-mono text-zinc-400 overflow-x-auto max-h-[100px] select-all border border-white/5">
+                        <pre className="p-2 rounded bg-bg text-[9px] font-mono text-text-2 overflow-x-auto max-h-[100px] select-all border border-border">
                           {`CREATE EXTENSION IF NOT EXISTS pgcrypto;
 DO $$
 DECLARE
@@ -297,7 +297,7 @@ BEGIN
 END $$;`);
                             alert("SQL query copied to clipboard!");
                           }}
-                          className="absolute right-2 top-2 px-1.5 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-[8px] text-zinc-300 font-bold uppercase transition-colors"
+                          className="absolute right-2 top-2 px-1.5 py-0.5 rounded bg-[var(--card-bg)] hover:bg-zinc-700 text-[8px] text-text-2 font-bold uppercase transition-colors"
                         >
                           Copy
                         </Btn>
@@ -305,9 +305,9 @@ END $$;`);
                     </div>
 
                     <div>
-                      <span className="text-white font-semibold block mb-0.5">Option C: Add Service Role Key</span>
-                      <p className="text-zinc-500">
-                        Add <span className="font-mono text-zinc-300">SUPABASE_SERVICE_ROLE_KEY</span> to <span className="font-mono text-zinc-300">.env.local</span> to allow automatic admin provisioning.
+                      <span className="text-text font-semibold block mb-0.5">Option C: Add Service Role Key</span>
+                      <p className="text-text-3">
+                        Add <span className="font-mono text-text-2">SUPABASE_SERVICE_ROLE_KEY</span> to <span className="font-mono text-text-2">.env.local</span> to allow automatic admin provisioning.
                       </p>
                     </div>
                   </div>
@@ -320,7 +320,7 @@ END $$;`);
               <Btn
                 type="submit"
                 disabled={loading}
-                className="w-full bg-white hover:bg-zinc-200 text-black font-bold text-sm py-3.5 rounded-xl transition-all duration-300 mt-2 disabled:opacity-60 flex items-center justify-center gap-2 shadow-xl active:scale-[0.98]"
+                className="w-full bg-white hover:bg-zinc-200 text-bg2 font-bold text-sm py-3.5 rounded-xl transition-all duration-300 mt-2 disabled:opacity-60 flex items-center justify-center gap-2 shadow-xl active:scale-[0.98]"
               >
                 {loading ? (
                   <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />

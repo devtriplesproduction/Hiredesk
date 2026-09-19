@@ -846,18 +846,18 @@ export default function ContractEditor({ contract, onBack }: Props) {
       `}} />
 
       {/* Back + title */}
-      <div className="relative z-20 flex items-center justify-between gap-4 pb-2 border-b border-white/[0.06] bg-[#0A0B0E]">
+      <div className="relative z-20 flex items-center justify-between gap-4 pb-2 border-b border-white/[0.06] bg-[var(--card-bg)]">
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer select-none outline-none flex-shrink-0 bg-[#14161A] hover:bg-[#1D2128] active:bg-[#16181F] text-[var(--text)] hover:text-[var(--text)] active:text-white border-[var(--border-2)] hover:border-[#00D9FF]/60 focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer select-none outline-none flex-shrink-0 bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] active:bg-[var(--card-bg)] text-[var(--text)] hover:text-[var(--text)] active:text-white border-[var(--border-2)] hover:border-[#00D9FF]/60 focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
         >
           <span className="text-sm leading-none text-[#00D9FF]">←</span>
           <span>BACK</span>
         </button>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#121418] border border-[var(--border-2)]">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--card-bg)] border border-[var(--border-2)]">
           <span className="w-2 h-2 rounded-full bg-[#00D9FF] shadow-[0_0_8px_rgba(0,217,255,0.6)]" />
-          <span className="text-xs text-[#8E95A2] font-semibold uppercase tracking-wider">Template:</span>
+          <span className="text-xs text-[var(--text)] font-semibold uppercase tracking-wider">Template:</span>
           <span className="text-sm font-bold tracking-tight text-white">{contract.name}</span>
         </div>
       </div>
@@ -880,13 +880,13 @@ export default function ContractEditor({ contract, onBack }: Props) {
                     Inherited Global
                   </span>
                 ) : (
-                  <span className="text-[16px] text-[#8E95A2] font-semibold tracking-normal">
+                  <span className="text-[16px] text-[var(--text)] font-semibold tracking-normal">
                     Default
                   </span>
                 )}
               </div>
               {resolvedAssets.logoUrl ? (
-                <div className="relative rounded-xl overflow-hidden border border-[#2A2F37] bg-white p-2.5 shadow-sm">
+                <div className="relative rounded-xl overflow-hidden border border-[var(--border-2)] bg-white p-2.5 shadow-sm">
                   <img src={resolvedAssets.logoUrl} alt="Logo" className="w-full h-14 object-contain" />
                   {resolvedAssets.isSpecificLogo && (
                     <button
@@ -901,7 +901,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                   <button
                     type="button"
                     onClick={() => logoRef.current?.click()}
-                    className="mt-2 w-full py-1.5 rounded-lg text-[15px] font-semibold text-[var(--text-3)] hover:text-[var(--text)] bg-[#15171B] hover:bg-[#1f2229] border border-[#2A2F37] transition-all text-center cursor-pointer"
+                    className="mt-2 w-full py-1.5 rounded-lg text-[15px] font-semibold text-[var(--text-3)] hover:text-[var(--text)] bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] border border-[var(--border-2)] transition-all text-center cursor-pointer"
                   >
                     {resolvedAssets.isSpecificLogo ? "Change Document Logo" : "Upload Custom for this Doc"}
                   </button>
@@ -910,7 +910,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                 <button
                   type="button"
                   onClick={() => logoRef.current?.click()}
-                  className="w-full py-3 rounded-xl text-xs font-semibold text-[var(--text-3)] hover:text-[var(--text)] transition-all text-center border-2 border-dashed border-[#2B3038] hover:border-[#00D9FF]/60 bg-[#15171B] hover:bg-[#1A1D23] cursor-pointer"
+                  className="w-full py-3 rounded-xl text-xs font-semibold text-[var(--text-3)] hover:text-[var(--text)] transition-all text-center border-2 border-dashed border-[var(--border-2)] hover:border-[#00D9FF]/60 bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] cursor-pointer"
                 >
                   + UPLOAD LOGO
                 </button>
@@ -937,13 +937,13 @@ export default function ContractEditor({ contract, onBack }: Props) {
                     Inherited Global
                   </span>
                 ) : (
-                  <span className="text-[16px] text-[#8E95A2] font-semibold tracking-normal">
+                  <span className="text-[16px] text-[var(--text)] font-semibold tracking-normal">
                     Empty
                   </span>
                 )}
               </div>
               {resolvedAssets.signUrl ? (
-                <div className="relative rounded-xl overflow-hidden border border-[#2A2F37] bg-white p-2.5 shadow-sm">
+                <div className="relative rounded-xl overflow-hidden border border-[var(--border-2)] bg-white p-2.5 shadow-sm">
                   <img src={resolvedAssets.signUrl} alt="Sign" className="w-full h-12 object-contain" />
                   {resolvedAssets.isSpecificSign && (
                     <button
@@ -958,7 +958,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                   <button
                     type="button"
                     onClick={() => signRef.current?.click()}
-                    className="mt-2 w-full py-1.5 rounded-lg text-[15px] font-semibold text-[var(--text-3)] hover:text-[var(--text)] bg-[#15171B] hover:bg-[#1f2229] border border-[#2A2F37] transition-all text-center cursor-pointer"
+                    className="mt-2 w-full py-1.5 rounded-lg text-[15px] font-semibold text-[var(--text-3)] hover:text-[var(--text)] bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] border border-[var(--border-2)] transition-all text-center cursor-pointer"
                   >
                     {resolvedAssets.isSpecificSign ? "Change Document Sign" : "Upload Custom for this Doc"}
                   </button>
@@ -967,7 +967,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                 <button
                   type="button"
                   onClick={() => signRef.current?.click()}
-                  className="w-full py-3 rounded-xl text-xs font-semibold text-[var(--text-3)] hover:text-[var(--text)] transition-all text-center border-2 border-dashed border-[#2B3038] hover:border-[#00D9FF]/60 bg-[#15171B] hover:bg-[#1A1D23] cursor-pointer"
+                  className="w-full py-3 rounded-xl text-xs font-semibold text-[var(--text-3)] hover:text-[var(--text)] transition-all text-center border-2 border-dashed border-[var(--border-2)] hover:border-[#00D9FF]/60 bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] cursor-pointer"
                 >
                   + UPLOAD SIGNATURE
                 </button>
@@ -993,17 +993,17 @@ export default function ContractEditor({ contract, onBack }: Props) {
                     type="button"
                     onMouseDown={e => e.preventDefault()}
                     onClick={() => insertField(f)}
-                    className="text-left text-[11.5px] font-mono px-3 py-2 rounded-lg bg-[var(--card-bg)] hover:bg-[#1E222A] text-[#A6ADB8] hover:text-[#00D9FF] border border-[#262A32] hover:border-[#00D9FF]/40 transition-all duration-150 flex items-center justify-between group cursor-pointer"
+                    className="text-left text-[11.5px] font-mono px-3 py-2 rounded-lg bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] text-[var(--text)] hover:text-[#00D9FF] border border-[var(--border-2)] hover:border-[#00D9FF]/40 transition-all duration-150 flex items-center justify-between group cursor-pointer"
                   >
                     <span>{f}</span>
-                    <span className="text-[16px] text-[#636A75] group-hover:text-[#00D9FF] transition-colors">+</span>
+                    <span className="text-[16px] text-[var(--text-3)] group-hover:text-[#00D9FF] transition-colors">+</span>
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Action buttons (Print / PDF & Save) */}
-            <div className="pt-3 border-t border-[#22262C] flex flex-col gap-2.5">
+            <div className="pt-3 border-t border-[var(--border-2)] flex flex-col gap-2.5">
               <button
                 type="button"
                 onClick={handlePrint}
@@ -1017,7 +1017,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                 onClick={handleSave}
                 className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider border transition-all text-center flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] ${isSaved
                     ? "bg-emerald-600/20 text-emerald-400 border-emerald-500/50"
-                    : "bg-[#17191D] hover:bg-[#20242C] text-[var(--text)] hover:text-[var(--text)] border-[#2A2F37] hover:border-[#00D9FF]"
+                    : "bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] text-[var(--text)] hover:text-[var(--text)] border-[var(--border-2)] hover:border-[#00D9FF]"
                   }`}
               >
                 <span>{isSaved ? "✅" : "💾"}</span>
@@ -1072,18 +1072,18 @@ export default function ContractEditor({ contract, onBack }: Props) {
           </div>
 
           {/* Paper container with chrome window bar */}
-          <div className="rounded-2xl overflow-hidden shadow-2xl flex flex-col border border-[#232730] bg-[#0A0B0E]">
+          <div className="rounded-2xl overflow-hidden shadow-2xl flex flex-col border border-[var(--border-2)] bg-[var(--card-bg)]">
             {/* Paper chrome bar */}
-            <div className="px-4 py-3 flex items-center justify-between bg-[#111317] border-b border-[#1F232B]">
+            <div className="px-4 py-3 flex items-center justify-between bg-[var(--card-bg)] border-b border-[var(--border-2)]">
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#EF4444]/80" />
-                <div className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]/80" />
-                <div className="w-2.5 h-2.5 rounded-full bg-[#10B981]/80" />
-                <span className="ml-2 text-xs font-medium text-[#A0A6B2]">
+                <div className="w-2.5 h-2.5 rounded-full bg-[var(--card-bg)]/80" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[var(--card-bg)]/80" />
+                <span className="ml-2 text-xs font-medium text-[var(--text)]">
                   A4 · 210mm × 297mm · {contract.name}
                 </span>
               </div>
-              <div className="text-xs font-mono text-[var(--text-3)] bg-[#0B0D10] px-2.5 py-0.5 rounded-md border border-[#1F232B]">
+              <div className="text-xs font-mono text-[var(--text-3)] bg-[var(--card-bg)] px-2.5 py-0.5 rounded-md border border-[var(--border-2)]">
                 {Math.round(zoom * 100)}% scale
               </div>
             </div>

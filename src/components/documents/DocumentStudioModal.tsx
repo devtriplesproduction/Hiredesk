@@ -489,7 +489,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
         style={{ background: "#0D0E12", borderColor: "#24272D" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 px-6 border-b border-[#24272D] bg-[#111215] shrink-0">
+        <div className="flex items-center justify-between p-4 px-6 border-b border-[var(--border-2)] bg-[var(--card-bg)] shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/25 flex items-center justify-center text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
               <FileText className="w-5 h-5" />
@@ -505,7 +505,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
               </div>
               <p className="text-xs text-[var(--text-2)] mt-0.5">
                 Generating for <span className="font-semibold text-white">{candidate.name}</span>
-                {candidate.roleName && <span className="text-[#606060]"> · {candidate.roleName}</span>}
+                {candidate.roleName && <span className="text-[var(--text-3)]"> · {candidate.roleName}</span>}
               </p>
             </div>
           </div>
@@ -523,10 +523,10 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
         {/* Main Content: Sidebar + Workspace */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left Form Panel */}
-          <div className="w-[340px] sm:w-[380px] bg-[#111215] border-r border-[#24272D] flex flex-col z-10 overflow-y-auto shrink-0">
+          <div className="w-[340px] sm:w-[380px] bg-[var(--card-bg)] border-r border-[var(--border-2)] flex flex-col z-10 overflow-y-auto shrink-0">
             <div className="p-4 sm:p-5 flex flex-col gap-5">
               {/* Document Type Selector */}
-              <div className="p-3.5 rounded-xl bg-[#16171B] border border-[#24272D] flex flex-col gap-2 relative z-30">
+              <div className="p-3.5 rounded-xl bg-[var(--card-bg)] border border-[var(--border-2)] flex flex-col gap-2 relative z-30">
                 <label className="text-[15px] font-semibold uppercase tracking-wider text-[#A78BFA] flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5" />
                   <span>Document Template</span>
@@ -546,14 +546,14 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
                 {activeGroups.map((group: string) => (
                   <div
                     key={group}
-                    className="p-3.5 rounded-xl bg-[#16171B] border border-[#24272D] flex flex-col gap-3"
+                    className="p-3.5 rounded-xl bg-[var(--card-bg)] border border-[var(--border-2)] flex flex-col gap-3"
                   >
                     <div className="flex items-center justify-between pb-1 border-b border-white/[0.06]">
                       <h3 className="text-xs font-bold text-[var(--text)] uppercase tracking-wider flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA]"></span>
                         <span>{group} Details</span>
                       </h3>
-                      <span className="text-[16px] font-mono text-[#606060]">
+                      <span className="text-[16px] font-mono text-[var(--text-3)]">
                         {FIELD_GROUPS[group]?.length || 0} fields
                       </span>
                     </div>
@@ -587,7 +587,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
                               value={(data as any)[field.key] || ""}
                               onChange={handleInputChange}
                               placeholder={`Enter ${field.label.toLowerCase()}...`}
-                              className="w-full bg-[#0E0F12] border border-[#24272D] hover:border-[#32363E] focus:border-[#A78BFA]/70 text-white text-xs rounded-lg px-3 py-2 outline-none transition-all placeholder:text-[#555] focus:bg-[#121317] focus:ring-1 focus:ring-[#A78BFA]/30"
+                              className="w-full bg-[var(--card-bg)] border border-[var(--border-2)] hover:border-[var(--border-3)] focus:border-[#A78BFA]/70 text-white text-xs rounded-lg px-3 py-2 outline-none transition-all placeholder:text-[var(--text-3)] focus:bg-[var(--card-bg)] focus:ring-1 focus:ring-[#A78BFA]/30"
                             />
                           </div>
                         );
@@ -608,16 +608,16 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
             }}
           >
             {/* Top Toolbar: Mode Controls + Status + Direct Editing Pill */}
-            <div className="sticky top-0 z-30 w-full max-w-[850px] flex flex-col sm:flex-row items-center justify-between gap-3 p-3 px-4 rounded-2xl bg-[#13151A]/95 border border-white/[0.12] backdrop-blur-xl shadow-2xl">
+            <div className="sticky top-0 z-30 w-full max-w-[850px] flex flex-col sm:flex-row items-center justify-between gap-3 p-3 px-4 rounded-2xl bg-[var(--card-bg)]/95 border border-white/[0.12] backdrop-blur-xl shadow-2xl">
               {/* Left: Document info */}
               <div className="flex items-center gap-2 text-xs">
                 <div className="flex items-center gap-1.5 font-bold text-white">
                   <FileText className="w-3.5 h-3.5 text-[#A78BFA]" />
                   <span>{DOC_OPTIONS.find((o) => o.value === docType)?.label}</span>
                 </div>
-                <span className="text-[#555]">·</span>
-                <span className="font-mono text-[16px] text-[#70747D]">A4 · 210mm × 297mm</span>
-                <span className="text-[#555]">·</span>
+                <span className="text-[var(--text-3)]">·</span>
+                <span className="font-mono text-[16px] text-[var(--text-3)]">A4 · 210mm × 297mm</span>
+                <span className="text-[var(--text-3)]">·</span>
                 <span className="text-[15px] text-emerald-400 font-semibold flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   Live Preview
@@ -638,7 +638,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
                   </button>
                 )}
 
-                <div className="flex items-center bg-[#0C0D10] p-1 rounded-xl border border-white/[0.08] shadow-inner">
+                <div className="flex items-center bg-[var(--card-bg)] p-1 rounded-xl border border-white/[0.08] shadow-inner">
                   <button
                     type="button"
                     onClick={() => handleModeToggle("temporary")}
@@ -718,13 +718,13 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 px-6 border-t border-[#24272D] bg-[#111215] flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
+        <div className="p-4 px-6 border-t border-[var(--border-2)] bg-[var(--card-bg)] flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
           <div className="flex items-center gap-2 text-xs text-[var(--text-2)]">
-            <span className="text-[#606060]">Active Template:</span>
+            <span className="text-[var(--text-3)]">Active Template:</span>
             <span className="font-semibold text-white px-2.5 py-1 rounded-md bg-white/[0.05] border border-white/[0.08]">
               {DOC_OPTIONS.find((o) => o.value === docType)?.label}
             </span>
-            <span className="text-[#606060] ml-2">Mode:</span>
+            <span className="text-[var(--text-3)] ml-2">Mode:</span>
             <span
               className={`font-semibold px-2 py-0.5 rounded-md border text-[15px] ${
                 editMode === "temporary"

@@ -185,7 +185,7 @@ export function ChecklistClient({
   const displayDepartment = documentData.department || "Development";
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col items-center relative selection:bg-white/15 selection:text-white">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col items-center relative selection:bg-white/15 selection:text-text">
       {/* Embedded print stylesheet */}
       <style jsx global>{`
         @media print {
@@ -221,7 +221,7 @@ export function ChecklistClient({
             <img src="/logo.png" alt="HireDesk Logo" className="w-full h-full object-cover" />
           </div>
           <div>
-            <div className="text-sm sm:text-base font-bold tracking-tight leading-tight text-white">
+            <div className="text-sm sm:text-base font-bold tracking-tight leading-tight text-text">
               HireDesk
             </div>
             <div className="text-[16px] sm:text-[15px] text-[var(--text-3)] font-medium leading-tight">
@@ -233,7 +233,7 @@ export function ChecklistClient({
         <div className="flex items-center gap-3">
           <Link
             href={`/onboarding/${candidateId}`}
-            className="inline-flex items-center gap-1.5 font-semibold text-xs sm:text-sm px-3.5 py-2 rounded-xl bg-white text-black hover:bg-white/90 transition-all border border-white shadow-sm"
+            className="inline-flex items-center gap-1.5 font-semibold text-xs sm:text-sm px-3.5 py-2 rounded-xl bg-white text-bg2 hover:bg-white/90 transition-all border border-white shadow-sm"
           >
             <UploadCloud size={15} />
             <span>Upload Documents</span>
@@ -244,11 +244,11 @@ export function ChecklistClient({
       <div className="max-w-5xl w-full flex flex-col gap-6 px-4 py-8 md:py-10">
         {/* Breadcrumb Bar */}
         <div className="flex items-center gap-2 text-xs font-medium text-[var(--text-3)] tracking-wider uppercase px-1 print-hide">
-          <Link href={`/onboarding/${candidateId}`} className="hover:text-white transition-colors">
+          <Link href={`/onboarding/${candidateId}`} className="hover:text-text transition-colors">
             HireDesk
           </Link>
           <ChevronRight size={13} className="text-[var(--text-3)]" />
-          <Link href={`/onboarding/${candidateId}`} className="hover:text-white transition-colors">
+          <Link href={`/onboarding/${candidateId}`} className="hover:text-text transition-colors">
             Onboarding
           </Link>
           <ChevronRight size={13} className="text-[var(--text-3)]" />
@@ -264,14 +264,14 @@ export function ChecklistClient({
           </div>
 
           {/* Main Title */}
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text mb-2">
             Document Verification Checklist
           </h1>
 
           {/* Candidate Subtitle */}
           <p className="max-w-2xl text-xs sm:text-sm text-[var(--text-2)] leading-relaxed mb-5">
             Official verification checklist for{" "}
-            <span className="font-semibold text-white">{candidate.name}</span>. Please review the
+            <span className="font-semibold text-text">{candidate.name}</span>. Please review the
             required pre-employment documents and submit authentic copies prior to your joining date.
           </p>
 
@@ -310,7 +310,7 @@ export function ChecklistClient({
                 <button
                   onClick={() => setZoomScale((prev) => Math.max(prev - 10, 60))}
                   title="Zoom out"
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-white hover:bg-[var(--glass-2)] transition-colors"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-text hover:bg-[var(--glass-2)] transition-colors"
                 >
                   <ZoomOut size={14} />
                 </button>
@@ -320,14 +320,14 @@ export function ChecklistClient({
                 <button
                   onClick={() => setZoomScale((prev) => Math.min(prev + 10, 130))}
                   title="Zoom in"
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-white hover:bg-[var(--glass-2)] transition-colors"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-text hover:bg-[var(--glass-2)] transition-colors"
                 >
                   <ZoomIn size={14} />
                 </button>
                 <button
                   onClick={() => setZoomScale(100)}
                   title="Reset zoom"
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-white hover:bg-[var(--glass-2)] transition-colors ml-0.5"
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-text hover:bg-[var(--glass-2)] transition-colors ml-0.5"
                 >
                   <RotateCcw size={12} />
                 </button>
@@ -338,12 +338,12 @@ export function ChecklistClient({
                 onClick={handleDownloadPdf}
                 disabled={downloading}
                 title="Download PDF"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--glass-2)] hover:bg-[var(--glass-3)] text-xs font-semibold text-white border border-[var(--border-2)] transition-all disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--glass-2)] hover:bg-[var(--glass-3)] text-xs font-semibold text-text border border-[var(--border-2)] transition-all disabled:opacity-50"
               >
                 {downloading ? (
-                  <Loader2 size={13} className="animate-spin text-white" />
+                  <Loader2 size={13} className="animate-spin text-text" />
                 ) : (
-                  <Download size={13} className="text-white" />
+                  <Download size={13} className="text-text" />
                 )}
                 <span className="hidden sm:inline">Download</span>
               </button>
@@ -361,7 +361,7 @@ export function ChecklistClient({
           </div>
 
           {/* Viewport Area */}
-          <div className="w-full bg-[#0c0c0c] print:bg-white">
+          <div className="w-full bg-[var(--card-bg)] print:bg-white">
             <div
               ref={previewRef}
               className="w-full flex justify-center overflow-x-auto p-4 sm:p-8 md:p-12 custom-scrollbar print:p-0"

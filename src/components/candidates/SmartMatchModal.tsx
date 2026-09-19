@@ -113,29 +113,29 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
     <Modal
       open={open}
       onClose={onClose}
-      className="max-w-[1100px] w-full max-h-[92vh] md:h-[86vh] flex flex-col p-0 overflow-hidden bg-[#0e1013] border-[#22272e] shadow-2xl rounded-2xl"
+      className="max-w-[1200px] w-full max-h-[95vh] md:h-[90vh] flex flex-col p-0 overflow-hidden bg-[var(--card-bg)] border-[var(--border-2)] shadow-2xl rounded-2xl"
     >
       {/* Top Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f242b] bg-[var(--table-row-hover)]/90 backdrop-blur-md flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-2)] bg-[var(--table-row-hover)]/90 backdrop-blur-md flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-[#00D9FF]/10 border border-[#00D9FF]/30 flex items-center justify-center text-[#00D9FF] text-sm shadow-[0_0_12px_rgba(0,217,255,0.15)]">
             ✨
           </div>
           <div>
-            <div className="text-[16px] font-bold tracking-tight text-white flex items-center gap-2">
+            <div className="text-[16px] font-bold tracking-tight text-text flex items-center gap-2">
               <span>Requirements Smart Matcher</span>
-              <span className="text-[16px] font-semibold uppercase tracking-wider text-[#00D9FF] bg-[#00D9FF]/10 border border-[#00D9FF]/25 px-2 py-0.5 rounded-md">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#00D9FF] bg-[#00D9FF]/10 border border-[#00D9FF]/25 px-2 py-0.5 rounded-md">
                 Live AI Match
               </span>
             </div>
-            <div className="text-[15px] text-[#78808d] mt-0.5">
+            <div className="text-[15px] text-[var(--text-3)] mt-0.5">
               Specify target criteria to benchmark and instantly score candidates across your pool
             </div>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-[var(--text)] hover:bg-white/[0.06] border border-transparent hover:border-[#2b3038] transition-all"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-[var(--text)] hover:bg-white/[0.06] border border-transparent hover:border-[var(--border-3)] transition-all"
           aria-label="Close"
         >
           ✕
@@ -145,14 +145,14 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
       {/* Main Grid: Left Panel (Requirements) & Right Panel (Candidate Matches) */}
       <div className="flex-1 grid grid-cols-1 md:grid-cols-12 min-h-0 divide-y md:divide-y-0 md:divide-x divide-[#1f242b] overflow-hidden">
         {/* Left Side: Filter Requirements */}
-        <div className="md:col-span-5 flex flex-col min-h-0 bg-[#0c0e11] overflow-hidden">
-          <div className="px-5 py-3 border-b border-[#1c2027] bg-[#111418]/60 flex items-center justify-between flex-shrink-0">
-            <span className="text-[15px] font-bold uppercase tracking-wider text-[#8b93a0]">
+        <div className="md:col-span-5 flex flex-col min-h-0 bg-[var(--card-bg)] overflow-hidden">
+          <div className="px-5 py-3 border-b border-[var(--border-2)] bg-[var(--card-bg)]/60 flex items-center justify-between flex-shrink-0">
+            <span className="text-[15px] font-bold uppercase tracking-wider text-[var(--text)]">
               Match Criteria
             </span>
             <button
               onClick={clearAll}
-              className="text-[15px] text-[#717885] hover:text-[#00D9FF] transition-colors font-medium"
+              className="text-[15px] text-[var(--text-3)] hover:text-[#00D9FF] transition-colors font-medium"
             >
               Reset All
             </button>
@@ -161,21 +161,21 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
           <div className="flex-1 overflow-y-auto p-5 space-y-4 pr-4">
             {/* Job Profile Role */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-[11.5px] font-semibold text-[#a6adb9]">Target Role</label>
+              <label className="text-[13px] font-semibold text-[var(--text)]">Target Role</label>
               <div className="relative">
                 <select
                   value={roleId}
                   onChange={e => handleRoleChange(e.target.value)}
-                  className="w-full bg-[#15181d] border border-[#262c35] hover:border-[#38414e] focus:border-[#00D9FF] rounded-xl text-white text-[12.5px] px-3.5 py-2.5 outline-none transition-colors appearance-none cursor-pointer"
+                  className="w-full bg-[var(--card-bg)] border border-[var(--border-2)] hover:border-[var(--border-3)] focus:border-[#00D9FF] rounded-xl text-text text-[14px] px-3.5 py-2.5 outline-none transition-colors appearance-none cursor-pointer"
                 >
                   <option value="all">Any / All Roles</option>
                   {DEFAULT_ROLES.map(r => (
-                    <option key={r.id} value={r.id} className="bg-[#15181d] text-white">
+                    <option key={r.id} value={r.id} className="bg-[var(--card-bg)] text-text">
                       {r.name}
                     </option>
                   ))}
                 </select>
-                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#6e7683] text-[16px]">
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-3)] text-[16px]">
                   ▼
                 </div>
               </div>
@@ -184,42 +184,42 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
             {/* Experience and Education row */}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11.5px] font-semibold text-[#a6adb9]">Experience</label>
+                <label className="text-[13px] font-semibold text-[var(--text)]">Experience</label>
                 <div className="relative">
                   <select
                     value={prefExp}
                     onChange={e => setPrefExp(e.target.value)}
-                    className="w-full bg-[#15181d] border border-[#262c35] hover:border-[#38414e] focus:border-[#00D9FF] rounded-xl text-white text-[16px] px-3 py-2 outline-none transition-colors appearance-none cursor-pointer"
+                    className="w-full bg-[var(--card-bg)] border border-[var(--border-2)] hover:border-[var(--border-3)] focus:border-[#00D9FF] rounded-xl text-text text-[16px] px-3 py-2 outline-none transition-colors appearance-none cursor-pointer"
                   >
                     <option value="all">Any Exp.</option>
                     {EXP_LEVELS.map(x => (
-                      <option key={x} value={x} className="bg-[#15181d] text-white">
+                      <option key={x} value={x} className="bg-[var(--card-bg)] text-text">
                         {x}
                       </option>
                     ))}
                   </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#6e7683] text-[16px]">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-3)] text-[16px]">
                     ▼
                   </div>
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-[11.5px] font-semibold text-[#a6adb9]">Education</label>
+                <label className="text-[13px] font-semibold text-[var(--text)]">Education</label>
                 <div className="relative">
                   <select
                     value={prefEdu}
                     onChange={e => setPrefEdu(e.target.value)}
-                    className="w-full bg-[#15181d] border border-[#262c35] hover:border-[#38414e] focus:border-[#00D9FF] rounded-xl text-white text-[16px] px-3 py-2 outline-none transition-colors appearance-none cursor-pointer"
+                    className="w-full bg-[var(--card-bg)] border border-[var(--border-2)] hover:border-[var(--border-3)] focus:border-[#00D9FF] rounded-xl text-text text-[16px] px-3 py-2 outline-none transition-colors appearance-none cursor-pointer"
                   >
                     <option value="all">Any Edu.</option>
                     {EDU.map(e => (
-                      <option key={e} value={e} className="bg-[#15181d] text-white">
+                      <option key={e} value={e} className="bg-[var(--card-bg)] text-text">
                         {e}
                       </option>
                     ))}
                   </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[#6e7683] text-[16px]">
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-3)] text-[16px]">
                     ▼
                   </div>
                 </div>
@@ -227,9 +227,9 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
             </div>
 
             {/* Overall Score threshold */}
-            <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-[#13161b] border border-[#20252d]">
+            <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-[var(--card-bg)] border border-[var(--border-2)]">
               <div className="flex justify-between items-center">
-                <span className="text-[11.5px] font-semibold text-[#a6adb9]">Min ATS Score</span>
+                <span className="text-[13px] font-semibold text-[var(--text)]">Min ATS Score</span>
                 <span className="font-mono text-[16px] text-[#00D9FF] bg-[#00D9FF]/10 border border-[#00D9FF]/25 px-2 py-0.5 rounded-md font-bold">
                   {minScore}+
                 </span>
@@ -240,9 +240,9 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                 max={100}
                 value={minScore}
                 onChange={e => setMinScore(Number(e.target.value))}
-                className="w-full h-1.5 bg-[#20262f] rounded-lg appearance-none cursor-pointer accent-[#00D9FF]"
+                className="w-full h-1.5 bg-[var(--card-bg)] rounded-lg appearance-none cursor-pointer accent-[#00D9FF]"
               />
-              <div className="flex justify-between text-[16px] text-[#636c78] font-mono">
+              <div className="flex justify-between text-[16px] text-[var(--text-3)] font-mono">
                 <span>0</span>
                 <span>50</span>
                 <span>100</span>
@@ -253,7 +253,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-1.5">
-                  <label className="text-[11.5px] font-semibold text-[#a6adb9]">Key Skills</label>
+                  <label className="text-[13px] font-semibold text-[var(--text)]">Key Skills</label>
                   {selectedSkills.size > 0 && (
                     <span className="text-[16px] font-mono px-1.5 py-0.2 rounded bg-[#00D9FF]/15 text-[#00D9FF] font-semibold">
                       {selectedSkills.size}
@@ -263,13 +263,13 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                 {selectedSkills.size > 0 && (
                   <button
                     onClick={() => setSelectedSkills(new Set())}
-                    className="text-[16px] text-[#717885] hover:text-[#00D9FF] uppercase tracking-wider font-medium"
+                    className="text-[16px] text-[var(--text-3)] hover:text-[#00D9FF] uppercase tracking-wider font-medium"
                   >
                     Clear Skills
                   </button>
                 )}
               </div>
-              <div className="p-3 rounded-xl border border-[#20252e] bg-[#12151a] max-h-[170px] overflow-y-auto">
+              <div className="p-3 rounded-xl border border-[var(--border-2)] bg-[var(--card-bg)] max-h-[170px] overflow-y-auto">
                 <div className="flex flex-wrap gap-1.5">
                   {availableSkills.map(skill => {
                     const active = selectedSkills.has(skill);
@@ -282,7 +282,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                           "text-[15px] font-medium px-2.5 py-1 rounded-lg border transition-all text-left flex items-center gap-1",
                           active
                             ? "bg-[#00D9FF]/15 text-[#00D9FF] border-[#00D9FF]/40 shadow-sm"
-                            : "bg-[#161a20] border-[#252a33] text-[#8e95a2] hover:text-[var(--text)] hover:border-[#373e4b]"
+                            : "bg-[var(--card-bg)] border-[var(--border-2)] text-[var(--text)] hover:text-[var(--text)] hover:border-[var(--border-3)]"
                         )}
                       >
                         {active && <span className="text-[16px]">✓</span>}
@@ -295,10 +295,10 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
             </div>
           </div>
 
-          <div className="p-4 border-t border-[#1c2027] bg-[#0c0e11] flex-shrink-0">
+          <div className="p-4 border-t border-[var(--border-2)] bg-[var(--card-bg)] flex-shrink-0">
             <button
               onClick={clearAll}
-              className="w-full py-2.5 rounded-xl border border-[#262c36] hover:border-[#38414e] bg-[#14171d] hover:bg-[#191d24] text-[#a6adb9] hover:text-[var(--text)] text-[16px] font-semibold transition-all"
+              className="w-full py-2.5 rounded-xl border border-[var(--border-2)] hover:border-[var(--border-3)] bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] text-[var(--text)] hover:text-[var(--text)] text-[16px] font-semibold transition-all"
             >
               Reset Requirements
             </button>
@@ -306,29 +306,29 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
         </div>
 
         {/* Right Side: Ranked Match Results */}
-        <div className="md:col-span-7 flex flex-col min-h-0 bg-[#090b0d] overflow-hidden">
-          <div className="px-6 py-3 border-b border-[#1c2027] bg-[#111418]/60 flex items-center justify-between flex-shrink-0">
+        <div className="md:col-span-7 flex flex-col min-h-0 bg-[var(--card-bg)] overflow-hidden">
+          <div className="px-6 py-3 border-b border-[var(--border-2)] bg-[var(--card-bg)]/60 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2">
-              <span className="text-[15px] font-bold uppercase tracking-wider text-[#8b93a0]">
+              <span className="text-[15px] font-bold uppercase tracking-wider text-[var(--text)]">
                 Ranked Matches
               </span>
-              <span className="font-mono text-[15px] bg-[#1a1f26] text-[#a6adb9] px-2 py-0.5 rounded-full font-medium">
+              <span className="font-mono text-[15px] bg-[var(--card-bg)] text-[var(--text)] px-2 py-0.5 rounded-full font-medium">
                 {matchedCandidates.length}
               </span>
             </div>
-            <span className="text-[15px] text-[#5e6673]">
+            <span className="text-[15px] text-[var(--text-3)]">
               Sorted by highest relevance
             </span>
           </div>
 
           <div className="flex-1 overflow-y-auto p-5 space-y-3 pr-4">
             {matchedCandidates.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center py-20 text-[#606774]">
-                <div className="w-12 h-12 rounded-2xl bg-[#14171c] border border-[#20252e] flex items-center justify-center text-xl mb-3 text-[#7f8897]">
+              <div className="h-full flex flex-col items-center justify-center text-center py-20 text-[var(--text-3)]">
+                <div className="w-12 h-12 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-2)] flex items-center justify-center text-xl mb-3 text-[var(--text)]">
                   🔍
                 </div>
-                <div className="text-[16px] font-semibold text-[#e1e4ea]">No candidates matched</div>
-                <div className="text-[16px] max-w-xs mt-1 text-[#6f7785]">
+                <div className="text-[16px] font-semibold text-[var(--text)]">No candidates matched</div>
+                <div className="text-[16px] max-w-xs mt-1 text-[var(--text-3)]">
                   Try loosening your ATS score threshold, role filter, or required skills criteria.
                 </div>
               </div>
@@ -352,13 +352,13 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                 return (
                   <div
                     key={c.id}
-                    className="p-4 rounded-xl border border-[#1f242d] bg-[#111419] hover:border-[#2d3440] hover:bg-[#14181e] transition-all flex flex-col gap-3 group"
+                    className="p-4 rounded-xl border border-[var(--border-2)] bg-[var(--card-bg)] hover:border-[var(--border-3)] hover:bg-[var(--table-row-hover)] transition-all flex flex-col gap-3 group"
                   >
                     {/* Header */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div
-                          className="font-bold text-[14.5px] cursor-pointer text-white group-hover:text-[#00D9FF] transition-colors truncate"
+                          className="font-bold text-[14.5px] cursor-pointer text-text group-hover:text-[#00D9FF] transition-colors truncate"
                           onClick={() => {
                             onViewCandidate(c);
                             onClose();
@@ -366,8 +366,8 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                         >
                           {c.name}
                         </div>
-                        <div className="text-[11.5px] text-[#78808d] mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                          <span className="text-[#a6adb9] font-medium">{c.roleName}</span>
+                        <div className="text-[13px] text-[var(--text-3)] mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <span className="text-[var(--text)] font-medium">{c.roleName}</span>
                           <span>•</span>
                           <span>{c.exp}</span>
                           <span>•</span>
@@ -394,7 +394,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                     </div>
 
                     {/* Progress Bar */}
-                    <div className="w-full h-1.5 rounded-full overflow-hidden bg-[#1a1f26]">
+                    <div className="w-full h-1.5 rounded-full overflow-hidden bg-[var(--card-bg)]">
                       <div
                         className={clsx("h-full rounded-full transition-all duration-500", barColor)}
                         style={{ width: `${matchScore}%` }}
@@ -402,17 +402,17 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                     </div>
 
                     {/* Criteria Pill Tags */}
-                    <div className="flex flex-wrap items-center gap-1.5 text-[10.5px] font-medium">
+                    <div className="flex flex-wrap items-center gap-1.5 text-[12px] font-medium">
                       {/* Role Match */}
                       <span
                         className={clsx(
                           "px-2 py-0.5 rounded-md border flex items-center gap-1",
                           c.roleId === roleId || roleId === "all"
                             ? "bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20"
-                            : "bg-[#20252e] text-[#636c78] border-[#2b313d]"
+                            : "bg-[var(--card-bg)] text-[var(--text-3)] border-[var(--border-2)]"
                         )}
                       >
-                        <span className="text-[9px]">
+                        <span className="text-[11px]">
                           {c.roleId === roleId || roleId === "all" ? "✓" : "✕"}
                         </span>
                         Role
@@ -424,10 +424,10 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                           "px-2 py-0.5 rounded-md border flex items-center gap-1",
                           prefExp === "all" || c.exp === prefExp
                             ? "bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20"
-                            : "bg-[#20252e] text-[#636c78] border-[#2b313d]"
+                            : "bg-[var(--card-bg)] text-[var(--text-3)] border-[var(--border-2)]"
                         )}
                       >
-                        <span className="text-[9px]">
+                        <span className="text-[11px]">
                           {prefExp === "all" || c.exp === prefExp ? "✓" : "✕"}
                         </span>
                         Exp ({c.exp})
@@ -439,10 +439,10 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                           "px-2 py-0.5 rounded-md border flex items-center gap-1",
                           prefEdu === "all" || c.education === prefEdu
                             ? "bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20"
-                            : "bg-[#20252e] text-[#636c78] border-[#2b313d]"
+                            : "bg-[var(--card-bg)] text-[var(--text-3)] border-[var(--border-2)]"
                         )}
                       >
-                        <span className="text-[9px]">
+                        <span className="text-[11px]">
                           {prefEdu === "all" || c.education === prefEdu ? "✓" : "✕"}
                         </span>
                         Edu ({c.education})
@@ -454,10 +454,10 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                           "px-2 py-0.5 rounded-md border flex items-center gap-1",
                           c.score.total >= minScore
                             ? "bg-[#22c55e]/10 text-[#22c55e] border-[#22c55e]/20"
-                            : "bg-[#20252e] text-[#636c78] border-[#2b313d]"
+                            : "bg-[var(--card-bg)] text-[var(--text-3)] border-[var(--border-2)]"
                         )}
                       >
-                        <span className="text-[9px]">
+                        <span className="text-[11px]">
                           {c.score.total >= minScore ? "✓" : "✕"}
                         </span>
                         ATS: {c.score.total}
@@ -503,9 +503,9 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                     )}
 
                     {/* Footer Action */}
-                    <div className="flex items-center justify-between pt-1 border-t border-[#1a1f26]">
-                      <span className="text-[15px] text-[#555d6b]">
-                        ID: <span className="font-mono text-[#78808d]">{c.id.slice(0, 8)}</span>
+                    <div className="flex items-center justify-between pt-1 border-t border-[var(--border-2)]">
+                      <span className="text-[15px] text-[var(--text-3)]">
+                        ID: <span className="font-mono text-[var(--text-3)]">{c.id.slice(0, 8)}</span>
                       </span>
                       <button
                         type="button"
@@ -513,7 +513,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
                           onViewCandidate(c);
                           onClose();
                         }}
-                        className="text-[11.5px] font-semibold text-[#8b93a0] hover:text-[#00D9FF] flex items-center gap-1.5 transition-colors group/btn py-0.5"
+                        className="text-[13px] font-semibold text-[var(--text)] hover:text-[#00D9FF] flex items-center gap-1.5 transition-colors group/btn py-0.5"
                       >
                         <span>Inspect Candidate Profile</span>
                         <span className="transition-transform group-hover/btn:translate-x-0.5">→</span>

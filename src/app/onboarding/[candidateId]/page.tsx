@@ -200,7 +200,7 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
   const rejectedCount = documents.filter(d => d.status === "rejected").length;
 
   return (
-    <div className="min-h-screen bg-[#07080a] text-[var(--text)] flex flex-col items-center relative selection:bg-[#00D9FF]/20 selection:text-white font-sans">
+    <div className="min-h-screen bg-[var(--card-bg)] text-[var(--text)] flex flex-col items-center relative selection:bg-[#00D9FF]/20 selection:text-text font-sans">
       {/* Background ambient lighting effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div className="absolute -top-[20%] left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-gradient-to-b from-[#00D9FF]/[0.08] via-indigo-600/[0.04] to-transparent rounded-full blur-3xl" />
@@ -210,15 +210,15 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
 
       {/* Website Navigation Header matching HireDesk & TopBar */}
       <header
-        className="w-full h-[62px] flex items-center justify-between px-4 sm:px-8 border-b border-white/[0.08] backdrop-blur-xl sticky top-0 z-40"
+        className="w-full h-[62px] flex items-center justify-between px-4 sm:px-8 border-b border-[var(--border)] backdrop-blur-xl sticky top-0 z-40"
         style={{ background: "rgba(10, 11, 14, 0.88)" }}
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 border border-white/[0.12] bg-black/60 shadow-inner">
+          <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 border border-[var(--border-2)] bg-glass-3 shadow-inner">
             <img src="/logo.png" alt="HireDesk Logo" className="w-full h-full object-cover" />
           </div>
           <div>
-            <div className="text-sm sm:text-base font-bold tracking-tight leading-tight text-white">
+            <div className="text-sm sm:text-base font-bold tracking-tight leading-tight text-text">
               HireDesk
             </div>
             <div className="text-[16px] sm:text-[15px] text-[var(--text-3)] font-medium leading-tight">
@@ -231,7 +231,7 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
           {/* Quick link to verification checklist */}
           <Link
             href={`/onboarding/${candidateId}/checklist`}
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.10] transition-all"
+            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-text-2 hover:text-text px-3.5 py-2 rounded-xl bg-[var(--glass)] hover:bg-[var(--glass-2)] border border-[var(--border-2)] transition-all"
           >
             <FileCheck size={14} className="text-[#00D9FF]" />
             <span>Verification Checklist</span>
@@ -258,8 +258,8 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
                 Candidate Onboarding
               </span>
               {candidate?.roleName && (
-                <span className="text-xs font-medium text-zinc-400 bg-white/[0.04] border border-white/[0.08] px-2.5 py-1 rounded-full">
-                  Role: <strong className="text-zinc-200">{candidate.roleName}</strong>
+                <span className="text-xs font-medium text-text-2 bg-[var(--glass)] border border-[var(--border)] px-2.5 py-1 rounded-full">
+                  Role: <strong className="text-text">{candidate.roleName}</strong>
                 </span>
               )}
             </div>
@@ -282,14 +282,14 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
                   {documents.length} Submitted
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400 bg-white/[0.05] border border-white/[0.08] px-3 py-1 rounded-full">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-2 bg-[var(--glass)] border border-[var(--border)] px-3 py-1 rounded-full">
                   Action Required
                 </span>
               )}
             </div>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-text">
             {candidate?.name ? (
               <>
                 Welcome, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-zinc-400">{candidate.name}</span>
@@ -298,29 +298,29 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
               "Candidate Document Onboarding"
             )}
           </h1>
-          <p className="text-sm sm:text-base text-zinc-400 max-w-2xl leading-relaxed">
+          <p className="text-sm sm:text-base text-text-2 max-w-2xl leading-relaxed">
             Please securely submit your requested verification and identity documents to complete your onboarding with{" "}
-            <strong className="text-zinc-200 font-semibold">Triple S Production</strong>.
+            <strong className="text-text font-semibold">Triple S Production</strong>.
           </p>
         </section>
 
 
         {/* Upload Form Card */}
-        <section className="bg-[#111318]/95 border border-white/[0.10] rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden flex flex-col gap-6">
+        <section className="bg-[var(--card-bg)]/95 border border-[var(--border-2)] rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden flex flex-col gap-6">
           {/* Subtle top card glow line */}
           <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-[#00D9FF]/40 to-transparent" />
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+              <h2 className="text-lg font-bold text-text tracking-tight flex items-center gap-2">
                 <UploadCloud size={20} className="text-[#00D9FF]" />
                 Upload New Document
               </h2>
-              <p className="text-xs sm:text-sm text-zinc-400 mt-1">
+              <p className="text-xs sm:text-sm text-text-2 mt-1">
                 Choose the document category and drag or browse your file to upload.
               </p>
             </div>
-            <div className="text-xs font-mono text-zinc-500 bg-white/[0.03] border border-white/[0.06] px-3 py-1 rounded-lg self-start sm:self-auto">
+            <div className="text-xs font-mono text-text-3 bg-[var(--glass)] border border-[var(--border)] px-3 py-1 rounded-lg self-start sm:self-auto">
               Max 5MB • PDF, JPG, PNG
             </div>
           </div>
@@ -342,9 +342,9 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
           <div className="flex flex-col gap-5">
             {/* Document Type Dropdown */}
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider flex items-center justify-between">
+              <label className="text-xs font-semibold text-text-2 uppercase tracking-wider flex items-center justify-between">
                 <span>Select Document Type</span>
-                <span className="text-[15px] font-normal text-zinc-500 lowercase">select before uploading</span>
+                <span className="text-[15px] font-normal text-text-3 lowercase">select before uploading</span>
               </label>
               <FilterSelect
                 options={DOC_TYPE_OPTIONS}
@@ -369,7 +369,7 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
               className={`relative rounded-2xl p-8 sm:p-12 text-center transition-all duration-200 cursor-pointer border-2 border-dashed flex flex-col items-center justify-center gap-3 ${
                 isDragOver
                   ? "border-[#00D9FF] bg-[#00D9FF]/[0.08] shadow-[0_0_24px_rgba(0,217,255,0.15)] scale-[1.01]"
-                  : "border-white/[0.12] hover:border-white/30 bg-black/30 hover:bg-white/[0.02]"
+                  : "border-[var(--border-2)] hover:border-white/30 bg-glass-2 hover:bg-white/[0.02]"
               }`}
             >
               <input
@@ -387,10 +387,10 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
                   <div className="w-12 h-12 rounded-2xl bg-[#00D9FF]/10 border border-[#00D9FF]/30 flex items-center justify-center text-[#00D9FF] animate-spin">
                     <Loader2 size={24} />
                   </div>
-                  <div className="font-semibold text-sm sm:text-base text-zinc-200">
+                  <div className="font-semibold text-sm sm:text-base text-text">
                     Encrypting & Uploading Document...
                   </div>
-                  <div className="text-xs text-zinc-500 max-w-xs">
+                  <div className="text-xs text-text-3 max-w-xs">
                     Please wait while your file is securely transferred to HireDesk cloud storage.
                   </div>
                 </div>
@@ -400,26 +400,26 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
                     className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-200 ${
                       isDragOver
                         ? "bg-[#00D9FF]/20 text-[#00D9FF] border border-[#00D9FF]/40 scale-110"
-                        : "bg-white/[0.04] text-zinc-400 border border-white/[0.08] group-hover:text-white"
+                        : "bg-[var(--glass)] text-text-2 border border-[var(--border)] group-hover:text-text"
                     }`}
                   >
                     <UploadCloud size={28} />
                   </div>
 
                   <div className="flex flex-col items-center gap-1">
-                    <div className="font-bold text-base sm:text-lg text-white">
+                    <div className="font-bold text-base sm:text-lg text-text">
                       {isDragOver ? "Drop your file here to upload" : "Click to browse or drag and drop"}
                     </div>
-                    <div className="text-xs sm:text-sm text-zinc-400">
+                    <div className="text-xs sm:text-sm text-text-2">
                       Uploading as: <span className="text-[#00D9FF] font-semibold">{docType}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-[15px] font-medium text-zinc-500 bg-white/[0.04] border border-white/[0.08] px-2.5 py-1 rounded-md">
+                    <span className="text-[15px] font-medium text-text-3 bg-[var(--glass)] border border-[var(--border)] px-2.5 py-1 rounded-md">
                       PDF, JPG, PNG
                     </span>
-                    <span className="text-[15px] font-medium text-zinc-500 bg-white/[0.04] border border-white/[0.08] px-2.5 py-1 rounded-md">
+                    <span className="text-[15px] font-medium text-text-3 bg-[var(--glass)] border border-[var(--border)] px-2.5 py-1 rounded-md">
                       Up to 5MB
                     </span>
                   </div>
@@ -432,10 +432,10 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
         {/* Uploaded Documents List */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+            <h2 className="text-base sm:text-lg font-bold text-text flex items-center gap-2">
               <FileText size={18} className="text-[#00D9FF]" />
               Your Uploaded Documents
-              <span className="text-xs font-semibold text-zinc-400 bg-white/[0.06] border border-white/[0.10] px-2 py-0.5 rounded-full">
+              <span className="text-xs font-semibold text-text-2 bg-[var(--glass-2)] border border-[var(--border-2)] px-2 py-0.5 rounded-full">
                 {documents.length}
               </span>
             </h2>
@@ -444,7 +444,7 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
               type="button"
               onClick={fetchData}
               disabled={loading}
-              className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white px-2.5 py-1 rounded-lg bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] transition-all"
+              className="inline-flex items-center gap-1.5 text-xs text-text-2 hover:text-text px-2.5 py-1 rounded-lg bg-[var(--glass)] hover:bg-[var(--glass-2)] border border-[var(--border)] transition-all"
               title="Refresh document status"
             >
               <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
@@ -453,17 +453,17 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
           </div>
 
           {loading ? (
-            <div className="p-8 rounded-2xl bg-[#111318]/60 border border-white/[0.06] flex items-center justify-center gap-3 text-zinc-400 text-sm">
+            <div className="p-8 rounded-2xl bg-[var(--card-bg)]/60 border border-[var(--border)] flex items-center justify-center gap-3 text-text-2 text-sm">
               <Loader2 size={18} className="animate-spin text-[#00D9FF]" />
               <span>Fetching your documents...</span>
             </div>
           ) : documents.length === 0 ? (
-            <div className="p-10 sm:p-12 rounded-2xl bg-[#111318]/60 border border-dashed border-white/[0.10] flex flex-col items-center justify-center text-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-zinc-500">
+            <div className="p-10 sm:p-12 rounded-2xl bg-[var(--card-bg)]/60 border border-dashed border-[var(--border-2)] flex flex-col items-center justify-center text-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-[var(--glass)] border border-[var(--border)] flex items-center justify-center text-text-3">
                 <FileText size={22} />
               </div>
-              <div className="font-semibold text-sm text-zinc-300">No documents uploaded yet</div>
-              <div className="text-xs text-zinc-500 max-w-sm">
+              <div className="font-semibold text-sm text-text-2">No documents uploaded yet</div>
+              <div className="text-xs text-text-3 max-w-sm">
                 Select your document type above and drop or browse files to start your onboarding verification.
               </div>
             </div>
@@ -487,11 +487,11 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
                 return (
                   <div
                     key={doc.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:px-5 sm:py-4 rounded-xl bg-[#111318]/90 hover:bg-[#15181f] border border-white/[0.08] hover:border-white/[0.15] transition-all duration-150 shadow-sm group"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:px-5 sm:py-4 rounded-xl bg-[var(--card-bg)]/90 hover:bg-[var(--table-row-hover)] border border-[var(--border)] hover:border-white/[0.15] transition-all duration-150 shadow-sm group"
                   >
                     {/* Document Details */}
                     <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                      <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center flex-shrink-0 text-indigo-400 group-hover:text-[#00D9FF] group-hover:border-[#00D9FF]/30 transition-all shadow-inner">
+                      <div className="w-10 h-10 rounded-xl bg-[var(--glass)] border border-[var(--border)] flex items-center justify-center flex-shrink-0 text-indigo-400 group-hover:text-[#00D9FF] group-hover:border-[#00D9FF]/30 transition-all shadow-inner">
                         <FileText size={18} />
                       </div>
 
@@ -503,12 +503,12 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
                           >
                             {doc.fileName}
                           </span>
-                          <span className="text-[16px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-white/[0.06] border border-white/[0.08] text-zinc-300">
+                          <span className="text-[16px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[var(--glass-2)] border border-[var(--border)] text-text-2">
                             {doc.type}
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-3 text-xs text-zinc-500">
+                        <div className="flex items-center gap-3 text-xs text-text-3">
                           {formattedDate && <span>Uploaded {formattedDate}</span>}
                         </div>
                       </div>
@@ -544,10 +544,10 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
                           href={doc.previewUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white px-3 py-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.10] border border-white/[0.10] hover:border-white/[0.20] transition-all cursor-pointer"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-text-2 hover:text-text px-3 py-1.5 rounded-lg bg-[var(--glass)] hover:bg-white/[0.10] border border-[var(--border-2)] hover:border-white/[0.20] transition-all cursor-pointer"
                           title="Open document in new tab"
                         >
-                          <ExternalLink size={13} className="text-zinc-400 group-hover:text-white" />
+                          <ExternalLink size={13} className="text-text-2 group-hover:text-text" />
                           <span>View</span>
                         </a>
                       )}
@@ -560,7 +560,7 @@ export default function OnboardingPage({ params }: { params: { candidateId: stri
         </section>
 
         {/* Trust & Security Footer Banner */}
-        <footer className="mt-4 pt-6 border-t border-white/[0.08] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-zinc-500">
+        <footer className="mt-4 pt-6 border-t border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-text-3">
           <div className="flex items-center gap-2">
             <Lock size={14} className="text-emerald-400/80 flex-shrink-0" />
             <span>

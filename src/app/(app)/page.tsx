@@ -192,7 +192,7 @@ export default function DashboardPage() {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
               TALENT PIPELINE ACTIVE · TRIPLE S PRODUCTION
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text flex items-center gap-3">
               Hiring Command Center
             </h1>
             <p className="text-xs sm:text-sm text-[var(--text-2)] mt-1.5 max-w-xl">
@@ -242,7 +242,7 @@ export default function DashboardPage() {
             setFilters({ search: "", roleId: "all", status: "all", city: "", gender: "all", ageRange: "all", exp: "all", sort: "newest" });
             router.push("/candidates");
           }}
-          className="relative overflow-hidden rounded-2xl p-5 border border-white/[0.08] bg-[#111215] hover:border-cyan-500/40 hover:bg-[#14161A] transition-all duration-200 cursor-pointer group shadow-lg flex flex-col justify-between"
+          className="relative overflow-hidden rounded-2xl p-5 border border-white/[0.08] bg-[var(--card-bg)] hover:border-cyan-500/40 hover:bg-[var(--table-row-hover)] transition-all duration-200 cursor-pointer group shadow-lg flex flex-col justify-between"
         >
           <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-cyan-500/10 blur-3xl group-hover:bg-cyan-500/20 transition-all" />
 
@@ -254,7 +254,7 @@ export default function DashboardPage() {
                   <Users size={17} />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-white tracking-tight">Total Candidates</div>
+                  <div className="text-xs font-semibold text-text tracking-tight">Total Candidates</div>
                   <div className="text-[11px] text-[var(--text-3)] font-medium">Pipeline Intake</div>
                 </div>
               </div>
@@ -264,7 +264,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Primary Value */}
-            <div className="text-[32px] font-extrabold tracking-tight text-white leading-none my-2.5">
+            <div className="text-[32px] font-extrabold tracking-tight text-text leading-none my-2.5">
               {total}
             </div>
           </div>
@@ -272,7 +272,7 @@ export default function DashboardPage() {
           {/* Structured Footer */}
           <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-xs text-[var(--text-2)]">
             <span className="truncate">Resumes parsed &amp; indexed</span>
-            <span className="font-mono text-[11px] font-medium px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--text-2)] border border-white/10 shrink-0">
+            <span className="font-mono text-[11px] font-medium px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--text-2)] border border-border shrink-0">
               {roles.length} Roles
             </span>
           </div>
@@ -284,7 +284,7 @@ export default function DashboardPage() {
             setFilters({ search: "", roleId: "all", status: "offer_accepted", city: "", gender: "all", ageRange: "all", exp: "all", sort: "newest" });
             router.push("/candidates");
           }}
-          className="relative overflow-hidden rounded-2xl p-5 border border-white/[0.08] bg-[#111215] hover:border-emerald-500/40 hover:bg-[#14161A] transition-all duration-200 cursor-pointer group shadow-lg flex flex-col justify-between"
+          className="relative overflow-hidden rounded-2xl p-5 border border-white/[0.08] bg-[var(--card-bg)] hover:border-emerald-500/40 hover:bg-[var(--table-row-hover)] transition-all duration-200 cursor-pointer group shadow-lg flex flex-col justify-between"
         >
           <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-emerald-500/10 blur-3xl group-hover:bg-emerald-500/20 transition-all" />
 
@@ -296,7 +296,7 @@ export default function DashboardPage() {
                   <FileText size={17} />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-white tracking-tight">Offers Extended</div>
+                  <div className="text-xs font-semibold text-text tracking-tight">Offers Extended</div>
                   <div className="text-[11px] text-[var(--text-3)] font-medium">Contract Status</div>
                 </div>
               </div>
@@ -306,7 +306,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Primary Value */}
-            <div className="text-[32px] font-extrabold tracking-tight text-white leading-none my-2.5">
+            <div className="text-[32px] font-extrabold tracking-tight text-text leading-none my-2.5">
               {offersStats.total}
             </div>
           </div>
@@ -321,7 +321,7 @@ export default function DashboardPage() {
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
               {offersStats.sent} Sent
             </span>
-            <span className="inline-flex items-center gap-1 font-mono text-[11px] px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--text-3)] border border-white/10 font-medium whitespace-nowrap">
+            <span className="inline-flex items-center gap-1 font-mono text-[11px] px-2 py-0.5 rounded-md bg-white/[0.05] text-[var(--text-3)] border border-border font-medium whitespace-nowrap">
               {offersStats.draft} Draft
             </span>
           </div>
@@ -333,7 +333,7 @@ export default function DashboardPage() {
             setFilters({ search: "", roleId: "all", status: "all", city: "", gender: "all", ageRange: "all", exp: "all", sort: "score-desc" });
             router.push("/candidates");
           }}
-          className="relative overflow-hidden rounded-2xl p-5 border border-white/[0.08] bg-[#111215] hover:border-purple-500/40 hover:bg-[#14161A] transition-all duration-200 cursor-pointer group shadow-lg flex flex-col justify-between"
+          className="relative overflow-hidden rounded-2xl p-5 border border-white/[0.08] bg-[var(--card-bg)] hover:border-purple-500/40 hover:bg-[var(--table-row-hover)] transition-all duration-200 cursor-pointer group shadow-lg flex flex-col justify-between"
         >
           <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-purple-500/10 blur-3xl group-hover:bg-purple-500/20 transition-all" />
 
@@ -345,7 +345,7 @@ export default function DashboardPage() {
                   <Sparkles size={17} />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-white tracking-tight">Average ATS Score</div>
+                  <div className="text-xs font-semibold text-text tracking-tight">Average ATS Score</div>
                   <div className="text-[11px] text-[var(--text-3)] font-medium">Candidate Quality</div>
                 </div>
               </div>
@@ -356,7 +356,7 @@ export default function DashboardPage() {
 
             {/* Primary Value */}
             <div className="flex items-baseline gap-1.5 my-2.5">
-              <span className="text-[32px] font-extrabold tracking-tight text-white leading-none">
+              <span className="text-[32px] font-extrabold tracking-tight text-text leading-none">
                 {avgScore}
               </span>
               <span className="text-sm font-mono text-[var(--text-3)] font-semibold">/ 100</span>
@@ -384,7 +384,7 @@ export default function DashboardPage() {
             setFilters({ search: "", roleId: "all", status: "shortlisted", city: "", gender: "all", ageRange: "all", exp: "all", sort: "newest" });
             router.push("/candidates");
           }}
-          className="relative overflow-hidden rounded-2xl p-5 border border-white/[0.08] bg-[#111215] hover:border-amber-500/40 hover:bg-[#14161A] transition-all duration-200 cursor-pointer group shadow-lg flex flex-col justify-between"
+          className="relative overflow-hidden rounded-2xl p-5 border border-white/[0.08] bg-[var(--card-bg)] hover:border-amber-500/40 hover:bg-[var(--table-row-hover)] transition-all duration-200 cursor-pointer group shadow-lg flex flex-col justify-between"
         >
           <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-amber-500/10 blur-3xl group-hover:bg-amber-500/20 transition-all" />
 
@@ -396,7 +396,7 @@ export default function DashboardPage() {
                   <Calendar size={17} />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-white tracking-tight">Interviews Held</div>
+                  <div className="text-xs font-semibold text-text tracking-tight">Interviews Held</div>
                   <div className="text-[11px] text-[var(--text-3)] font-medium">Evaluation Rounds</div>
                 </div>
               </div>
@@ -406,7 +406,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Primary Value */}
-            <div className="text-[32px] font-extrabold tracking-tight text-white leading-none my-2.5">
+            <div className="text-[32px] font-extrabold tracking-tight text-text leading-none my-2.5">
               {interviewStats.total}
             </div>
           </div>
@@ -435,7 +435,7 @@ export default function DashboardPage() {
               "px-3.5 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 inline-flex items-center gap-2 cursor-pointer border select-none",
               showFunnel
                 ? "bg-cyan-500/15 border-cyan-500/40 text-cyan-400 shadow-[0_0_15px_rgba(0,217,255,0.15)]"
-                : "bg-white/[0.04] border-white/10 text-[var(--text-2)] hover:text-white hover:bg-white/[0.08] hover:border-white/20"
+                : "bg-white/[0.04] border-border text-[var(--text-2)] hover:text-text hover:bg-white/[0.08] hover:border-border-2"
             )}
           >
             <Activity size={14} className={showFunnel ? "text-cyan-400" : "text-[var(--text-3)]"} />
@@ -516,13 +516,13 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${stage.dot}`} />
-                      <span className="text-xs font-medium text-[var(--text-2)] group-hover:text-white transition-colors">
+                      <span className="text-xs font-medium text-[var(--text-2)] group-hover:text-text transition-colors">
                         {stage.label}
                       </span>
                     </div>
                     <span className="font-mono text-[10px] text-[var(--text-3)]">{pct}%</span>
                   </div>
-                  <div className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                  <div className="text-xl sm:text-2xl font-bold text-text tracking-tight">
                     {stage.count}
                   </div>
                 </button>
@@ -543,7 +543,7 @@ export default function DashboardPage() {
                   <Award size={16} />
                 </div>
                 <div>
-                  <div className="text-sm sm:text-base font-bold text-white tracking-tight">
+                  <div className="text-sm sm:text-base font-bold text-text tracking-tight">
                     Top Candidates
                   </div>
                   <div className="text-[11px] text-[var(--text-3)]">
@@ -576,7 +576,7 @@ export default function DashboardPage() {
                     <div
                       key={c.id}
                       onClick={() => setInspectCandidate(c)}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-white/10 transition-all duration-150 cursor-pointer group"
+                      className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-border transition-all duration-150 cursor-pointer group"
                     >
                       {/* Rank Medal */}
                       <div className="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0">
@@ -596,21 +596,21 @@ export default function DashboardPage() {
                           </span>
                         )}
                         {i > 2 && (
-                          <span className="w-6 h-6 rounded-md bg-white/5 border border-white/10 text-[var(--text-3)] font-mono text-[11px] flex items-center justify-center">
+                          <span className="w-6 h-6 rounded-md bg-white/5 border border-border text-[var(--text-3)] font-mono text-[11px] flex items-center justify-center">
                             {i + 1}
                           </span>
                         )}
                       </div>
 
                       {/* Candidate Avatar Initial */}
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center font-bold text-sm text-white flex-shrink-0 group-hover:border-cyan-500/40 transition-colors">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-border flex items-center justify-center font-bold text-sm text-text flex-shrink-0 group-hover:border-cyan-500/40 transition-colors">
                         {c.name ? c.name[0]?.toUpperCase() : "?"}
                       </div>
 
                       {/* Candidate Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-white truncate group-hover:text-cyan-400 transition-colors">
+                          <span className="text-sm font-semibold text-text truncate group-hover:text-cyan-400 transition-colors">
                             {c.name}
                           </span>
                           <span className="hidden sm:inline-block font-mono text-[10px] text-[var(--text-3)]">
@@ -664,9 +664,9 @@ export default function DashboardPage() {
                   <BarChart3 size={16} />
                 </div>
                 <div>
-                  <div className="text-sm sm:text-base font-bold text-white tracking-tight flex items-center gap-2">
+                  <div className="text-sm sm:text-base font-bold text-text tracking-tight flex items-center gap-2">
                     By Role
-                    <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[var(--text-2)]">
+                    <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-white/5 border border-border text-[var(--text-2)]">
                       {roleBreakdown.length} Positions
                     </span>
                   </div>
@@ -700,7 +700,7 @@ export default function DashboardPage() {
                     <div
                       key={r.id}
                       onClick={() => goRoleFiltered(r.id)}
-                      className="p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-white/10 transition-all duration-150 cursor-pointer group"
+                      className="p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-border transition-all duration-150 cursor-pointer group"
                       title={`Click to view all candidates for ${r.name}`}
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -709,7 +709,7 @@ export default function DashboardPage() {
                             {visual.icon}
                           </div>
                           <div className="min-w-0">
-                            <div className="text-xs sm:text-sm font-semibold text-white truncate group-hover:text-cyan-300 transition-colors">
+                            <div className="text-xs sm:text-sm font-semibold text-text truncate group-hover:text-cyan-300 transition-colors">
                               {r.name}
                             </div>
                             <div className="text-[10px] text-[var(--text-3)] font-mono">
@@ -719,7 +719,7 @@ export default function DashboardPage() {
                         </div>
 
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className="font-mono text-xs font-bold text-white">
+                          <span className="font-mono text-xs font-bold text-text">
                             {r.count}
                           </span>
                           <span className="text-[11px] font-mono text-[var(--text-3)]">
@@ -729,7 +729,7 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Vibrant Custom Progress Bar */}
-                      <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                      <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-border">
                         <div
                           className={`h-full rounded-full bg-gradient-to-r ${visual.barGradient} transition-all duration-700`}
                           style={{ width: `${Math.max(percentage, 3)}%` }}
@@ -749,7 +749,7 @@ export default function DashboardPage() {
                 <div className="text-[10px] uppercase font-mono tracking-wider text-[var(--text-3)] mb-0.5">
                   Most Demanded
                 </div>
-                <div className="font-bold text-white truncate text-xs">
+                <div className="font-bold text-text truncate text-xs">
                   {topDemandedRole ? topDemandedRole.name : "None"}
                 </div>
                 <div className="text-[10px] text-cyan-400 font-mono mt-0.5">
@@ -761,7 +761,7 @@ export default function DashboardPage() {
                 <div className="text-[10px] uppercase font-mono tracking-wider text-[var(--text-3)] mb-0.5">
                   Top Scoring Role
                 </div>
-                <div className="font-bold text-white truncate text-xs">
+                <div className="font-bold text-text truncate text-xs">
                   {highestScoringRole ? highestScoringRole.name : "None"}
                 </div>
                 <div className="text-[10px] text-emerald-400 font-mono mt-0.5">
@@ -788,7 +788,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Multi-tier bar */}
-        <div className="h-3 w-full rounded-full bg-white/5 overflow-hidden flex border border-white/5 mb-3.5">
+        <div className="h-3 w-full rounded-full bg-white/5 overflow-hidden flex border border-border mb-3.5">
           <div
             title={`Exceptional (80+): ${scoreBands.exceptional}`}
             className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-500"
@@ -816,28 +816,28 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400 flex-shrink-0" />
             <div>
-              <span className="text-white font-semibold">{scoreBands.exceptional}</span>
+              <span className="text-text font-semibold">{scoreBands.exceptional}</span>
               <span className="text-[var(--text-3)] ml-1">Exceptional (80+)</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-sm bg-cyan-400 flex-shrink-0" />
             <div>
-              <span className="text-white font-semibold">{scoreBands.strong}</span>
+              <span className="text-text font-semibold">{scoreBands.strong}</span>
               <span className="text-[var(--text-3)] ml-1">Strong (65–79)</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 flex-shrink-0" />
             <div>
-              <span className="text-white font-semibold">{scoreBands.moderate}</span>
+              <span className="text-text font-semibold">{scoreBands.moderate}</span>
               <span className="text-[var(--text-3)] ml-1">Moderate (45–64)</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-sm bg-rose-400 flex-shrink-0" />
             <div>
-              <span className="text-white font-semibold">{scoreBands.low}</span>
+              <span className="text-text font-semibold">{scoreBands.low}</span>
               <span className="text-[var(--text-3)] ml-1">Low (&lt;45)</span>
             </div>
           </div>
@@ -852,7 +852,7 @@ export default function DashboardPage() {
               <Clock size={16} />
             </div>
             <div>
-              <div className="text-sm sm:text-base font-bold text-white tracking-tight">
+              <div className="text-sm sm:text-base font-bold text-text tracking-tight">
                 Recent Candidates
               </div>
               <div className="text-[11px] text-[var(--text-3)]">
@@ -924,11 +924,11 @@ export default function DashboardPage() {
                       >
                         <td className="px-3.5 py-3 border-b border-[var(--table-border)] align-middle">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center font-bold text-xs text-white shrink-0 group-hover:border-cyan-500/40 transition-colors">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-white/10 to-white/5 border border-border flex items-center justify-center font-bold text-xs text-text shrink-0 group-hover:border-cyan-500/40 transition-colors">
                               {c.name ? c.name[0]?.toUpperCase() : "?"}
                             </div>
                             <div className="flex flex-col justify-center min-w-0">
-                              <div className="font-semibold text-sm text-white group-hover:text-cyan-400 transition-colors truncate">
+                              <div className="font-semibold text-sm text-text group-hover:text-cyan-400 transition-colors truncate">
                                 {c.name}
                               </div>
                               <div className="text-xs text-[var(--text-3)] truncate mt-0.5">
@@ -964,7 +964,7 @@ export default function DashboardPage() {
                           {c.appliedAt || "—"}
                         </td>
                         <td className="px-3.5 py-3 border-b border-[var(--table-border)] align-middle w-[36px] text-right">
-                          <ChevronRight size={15} className="text-[var(--text-3)] group-hover:text-white transition-colors" />
+                          <ChevronRight size={15} className="text-[var(--text-3)] group-hover:text-text transition-colors" />
                         </td>
                       </tr>
                     );

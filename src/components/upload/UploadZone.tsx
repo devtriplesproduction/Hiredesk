@@ -238,7 +238,7 @@ export default function UploadZone() {
               </div>
 
               {/* Primary Text */}
-              <h3 className="text-base sm:text-lg font-bold text-white tracking-tight mb-1.5">
+              <h3 className="text-base sm:text-lg font-bold text-text tracking-tight mb-1.5">
                 Drop resumes here
               </h3>
 
@@ -250,18 +250,18 @@ export default function UploadZone() {
               {/* Tertiary Information Pills */}
               <div className="inline-flex flex-wrap items-center justify-center gap-2 text-[15px] sm:text-xs text-[var(--text-3)] font-medium bg-[var(--card-bg)] px-3.5 py-1.5 rounded-full border border-[var(--border-2)] mb-6">
                 <span>PDF files only</span>
-                <span className="text-[#454B55]">•</span>
+                <span className="text-[var(--text-3)]">•</span>
                 <span>Multiple files supported</span>
-                <span className="text-[#454B55]">•</span>
+                <span className="text-[var(--text-3)]">•</span>
                 <span>Automatic parsing</span>
               </div>
 
               {/* Primary Upload CTA Button */}
               <label
                 htmlFor="resume-file-input"
-                className="inline-flex items-center gap-2 cursor-pointer font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl border bg-white hover:bg-[#F2F4F8] text-black border-white shadow-lg hover:shadow-white/10 active:scale-[0.98] transition-all duration-150 select-none"
+                className="inline-flex items-center gap-2 cursor-pointer font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl border shadow-lg active:scale-[0.98] transition-all duration-150 select-none bg-accent text-bg2 border-accent"
               >
-                <FolderOpen size={16} className="text-black" />
+                <FolderOpen size={16} className="text-bg2" />
                 <span>Browse / Upload Files</span>
               </label>
             </div>
@@ -274,7 +274,7 @@ export default function UploadZone() {
               <div className="flex flex-wrap items-center justify-between gap-3 px-1">
                 <div className="flex items-center gap-2.5">
                   <span className="w-2 h-2 rounded-full bg-[#00D9FF] shadow-[0_0_8px_rgba(0,217,255,0.6)]" />
-                  <h2 className="text-sm sm:text-base font-bold text-white tracking-tight">
+                  <h2 className="text-sm sm:text-base font-bold text-text tracking-tight">
                     Uploaded Resumes
                   </h2>
                   <span className="text-xs font-mono font-medium px-2 py-0.5 rounded-md bg-[var(--glass-2)] text-[var(--text-2)] border border-[var(--border)]">
@@ -303,16 +303,16 @@ export default function UploadZone() {
                     type="button"
                     onClick={processAll}
                     disabled={processing || waitCount === 0}
-                    className="h-9 inline-flex items-center gap-2 px-4 rounded-xl text-xs font-bold uppercase tracking-wider bg-white hover:bg-zinc-200 active:bg-zinc-300 text-black border border-white shadow-md hover:shadow-white/10 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] select-none"
+                    className="h-9 inline-flex items-center gap-2 px-4 rounded-xl text-xs font-bold uppercase tracking-wider bg-white hover:bg-zinc-200 active:bg-zinc-300 text-bg2 border border-white shadow-md hover:shadow-white/10 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] select-none"
                   >
                     {processing ? (
                       <>
-                        <Loader2 size={13} className="animate-spin text-black" />
+                        <Loader2 size={13} className="animate-spin text-bg2" />
                         <span>Parsing...</span>
                       </>
                     ) : (
                       <>
-                        <Play size={12} className="fill-current text-black" />
+                        <Play size={12} className="fill-current text-bg2" />
                         <span>
                           Parse {waitCount} {waitCount === 1 ? "Resume" : "Resumes"}
                         </span>
@@ -337,7 +337,7 @@ export default function UploadZone() {
 
                       <div className="min-w-0 flex-1">
                         <div
-                          className="text-[13.5px] sm:text-sm font-semibold text-white group-hover:text-[var(--text)] transition-colors truncate max-w-full"
+                          className="text-[13.5px] sm:text-sm font-semibold text-text group-hover:text-[var(--text)] transition-colors truncate max-w-full"
                           title={item.file.name}
                         >
                           {item.file.name}
@@ -347,7 +347,7 @@ export default function UploadZone() {
                         {item.status === "wait" && (
                           <div className="text-xs text-[var(--text-3)] font-normal mt-1 flex items-center gap-1.5">
                             <span className="text-[var(--text-2)]">PDF document</span>
-                            <span className="text-[#3A3F48]">•</span>
+                            <span className="text-[var(--text-3)]">•</span>
                             <span className="text-amber-400/80">Ready to parse</span>
                           </div>
                         )}
@@ -364,11 +364,11 @@ export default function UploadZone() {
                             <span className="font-semibold text-[var(--text)]">
                               {item.result.name}
                             </span>
-                            <span className="text-[#3A3F48]">•</span>
+                            <span className="text-[var(--text-3)]">•</span>
                             <span className="text-[var(--text-3)]">
                               {item.result.roleName}
                             </span>
-                            <span className="text-[#3A3F48]">•</span>
+                            <span className="text-[var(--text-3)]">•</span>
                             <span
                               className={clsx(
                                 "text-[15px] font-mono font-bold px-1.5 py-0.5 rounded-[5px] border inline-flex items-center justify-center",
@@ -383,7 +383,7 @@ export default function UploadZone() {
                             </span>
                             {item.result.email && (
                               <>
-                                <span className="text-[#3A3F48]">•</span>
+                                <span className="text-[var(--text-3)]">•</span>
                                 <span className="text-[var(--text-3)] truncate max-w-[180px]">
                                   {item.result.email}
                                 </span>
@@ -402,7 +402,7 @@ export default function UploadZone() {
                     </div>
 
                     {/* Right: Badge Status + Remove Button */}
-                    <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#1D2127]">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[var(--border-2)]">
                       {item.status === "wait" && (
                         <span className="text-[10.5px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-[6px] bg-amber-500/[0.08] text-amber-300/90 border border-amber-500/25">
                           QUEUED
@@ -469,9 +469,9 @@ export default function UploadZone() {
         <div className="lg:col-span-4 flex flex-col gap-5 w-full">
           {/* How Parsing Works Card */}
           <div className="p-4 sm:p-5 rounded-2xl border border-[var(--border-2)] bg-[var(--card-bg)] flex flex-col gap-4 shadow-xl">
-            <div className="flex items-center gap-2 pb-2.5 border-b border-[#20242A]">
+            <div className="flex items-center gap-2 pb-2.5 border-b border-[var(--border-2)]">
               <Sparkles size={16} className="text-[#00D9FF]" />
-              <h3 className="text-sm font-bold text-white tracking-tight">How parsing works</h3>
+              <h3 className="text-sm font-bold text-text tracking-tight">How parsing works</h3>
             </div>
 
             <div className="flex flex-col gap-3.5">
@@ -487,7 +487,7 @@ export default function UploadZone() {
                     {item.step}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="text-xs font-semibold text-white tracking-tight">
+                    <div className="text-xs font-semibold text-text tracking-tight">
                       {item.title}
                     </div>
                     <div className="text-[15px] text-[var(--text-3)] mt-0.5 leading-relaxed">
@@ -501,11 +501,11 @@ export default function UploadZone() {
 
           {/* ATS Scoring Breakdown Card */}
           <div className="p-4 sm:p-5 rounded-2xl border border-[var(--border-2)] bg-[var(--card-bg)] flex flex-col gap-3.5 shadow-xl">
-            <div className="flex items-center justify-between pb-2 border-b border-[#20242A]">
+            <div className="flex items-center justify-between pb-2 border-b border-[var(--border-2)]">
               <div className="text-[15px] font-bold uppercase tracking-wider text-[var(--text-3)]">
                 ATS Score
               </div>
-              <span className="text-[16px] font-mono text-[#6A717E]">100% Total</span>
+              <span className="text-[16px] font-mono text-[var(--text-3)]">100% Total</span>
             </div>
 
             {/* Segmented multi-colored progress bar */}
@@ -524,11 +524,11 @@ export default function UploadZone() {
             <div className="flex flex-col gap-2 pt-1">
               {ATS_WEIGHTS.map(w => (
                 <div key={w.label} className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-[#C4C9D3]">
+                  <div className="flex items-center gap-2 text-[var(--text)]">
                     <span className={clsx("w-2 h-2 rounded-full", w.dotClass)} />
-                    <span className="text-xs font-medium text-[#B2B8C3]">{w.label}</span>
+                    <span className="text-xs font-medium text-[var(--text)]">{w.label}</span>
                   </div>
-                  <span className="font-mono font-semibold text-white text-xs">{w.weight}</span>
+                  <span className="font-mono font-semibold text-text text-xs">{w.weight}</span>
                 </div>
               ))}
             </div>

@@ -76,7 +76,7 @@ export function Pagination({
           className={clsx(
             "h-8 px-2.5 rounded-[8px] text-[12.5px] font-medium inline-flex items-center gap-1 border transition-all duration-150",
             canPrev
-              ? "bg-[var(--glass-2)] text-[var(--text-2)] hover:text-white hover:bg-[var(--glass-3)] border-[var(--border-2)] cursor-pointer active:scale-95"
+              ? "bg-[var(--glass-2)] text-[var(--text-2)] hover:text-text hover:bg-[var(--glass-3)] border-[var(--border-2)] cursor-pointer active:scale-95"
               : "opacity-40 cursor-not-allowed bg-transparent border-[var(--border)] text-[var(--text-3)]"
           )}
         >
@@ -112,7 +112,7 @@ export function Pagination({
                   "min-w-[32px] h-8 px-2 rounded-[8px] text-[12.5px] font-medium transition-all duration-150 cursor-pointer",
                   isActive
                     ? "bg-[rgba(0,217,255,0.15)] text-[#00D9FF] border border-[rgba(0,217,255,0.45)] font-bold shadow-[0_0_12px_rgba(0,217,255,0.2)]"
-                    : "bg-[var(--glass-2)] text-[var(--text-2)] hover:text-white hover:bg-[var(--glass-3)] border border-[var(--border-2)]"
+                    : "bg-[var(--glass-2)] text-[var(--text-2)] hover:text-text hover:bg-[var(--glass-3)] border border-[var(--border-2)]"
                 )}
               >
                 {pageNum}
@@ -130,7 +130,7 @@ export function Pagination({
           className={clsx(
             "h-8 px-2.5 rounded-[8px] text-[12.5px] font-medium inline-flex items-center gap-1 border transition-all duration-150",
             canNext
-              ? "bg-[var(--glass-2)] text-[var(--text-2)] hover:text-white hover:bg-[var(--glass-3)] border-[var(--border-2)] cursor-pointer active:scale-95"
+              ? "bg-[var(--glass-2)] text-[var(--text-2)] hover:text-text hover:bg-[var(--glass-3)] border-[var(--border-2)] cursor-pointer active:scale-95"
               : "opacity-40 cursor-not-allowed bg-transparent border-[var(--border)] text-[var(--text-3)]"
           )}
         >

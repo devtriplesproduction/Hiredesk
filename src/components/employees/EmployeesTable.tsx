@@ -383,7 +383,7 @@ export default function EmployeesTable() {
               return (
                 <div
                   key={e.id}
-                  className="p-3.5 rounded-xl border border-[var(--table-border)] bg-[#111214] hover:bg-[var(--input-bg)] transition-colors cursor-pointer"
+                  className="p-3.5 rounded-xl border border-[var(--table-border)] bg-[var(--card-bg)] hover:bg-[var(--input-bg)] transition-colors cursor-pointer"
                   onClick={() => candidate && setViewingCandidate(candidate)}
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
@@ -400,16 +400,16 @@ export default function EmployeesTable() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2 text-[15px] text-[var(--text-3)]">
                     <span>{roleName}</span>
-                    <span className="text-[#2B2F35]">·</span>
+                    <span className="text-[var(--text-3)]">·</span>
                     <span
                       className="text-[16px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-[5px]"
                       style={{ color: empBadge.color, backgroundColor: empBadge.bg, border: empBadge.border }}
                     >
                       {empBadge.label}
                     </span>
-                    <span className="text-[#2B2F35]">·</span>
+                    <span className="text-[var(--text-3)]">·</span>
                     <span>{city}</span>
-                    <span className="text-[#2B2F35]">·</span>
+                    <span className="text-[var(--text-3)]">·</span>
                     <span>{formatHiredDate(e.createdAt)}</span>
                   </div>
                 </div>

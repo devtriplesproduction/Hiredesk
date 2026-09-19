@@ -20,7 +20,13 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("dark");
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window !== "undefined") {
+      const t = document.documentElement.getAttribute("data-theme");
+      if (t === "light" || t === "dark") return t as Theme;
+    }
+    return "dark";
+  });
   const [mounted, setMounted] = useState(false);
 
   // Load saved theme from localStorage on mount

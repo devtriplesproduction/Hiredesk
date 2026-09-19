@@ -240,7 +240,7 @@ export default function GenerateContractModal({ contract, preselectedCandidateId
           <Btn
             onClick={generateAndPreview}
             disabled={!form.candidateName.trim()}
-            className="flex-1 py-3 rounded-xl text-sm font-semibold bg-white text-black hover:bg-white/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 py-3 rounded-xl text-sm font-semibold bg-accent text-bg2 hover:bg-white/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Generate & Edit →
           </Btn>

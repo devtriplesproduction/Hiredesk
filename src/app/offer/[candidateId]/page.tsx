@@ -170,9 +170,9 @@ export default function CandidateOfferPage() {
 
   // Reusable Site Header across all portal views
   const renderHeader = () => (
-    <header className="w-full h-[60px] flex items-center justify-between px-4 sm:px-8 border-b border-[var(--border)] backdrop-blur-xl sticky top-0 z-50 bg-[#0a0a0a]/95">
+    <header className="w-full h-[60px] flex items-center justify-between px-4 sm:px-8 border-b border-[var(--border)] backdrop-blur-xl sticky top-0 z-50 bg-[var(--card-bg)]/95">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 border border-[var(--border)] bg-black/60 shadow-inner">
+        <div className="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 border border-[var(--border)] bg-glass-3 shadow-inner">
           <img src="/logo.png" alt="HireDesk Logo" className="w-full h-full object-cover" />
         </div>
         <div>
@@ -208,7 +208,7 @@ export default function CandidateOfferPage() {
               <div className="absolute -inset-1 rounded-2xl border border-[#00D9FF]/30 animate-ping opacity-25" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Loading Offer Portal</h3>
+              <h3 className="text-base font-bold text-text">Loading Offer Portal</h3>
               <p className="text-xs text-[var(--text-2)] mt-1">Retrieving employment documentation securely...</p>
             </div>
             <Loader2 className="w-5 h-5 text-[#00D9FF] animate-spin mt-1" />
@@ -241,16 +241,16 @@ export default function CandidateOfferPage() {
               Link Window Expired
             </div>
 
-            <h1 className="text-2xl font-bold text-white mb-2">Offer Link Expired</h1>
+            <h1 className="text-2xl font-bold text-text mb-2">Offer Link Expired</h1>
             <p className="text-sm text-[var(--text-2)] mb-6 leading-relaxed">
-              For security reasons, official offer letter links are valid for <span className="text-white font-medium">24 hours</span> from issuance. This link has now expired.
+              For security reasons, official offer letter links are valid for <span className="text-text font-medium">24 hours</span> from issuance. This link has now expired.
             </p>
 
             <div className="p-4 rounded-2xl bg-[var(--glass)] border border-[var(--border)] text-left mb-6">
               <div className="flex items-start gap-3">
                 <HelpCircle size={18} className="text-[var(--text-3)] shrink-0 mt-0.5" />
                 <div className="text-xs text-[var(--text-2)] leading-relaxed">
-                  Please reach out to the <span className="text-white font-medium">Triple S Production HR Team</span> or reply to the message where you received this link to request an updated access link.
+                  Please reach out to the <span className="text-text font-medium">Triple S Production HR Team</span> or reply to the message where you received this link to request an updated access link.
                 </div>
               </div>
             </div>
@@ -294,7 +294,7 @@ export default function CandidateOfferPage() {
         {renderHeader()}
 
         <div className="flex-1 flex items-center justify-center p-4 sm:p-6 relative z-10">
-          <div className="max-w-[430px] w-full bg-[#111111]/90 border border-[var(--border)] rounded-3xl p-7 sm:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.85)] relative overflow-hidden backdrop-blur-2xl animate-fade-in flex flex-col">
+          <div className="max-w-[430px] w-full bg-[var(--card-bg)]/90 border border-[var(--border)] rounded-3xl p-7 sm:p-9 shadow-[0_25px_60px_rgba(0,0,0,0.85)] relative overflow-hidden backdrop-blur-2xl animate-fade-in flex flex-col">
             
             {/* Top Cyan Highlight Line */}
             <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#00D9FF]/40 to-transparent" />
@@ -311,14 +311,14 @@ export default function CandidateOfferPage() {
                 <span>Pre-Employment Verification</span>
               </div>
 
-              <h1 className="text-2xl sm:text-[26px] font-extrabold text-white tracking-tight mb-2">
+              <h1 className="text-2xl sm:text-[26px] font-extrabold text-text tracking-tight mb-2">
                 Secure Offer Link
               </h1>
 
               {/* Personalized Greeting if candidate details are loaded */}
               {candidate?.name ? (
-                <div className="text-sm text-zinc-200 mb-1">
-                  Welcome, <span className="text-white font-bold">{candidate.name}</span>
+                <div className="text-sm text-text mb-1">
+                  Welcome, <span className="text-text font-bold">{candidate.name}</span>
                 </div>
               ) : null}
 
@@ -329,14 +329,14 @@ export default function CandidateOfferPage() {
                 </div>
               )}
 
-              <p className="text-xs sm:text-[13.5px] text-zinc-300 leading-relaxed mb-4">
+              <p className="text-xs sm:text-[13.5px] text-text-2 leading-relaxed mb-4">
                 This offer letter is confidential. To protect your compensation details, please verify your registered mobile number.
               </p>
 
               {/* Validity Notice */}
-              <div className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs text-zinc-200 mb-6 shadow-sm">
+              <div className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-[var(--glass)] border border-[var(--border)] text-xs text-text mb-6 shadow-sm">
                 <Clock size={13} className="text-[#00D9FF] shrink-0" />
-                <span>Link is valid for <strong className="text-white font-semibold">24 hours</strong> from generation</span>
+                <span>Link is valid for <strong className="text-text font-semibold">24 hours</strong> from generation</span>
               </div>
             </div>
 
@@ -351,12 +351,12 @@ export default function CandidateOfferPage() {
             {/* Verification Form */}
             <form onSubmit={handleVerify} className="flex flex-col gap-4">
               <div>
-                <label className="block text-[15px] font-bold text-zinc-200 uppercase tracking-wider mb-2">
+                <label className="block text-[15px] font-bold text-text uppercase tracking-wider mb-2">
                   Registered Mobile Number
                 </label>
                 
-                <div className="relative flex items-center rounded-xl bg-[#161616] border border-white/[0.12] focus-within:border-[#00D9FF] focus-within:ring-1 focus-within:ring-[#00D9FF]/30 transition-all">
-                  <div className="flex items-center gap-1.5 pl-3.5 pr-2.5 py-3 text-zinc-200 border-r border-white/[0.1] select-none text-xs font-semibold">
+                <div className="relative flex items-center rounded-xl bg-[var(--card-bg)] border border-[var(--border-2)] focus-within:border-[#00D9FF] focus-within:ring-1 focus-within:ring-[#00D9FF]/30 transition-all">
+                  <div className="flex items-center gap-1.5 pl-3.5 pr-2.5 py-3 text-text border-r border-white/[0.1] select-none text-xs font-semibold">
                     <Phone size={14} className="text-[#00D9FF]" />
                     <span>+91</span>
                   </div>
@@ -371,12 +371,12 @@ export default function CandidateOfferPage() {
                     }}
                     disabled={verifying}
                     maxLength={15}
-                    className="w-full bg-transparent px-3 py-3 text-white text-sm placeholder:text-zinc-500 focus:outline-none font-mono tracking-wide"
+                    className="w-full bg-transparent px-3 py-3 text-text text-sm placeholder:text-text-3 focus:outline-none font-mono tracking-wide"
                     required
                     autoFocus
                   />
                 </div>
-                <p className="text-[15px] text-zinc-400 mt-1.5 pl-1">
+                <p className="text-[15px] text-text-2 mt-1.5 pl-1">
                   Enter the phone number associated with your application
                 </p>
               </div>
@@ -384,25 +384,25 @@ export default function CandidateOfferPage() {
               <button 
                 type="submit" 
                 disabled={verifying || !phoneInput.trim()}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-b from-[#FFFFFF] to-[#E9ECEF] text-[#0A0C10] font-extrabold text-xs tracking-wider uppercase transition-all duration-200 shadow-[0_2px_14px_rgba(255,255,255,0.15),inset_0_1px_0_rgba(255,255,255,0.95)] hover:shadow-[0_6px_26px_rgba(0,217,255,0.32),inset_0_1px_0_rgba(255,255,255,1)] hover:border-[#00D9FF] active:scale-[0.98] disabled:bg-[#202226] disabled:text-zinc-400 disabled:border-white/[0.08] disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-1 border border-white/80 cursor-pointer">
+                className="w-full py-3.5 rounded-xl bg-gradient-to-b from-[#FFFFFF] to-[#E9ECEF] text-[var(--text-3)] font-extrabold text-xs tracking-wider uppercase transition-all duration-200 shadow-[0_2px_14px_rgba(255,255,255,0.15),inset_0_1px_0_rgba(255,255,255,0.95)] hover:shadow-[0_6px_26px_rgba(0,217,255,0.32),inset_0_1px_0_rgba(255,255,255,1)] hover:border-[#00D9FF] active:scale-[0.98] disabled:bg-[var(--card-bg)] disabled:text-text-2 disabled:border-[var(--border)] disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-1 border border-white/80 cursor-pointer">
                 {verifying ? (
                   <>
-                    <Loader2 size={16} className="animate-spin text-[#0A0C10]" />
+                    <Loader2 size={16} className="animate-spin text-[var(--text-3)]" />
                     <span>Verifying Identity...</span>
                   </>
                 ) : (
                   <>
                     <span>Verify & View Offer</span>
-                    <ArrowRight size={15} className={phoneInput.trim() ? "text-[#0A0C10]" : "text-zinc-400"} />
+                    <ArrowRight size={15} className={phoneInput.trim() ? "text-[var(--text-3)]" : "text-text-2"} />
                   </>
                 )}
               </button>
             </form>
 
             {/* Trust Footer */}
-            <div className="mt-7 pt-4 border-t border-white/[0.08] flex items-center justify-between text-xs text-zinc-400">
+            <div className="mt-7 pt-4 border-t border-[var(--border)] flex items-center justify-between text-xs text-text-2">
               <span>Triple S Production</span>
-              <span className="flex items-center gap-1.5 text-zinc-300">
+              <span className="flex items-center gap-1.5 text-text-2">
                 <Lock size={11} className="text-[#00D9FF]" />
                 End-to-End Encrypted
               </span>
@@ -423,7 +423,7 @@ export default function CandidateOfferPage() {
             <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center mx-auto mb-4">
               <XCircle size={24} />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Offer Not Available</h2>
+            <h2 className="text-xl font-bold text-text mb-2">Offer Not Available</h2>
             <p className="text-xs text-[var(--text-2)] leading-relaxed mb-6">
               The requested offer letter could not be found or is not currently available for viewing.
             </p>
@@ -479,13 +479,13 @@ export default function CandidateOfferPage() {
             </div>
 
             {/* Main Title */}
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-3">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text mb-3">
               Letter of Appointment
             </h1>
 
             {/* Candidate Greeting & Role Badge */}
-            <div className="max-w-xl text-sm sm:text-base text-zinc-300 leading-relaxed">
-              Congratulations <span className="font-semibold text-white">{candidate.name}</span>! Triple S Production is excited to extend you an official employment offer for
+            <div className="max-w-xl text-sm sm:text-base text-text-2 leading-relaxed">
+              Congratulations <span className="font-semibold text-text">{candidate.name}</span>! Triple S Production is excited to extend you an official employment offer for
               <div className="inline-flex items-center gap-1.5 mx-1.5 px-3 py-1 rounded-xl bg-[#00D9FF]/10 border border-[#00D9FF]/20 text-[#00D9FF] font-semibold text-sm">
                 <Briefcase size={14} className="text-[#00D9FF] shrink-0" />
                 <span>{displayRole}</span>
@@ -506,7 +506,7 @@ export default function CandidateOfferPage() {
                       Confirmed
                     </span>
                   </div>
-                  <p className="text-xs sm:text-sm text-zinc-300 mt-1 font-normal leading-relaxed">
+                  <p className="text-xs sm:text-sm text-text-2 mt-1 font-normal leading-relaxed">
                     Your response has been confirmed. The onboarding team will reach out shortly with next steps.
                   </p>
                 </div>
@@ -526,7 +526,7 @@ export default function CandidateOfferPage() {
                       Declined
                     </span>
                   </div>
-                  <p className="text-xs sm:text-sm text-zinc-300 mt-1 font-normal leading-relaxed">
+                  <p className="text-xs sm:text-sm text-text-2 mt-1 font-normal leading-relaxed">
                     Thank you for your response. We wish you the very best in your career journey.
                   </p>
                 </div>
@@ -536,18 +536,18 @@ export default function CandidateOfferPage() {
         </div>
 
         {/* Document Workspace Container - Scrollable Document Viewer Box */}
-        <div className="w-full flex flex-col rounded-3xl border border-[var(--border)] bg-[#0d0d0d] shadow-2xl overflow-hidden mt-2">
+        <div className="w-full flex flex-col rounded-3xl border border-[var(--border)] bg-[var(--card-bg)] shadow-2xl overflow-hidden mt-2">
           {/* Document Header Bar */}
           <div className="px-4 sm:px-6 py-3.5 bg-[var(--bg2)] border-b border-[var(--border)] flex items-center justify-between gap-3 sticky top-0 z-20 backdrop-blur-md">
-            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200 uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-xs font-semibold text-text uppercase tracking-wider">
               <FileText size={15} className="text-[#00D9FF]" />
               <span>Document Viewer</span>
-              <span className="hidden sm:inline text-[15px] font-normal normal-case text-zinc-400">· Official Appointment Letter</span>
+              <span className="hidden sm:inline text-[15px] font-normal normal-case text-text-2">· Official Appointment Letter</span>
             </div>
 
             <div className="flex items-center gap-3">
               {/* Scroll Hint Badge */}
-              <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08] text-[15px] text-zinc-400">
+              <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--glass)] border border-[var(--border)] text-[15px] text-text-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00D9FF] animate-pulse" />
                 <span>Scroll box to read all pages</span>
               </div>
@@ -557,7 +557,7 @@ export default function CandidateOfferPage() {
                 <button 
                   onClick={() => setZoomScale(prev => Math.max(prev - 10, 60))}
                   title="Zoom out"
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-white hover:bg-[var(--glass-2)] transition-colors">
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-text hover:bg-[var(--glass-2)] transition-colors">
                   <ZoomOut size={14} />
                 </button>
                 <span className="text-[15px] font-mono px-2 text-[var(--text)] select-none">
@@ -566,13 +566,13 @@ export default function CandidateOfferPage() {
                 <button 
                   onClick={() => setZoomScale(prev => Math.min(prev + 10, 130))}
                   title="Zoom in"
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-white hover:bg-[var(--glass-2)] transition-colors">
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-text hover:bg-[var(--glass-2)] transition-colors">
                   <ZoomIn size={14} />
                 </button>
                 <button 
                   onClick={() => setZoomScale(100)}
                   title="Reset zoom"
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-white hover:bg-[var(--glass-2)] transition-colors ml-0.5">
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-text hover:bg-[var(--glass-2)] transition-colors ml-0.5">
                   <RotateCcw size={12} />
                 </button>
               </div>
@@ -580,7 +580,7 @@ export default function CandidateOfferPage() {
           </div>
 
           {/* Document Viewing Area - Contained scrollable box */}
-          <div className="w-full h-[580px] sm:h-[680px] max-h-[75vh] flex justify-center overflow-y-auto overflow-x-auto p-4 sm:p-8 md:p-10 bg-[#09090c] custom-scrollbar select-text relative">
+          <div className="w-full h-[580px] sm:h-[680px] max-h-[75vh] flex justify-center overflow-y-auto overflow-x-auto p-4 sm:p-8 md:p-10 bg-[var(--card-bg)] custom-scrollbar select-text relative">
             <div 
               style={{ transform: `scale(${zoomScale / 100})`, transformOrigin: "top center" }}
               className="w-max transition-transform duration-150 drop-shadow-[0_16px_40px_rgba(0,0,0,0.85)] my-2 pb-8 flex flex-col items-center">
@@ -591,12 +591,12 @@ export default function CandidateOfferPage() {
 
         {/* Actions for Pending Offer */}
         {offer.status === "sent" && (
-          <div className="relative overflow-hidden bg-[#121418]/90 backdrop-blur-2xl border border-white/[0.08] rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.85),0_0_1px_1px_rgba(255,255,255,0.05)] sticky bottom-4 z-50 flex flex-col items-center w-full">
+          <div className="relative overflow-hidden bg-[var(--card-bg)]/90 backdrop-blur-2xl border border-[var(--border)] rounded-2xl sm:rounded-3xl p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.85),0_0_1px_1px_rgba(255,255,255,0.05)] sticky bottom-4 z-50 flex flex-col items-center w-full">
             {/* Top Cyan Highlight Beam */}
             <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#00D9FF]/40 to-transparent" />
 
             {/* Prompt Label */}
-            <div className="flex items-center gap-2 mb-4 text-xs sm:text-[13.5px] text-zinc-300 font-medium text-center">
+            <div className="flex items-center gap-2 mb-4 text-xs sm:text-[13.5px] text-text-2 font-medium text-center">
               <Sparkles size={14} className="text-[#00D9FF] shrink-0" />
               <span>Please review the details in the appointment letter above and provide your decision:</span>
             </div>
@@ -608,15 +608,15 @@ export default function CandidateOfferPage() {
                 type="button"
                 onClick={() => handleRespond("accepted")}
                 disabled={submitting}
-                className="group relative h-[48px] sm:h-[52px] px-6 rounded-xl sm:rounded-2xl text-[15px] sm:text-[16px] font-extrabold uppercase tracking-wider transition-all duration-200 flex-1 inline-flex items-center justify-center gap-2.5 bg-gradient-to-b from-[#FFFFFF] to-[#E9ECEF] text-[#0A0C10] shadow-[0_2px_14px_rgba(255,255,255,0.15),inset_0_1px_0_rgba(255,255,255,0.95)] hover:shadow-[0_6px_26px_rgba(0,217,255,0.32),inset_0_1px_0_rgba(255,255,255,1)] hover:from-white hover:to-white active:scale-[0.98] select-none cursor-pointer border border-white/80 hover:border-[#00D9FF] outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF]/50 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="group relative h-[48px] sm:h-[52px] px-6 rounded-xl sm:rounded-2xl text-[15px] sm:text-[16px] font-extrabold uppercase tracking-wider transition-all duration-200 flex-1 inline-flex items-center justify-center gap-2.5 bg-gradient-to-b from-[#FFFFFF] to-[#E9ECEF] text-[var(--text-3)] shadow-[0_2px_14px_rgba(255,255,255,0.15),inset_0_1px_0_rgba(255,255,255,0.95)] hover:shadow-[0_6px_26px_rgba(0,217,255,0.32),inset_0_1px_0_rgba(255,255,255,1)] hover:from-white hover:to-white active:scale-[0.98] select-none cursor-pointer border border-white/80 hover:border-[#00D9FF] outline-none focus-visible:ring-2 focus-visible:ring-[#00D9FF]/50 disabled:opacity-50 disabled:cursor-not-allowed">
                 {submitting ? (
                   <>
-                    <Loader2 size={18} className="animate-spin text-[#0A0C10]" />
+                    <Loader2 size={18} className="animate-spin text-[var(--text-3)]" />
                     <span>Processing...</span>
                   </>
                 ) : (
                   <>
-                    <CheckCircle2 size={18} className="text-[#0A0C10] group-hover:scale-110 transition-transform duration-200" />
+                    <CheckCircle2 size={18} className="text-[var(--text-3)] group-hover:scale-110 transition-transform duration-200" />
                     <span>Accept Offer</span>
                   </>
                 )}
@@ -627,8 +627,8 @@ export default function CandidateOfferPage() {
                 type="button"
                 onClick={() => handleRespond("rejected")}
                 disabled={submitting}
-                className="group relative h-[48px] sm:h-[52px] px-6 rounded-xl sm:rounded-2xl text-[15px] sm:text-[16px] font-semibold uppercase tracking-wider transition-all duration-200 flex-1 inline-flex items-center justify-center gap-2.5 bg-[#17191E]/90 hover:bg-[#1F2229] active:bg-[#131519] text-[#C4C9D4] hover:text-white border border-[#2B303A] hover:border-red-500/50 hover:shadow-[0_4px_22px_rgba(239,68,68,0.18)] active:scale-[0.98] select-none cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed">
-                <XCircle size={18} className="text-[#848B98] group-hover:text-red-400 group-hover:scale-110 transition-all duration-200" />
+                className="group relative h-[48px] sm:h-[52px] px-6 rounded-xl sm:rounded-2xl text-[15px] sm:text-[16px] font-semibold uppercase tracking-wider transition-all duration-200 flex-1 inline-flex items-center justify-center gap-2.5 bg-[var(--card-bg)]/90 hover:bg-[var(--table-row-hover)] active:bg-[var(--card-bg)] text-[var(--text)] hover:text-text border border-[var(--border-2)] hover:border-red-500/50 hover:shadow-[0_4px_22px_rgba(239,68,68,0.18)] active:scale-[0.98] select-none cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed">
+                <XCircle size={18} className="text-[var(--text)] group-hover:text-red-400 group-hover:scale-110 transition-all duration-200" />
                 <span className="group-hover:text-red-300 transition-colors">Decline Offer</span>
               </button>
             </div>

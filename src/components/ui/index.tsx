@@ -9,7 +9,7 @@ export function Btn({ variant="ghost", size="md", className, children, ...props 
     <button className={clsx(
       "inline-flex items-center gap-1.5 font-semibold uppercase tracking-wide rounded-xl cursor-pointer transition-all duration-150 border",
       size==="sm" ? "text-xs px-3 py-2" : "text-sm px-4 py-2.5",
-      variant==="primary" && "bg-white text-black border-white hover:bg-white/85",
+      variant==="primary" && "bg-accent text-bg2 border-accent hover:opacity-90",
       variant==="ghost"   && "bg-[var(--glass-2)] text-[var(--text)] border-[var(--border-2)] hover:bg-[var(--glass-3)] hover:border-[var(--border-3)]",
       variant==="danger"  && "bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20",
       variant==="outline" && "bg-transparent text-[var(--text-2)] border-[var(--border)] hover:text-[var(--text)] hover:border-[var(--border-2)]",
@@ -23,7 +23,7 @@ export function Input({ label, className, ...props }: React.InputHTMLAttributes<
     <div className="flex flex-col gap-1.5">
       {label && <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">{label}</div>}
       <input className={clsx(
-        "bg-[var(--glass)] border border-[var(--border)] rounded-xl text-[var(--text)] text-sm px-3.5 py-2.5 transition-colors outline-none focus:border-[var(--border-3)] placeholder:text-[#808080]",
+        "bg-[var(--glass)] border border-[var(--border)] rounded-xl text-[var(--text)] text-sm px-3.5 py-2.5 transition-colors outline-none focus:border-[var(--border-3)] placeholder:text-[var(--text-3)]",
         className
       )} {...props} />
     </div>
@@ -35,7 +35,7 @@ export function Select({ label, className, children, ...props }: React.SelectHTM
     <div className="flex flex-col gap-1.5">
       {label && <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">{label}</div>}
       <select className={clsx(
-        "bg-[var(--glass-2)] border border-[var(--border)] rounded-xl text-[var(--text)] text-sm px-3.5 py-2.5 transition-colors cursor-pointer appearance-none outline-none focus:border-[var(--border-3)] [&>option]:bg-[#1a1a1a] [&>option]:text-[var(--text)]",
+        "bg-[var(--glass-2)] border border-[var(--border)] rounded-xl text-[var(--text)] text-sm px-3.5 py-2.5 transition-colors cursor-pointer appearance-none outline-none focus:border-[var(--border-3)] [&>option]:bg-[var(--card-bg)] [&>option]:text-[var(--text)]",
         className
       )} {...props}>{children}</select>
     </div>
@@ -126,7 +126,7 @@ export function StatCard({ label, value, delta, deltaUp }: { label:string; value
   return (
     <div className="glass p-5">
       <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-widest mb-2">{label}</div>
-      <div className="text-[32px] font-extrabold tracking-tight text-white leading-none">{value}</div>
+      <div className="text-[32px] font-extrabold tracking-tight text-text leading-none">{value}</div>
       {delta && <div className={clsx("text-xs font-medium mt-2", deltaUp?"text-[var(--green)]":"text-[var(--text-3)]")}>{delta}</div>}
     </div>
   );

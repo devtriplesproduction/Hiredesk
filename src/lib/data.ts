@@ -28,7 +28,7 @@ export function getEmploymentStatusMeta(status?: EmploymentStatus) {
         badgeLabel: "Not Working",
         icon: "⚪",
         color: "#9CA3AF",
-        textColor: "text-zinc-400",
+        textColor: "text-text-2",
         bg: "rgba(156, 163, 175, 0.12)",
         border: "rgba(156, 163, 175, 0.3)",
       };
