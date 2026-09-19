@@ -850,7 +850,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer select-none outline-none flex-shrink-0 bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] active:bg-[var(--card-bg)] text-[var(--text)] hover:text-[var(--text)] active:text-white border-[var(--border-2)] hover:border-[#00D9FF]/60 focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer select-none outline-none flex-shrink-0 bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] active:bg-[var(--card-bg)] text-[var(--text)] hover:text-[var(--text)] active:text-[var(--text)] border-[var(--border-2)] hover:border-[#00D9FF]/60 focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
         >
           <span className="text-sm leading-none text-[#00D9FF]">←</span>
           <span>BACK</span>
@@ -858,7 +858,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--card-bg)] border border-[var(--border-2)]">
           <span className="w-2 h-2 rounded-full bg-[#00D9FF] shadow-[0_0_8px_rgba(0,217,255,0.6)]" />
           <span className="text-xs text-[var(--text)] font-semibold uppercase tracking-wider">Template:</span>
-          <span className="text-sm font-bold tracking-tight text-white">{contract.name}</span>
+          <span className="text-sm font-bold tracking-tight text-[var(--text)]">{contract.name}</span>
         </div>
       </div>
 
@@ -892,7 +892,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                     <button
                       type="button"
                       onClick={handleClearDocLogo}
-                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-black/80 hover:bg-red-600 text-white text-xs flex items-center justify-center transition-colors cursor-pointer"
+                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-[var(--bg)]/80 hover:bg-red-600 text-[var(--text)] text-xs flex items-center justify-center transition-colors cursor-pointer"
                       title="Remove document-specific logo (falls back to global)"
                     >
                       ✕
@@ -949,7 +949,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                     <button
                       type="button"
                       onClick={handleClearDocSign}
-                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-black/80 hover:bg-red-600 text-white text-xs flex items-center justify-center transition-colors cursor-pointer"
+                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-[var(--bg)]/80 hover:bg-red-600 text-[var(--text)] text-xs flex items-center justify-center transition-colors cursor-pointer"
                       title="Remove document-specific signature (falls back to global)"
                     >
                       ✕
@@ -1093,7 +1093,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
               ref={workspaceRef}
               className="w-full overflow-x-auto overflow-y-auto p-6 sm:p-10 flex flex-col items-center custom-scrollbar"
               style={{
-                backgroundColor: "#07080A",
+                backgroundColor: "var(--card-bg)",
                 backgroundImage: `radial-gradient(circle at 50% 25%, rgba(0, 217, 255, 0.02) 0%, transparent 60%),
                   radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px)`,
                 backgroundSize: "100% 100%, 28px 28px",

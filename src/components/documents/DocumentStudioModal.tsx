@@ -486,7 +486,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
     >
       <div
         className="w-full max-w-[1440px] h-full max-h-[92vh] flex flex-col rounded-2xl overflow-hidden border shadow-2xl relative animate-scale-up"
-        style={{ background: "#0D0E12", borderColor: "#24272D" }}
+        style={{ background: "var(--bg2)", borderColor: "var(--border)" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 px-6 border-b border-[var(--border-2)] bg-[var(--card-bg)] shrink-0">
@@ -496,15 +496,15 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-bold text-white tracking-tight leading-tight">
+                <h2 className="text-xl sm:text-2xl font-bold text-text tracking-tight leading-tight">
                   Document Studio
                 </h2>
-                <span className="text-[16px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-400">
+                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-400">
                   HireDesk Docs
                 </span>
               </div>
               <p className="text-xs text-[var(--text-2)] mt-0.5">
-                Generating for <span className="font-semibold text-white">{candidate.name}</span>
+                Generating for <span className="font-semibold text-text">{candidate.name}</span>
                 {candidate.roleName && <span className="text-[var(--text-3)]"> · {candidate.roleName}</span>}
               </p>
             </div>
@@ -513,7 +513,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-[var(--text)] bg-white/[0.04] hover:bg-white/[0.10] border border-white/[0.08] hover:border-white/[0.20] transition-all cursor-pointer active:scale-95"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-2)] hover:text-[var(--text)] bg-[var(--glass)] hover:bg-[var(--glass-2)] border border-[var(--border)] hover:border-[var(--border-3)] transition-all cursor-pointer active:scale-95"
             title="Close"
           >
             <X className="w-4 h-4" />
@@ -548,7 +548,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
                     key={group}
                     className="p-3.5 rounded-xl bg-[var(--card-bg)] border border-[var(--border-2)] flex flex-col gap-3"
                   >
-                    <div className="flex items-center justify-between pb-1 border-b border-white/[0.06]">
+                    <div className="flex items-center justify-between pb-1 border-b border-[var(--border)]">
                       <h3 className="text-xs font-bold text-[var(--text)] uppercase tracking-wider flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA]"></span>
                         <span>{group} Details</span>
@@ -587,7 +587,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
                               value={(data as any)[field.key] || ""}
                               onChange={handleInputChange}
                               placeholder={`Enter ${field.label.toLowerCase()}...`}
-                              className="w-full bg-[var(--card-bg)] border border-[var(--border-2)] hover:border-[var(--border-3)] focus:border-[#A78BFA]/70 text-white text-xs rounded-lg px-3 py-2 outline-none transition-all placeholder:text-[var(--text-3)] focus:bg-[var(--card-bg)] focus:ring-1 focus:ring-[#A78BFA]/30"
+                              className="w-full bg-[var(--card-bg)] border border-[var(--border-2)] hover:border-[var(--border-3)] focus:border-[#A78BFA]/70 text-text text-xs rounded-lg px-3 py-2 outline-none transition-all placeholder:text-[var(--text-3)] focus:bg-[var(--card-bg)] focus:ring-1 focus:ring-[#A78BFA]/30"
                             />
                           </div>
                         );
@@ -604,14 +604,14 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
             ref={previewContainerRef}
             className="flex-1 overflow-y-auto p-6 sm:p-10 relative flex flex-col items-center gap-5 select-text"
             style={{
-              background: "radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px) 0 0 / 24px 24px, #08090B",
+              background: "radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px) 0 0 / 24px 24px, var(--bg)",
             }}
           >
             {/* Top Toolbar: Mode Controls + Status + Direct Editing Pill */}
-            <div className="sticky top-0 z-30 w-full max-w-[850px] flex flex-col sm:flex-row items-center justify-between gap-3 p-3 px-4 rounded-2xl bg-[var(--card-bg)]/95 border border-white/[0.12] backdrop-blur-xl shadow-2xl">
+            <div className="sticky top-0 z-30 w-full max-w-[850px] flex flex-col sm:flex-row items-center justify-between gap-3 p-3 px-4 rounded-2xl bg-[var(--card-bg)]/95 border border-[var(--border-2)] backdrop-blur-xl shadow-2xl">
               {/* Left: Document info */}
               <div className="flex items-center gap-2 text-xs">
-                <div className="flex items-center gap-1.5 font-bold text-white">
+                <div className="flex items-center gap-1.5 font-bold text-text">
                   <FileText className="w-3.5 h-3.5 text-[#A78BFA]" />
                   <span>{DOC_OPTIONS.find((o) => o.value === docType)?.label}</span>
                 </div>
@@ -638,7 +638,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
                   </button>
                 )}
 
-                <div className="flex items-center bg-[var(--card-bg)] p-1 rounded-xl border border-white/[0.08] shadow-inner">
+                <div className="flex items-center bg-[var(--card-bg)] p-1 rounded-xl border border-[var(--border)] shadow-inner">
                   <button
                     type="button"
                     onClick={() => handleModeToggle("temporary")}
@@ -721,7 +721,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
         <div className="p-4 px-6 border-t border-[var(--border-2)] bg-[var(--card-bg)] flex flex-col sm:flex-row justify-between items-center gap-3 shrink-0">
           <div className="flex items-center gap-2 text-xs text-[var(--text-2)]">
             <span className="text-[var(--text-3)]">Active Template:</span>
-            <span className="font-semibold text-white px-2.5 py-1 rounded-md bg-white/[0.05] border border-white/[0.08]">
+            <span className="font-semibold text-text px-2.5 py-1 rounded-md bg-[var(--glass)] border border-[var(--border)]">
               {DOC_OPTIONS.find((o) => o.value === docType)?.label}
             </span>
             <span className="text-[var(--text-3)] ml-2">Mode:</span>
@@ -740,7 +740,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-[var(--text)] hover:text-[var(--text)] bg-white/[0.04] hover:bg-white/[0.09] border border-white/[0.10] hover:border-white/[0.20] rounded-xl active:scale-95 transition-all cursor-pointer"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-[var(--text)] hover:text-[var(--text)] bg-[var(--glass)] hover:bg-white/[0.09] border border-white/[0.10] hover:border-[var(--border-3)] rounded-xl active:scale-95 transition-all cursor-pointer"
             >
               Close
             </button>
@@ -749,7 +749,7 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
               type="button"
               onClick={handleDownload}
               disabled={isGenerating}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 active:scale-95 border border-blue-400/30 rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.35)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2 text-xs font-bold text-text bg-blue-600 hover:bg-blue-500 active:scale-95 border border-blue-400/30 rounded-xl transition-all shadow-[0_0_20px_rgba(37,99,235,0.35)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isGenerating ? (
                 <>

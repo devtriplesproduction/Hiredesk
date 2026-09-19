@@ -59,7 +59,6 @@ const CandidateRow = memo(function CandidateRow({ candidate: c, isSelected, onSe
         <StatusBadge status={c.status} />
       </td>
       <td className={tdText}>{c.city || "—"}</td>
-      <td className={tdText}>{c.gender || "—"}</td>
       <td className={tdCls}>
         <EmploymentBadge status={c.employmentStatus} />
       </td>
@@ -195,8 +194,8 @@ export default function CandidatesTable() {
       {/* ── Candidates Title Row ────────────────────────────────────────── */}
       <div className="flex items-start sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-[22px] font-extrabold tracking-tight text-text">Candidates</h1>
-          <div className="font-mono text-[16px] text-[var(--text-3)] mt-1 uppercase tracking-widest">
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text">Candidates</h1>
+          <div className="font-mono text-[16px] text-[var(--text-3)] mt-1 tracking-widest">
             All applicants · Filter · Review · Score
           </div>
         </div>
@@ -267,7 +266,7 @@ export default function CandidatesTable() {
                   <div
                     key={c.id}
                     className="p-4 rounded-[11px] border border-[var(--border-2)] flex flex-col gap-3"
-                    style={{ background: "rgba(10, 11, 13, 0.55)" }}
+                    style={{ background: "var(--table-bg)" }}
                   >
                     <div className="flex justify-between items-start gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
@@ -313,11 +312,11 @@ export default function CandidatesTable() {
             {/* Desktop Candidate Table */}
             <div
               className="hidden md:block rounded-[11px] overflow-hidden border border-[var(--border-2)]"
-              style={{ background: "rgba(10, 11, 13, 0.55)" }}
+              style={{ background: "var(--table-bg)" }}
             >
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
-                  <thead style={{ background: "#0D0E11" }}>
+                  <thead style={{ background: "var(--table-header-bg)" }}>
                     <tr>
                       <th className={clsx(thCls, "w-[44px] text-center")}>
                         <input
@@ -327,15 +326,14 @@ export default function CandidatesTable() {
                           className="w-[16px] h-[16px] rounded border-[var(--input-border)] bg-[var(--input-bg)] accent-[#00D9FF] cursor-pointer"
                         />
                       </th>
-                      <th className={clsx(thCls, "w-[23%]")}>Candidate</th>
-                      <th className={clsx(thCls, "w-[14%]")}>Role</th>
+                      <th className={clsx(thCls, "w-[25%]")}>Candidate</th>
+                      <th className={clsx(thCls, "w-[15%]")}>Role</th>
                       <th className={clsx(thCls, "w-[7%] text-center")}>Score</th>
-                      <th className={clsx(thCls, "w-[11%]")}>Status</th>
-                      <th className={clsx(thCls, "w-[8%]")}>City</th>
-                      <th className={clsx(thCls, "w-[8%]")}>Gender</th>
-                      <th className={clsx(thCls, "w-[11%]")}>Employment</th>
+                      <th className={clsx(thCls, "w-[12%]")}>Status</th>
+                      <th className={clsx(thCls, "w-[10%]")}>City</th>
+                      <th className={clsx(thCls, "w-[12%]")}>Employment</th>
                       <th className={clsx(thCls, "w-[8%]")}>Exp</th>
-                      <th className={clsx(thCls, "w-[10%]")}>Applied</th>
+                      <th className={clsx(thCls, "w-[11%]")}>Applied</th>
                       <th className={clsx(thCls, "w-[44px] text-right")}></th>
                     </tr>
                   </thead>

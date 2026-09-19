@@ -151,7 +151,7 @@ export default function ContractsList() {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-2.5 w-full sm:w-auto flex-shrink-0 mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-white/[0.06] sm:border-t-0 justify-end">
+                <div className="flex items-center gap-2.5 w-full sm:w-auto flex-shrink-0 mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-[var(--border)] sm:border-t-0 justify-end">
                   <button
                     type="button"
                     onClick={() => { setPreselectedCandidateId(""); setGenerating(c); }}
@@ -205,7 +205,7 @@ export default function ContractsList() {
                 must be filled and customized before issuing to candidates.
               </p>
 
-              <div className="mt-4 pt-3.5 border-t border-white/[0.06] flex items-center gap-2 text-[11.5px] text-[var(--text)]">
+              <div className="mt-4 pt-3.5 border-t border-[var(--border)] flex items-center gap-2 text-[11.5px] text-[var(--text)]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] flex-shrink-0" />
                 <span>Recommended: Review with legal counsel prior to formal execution</span>
               </div>
@@ -218,7 +218,7 @@ export default function ContractsList() {
               <div className="text-[11.5px] font-bold text-[var(--text)] uppercase tracking-[0.1em]">
                 Global Brand Assets
               </div>
-              <span className="text-[10.5px] font-mono text-[var(--text-3)] bg-white/[0.04] px-2 py-0.5 rounded-md border border-white/[0.06]">
+              <span className="text-[10.5px] font-mono text-[var(--text-3)] bg-[var(--glass)] px-2 py-0.5 rounded-md border border-[var(--border)]">
                 Auto-Applied
               </span>
             </div>
@@ -334,7 +334,7 @@ export default function ContractsList() {
             </div>
 
             {/* Footnote */}
-            <div className="mt-4 pt-3.5 border-t border-white/[0.06] flex items-start gap-2 text-[11.5px] text-[var(--text)] leading-relaxed">
+            <div className="mt-4 pt-3.5 border-t border-[var(--border)] flex items-start gap-2 text-[11.5px] text-[var(--text)] leading-relaxed">
               <span className="text-[#00D9FF] select-none text-xs leading-none mt-0.5">✦</span>
               <span>Brand assets automatically sync to headers, watermarks, and signature footers across all generated contracts.</span>
             </div>

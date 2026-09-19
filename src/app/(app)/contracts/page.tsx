@@ -6,17 +6,17 @@ export default function ContractsPage() {
   return (
     <div className="animate-fade-in max-w-[1600px] mx-auto pb-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 sm:mb-8 pb-5 border-b border-white/[0.06]">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 sm:mb-8 pb-5 border-b border-[var(--border)]">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text">
               Contracts &amp; Agreements
             </h1>
             <span className="hidden xs:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[15px] font-mono font-semibold text-[#00D9FF] bg-[#00D9FF]/10 border border-[#00D9FF]/25">
               8 Templates
             </span>
           </div>
-          <div className="font-mono text-[15px] sm:text-xs text-[var(--text)] mt-1.5 uppercase tracking-widest flex items-center gap-2 flex-wrap">
+          <div className="font-mono text-[15px] sm:text-xs text-[var(--text)] mt-1.5 tracking-widest flex items-center gap-2 flex-wrap">
             <span>Agency-grade legal documents</span>
             <span className="text-text/20">·</span>
             <span>Triple S Production branding</span>

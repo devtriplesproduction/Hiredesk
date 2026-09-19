@@ -139,7 +139,7 @@ export default function GenerateContractModal({ contract, preselectedCandidateId
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
 
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl animate-fade-in"
-        style={{ background: "#131313", border: "1px solid var(--border-2)" }}>
+        style={{ background: "var(--card-bg)", border: "1px solid var(--border-2)" }}>
 
         <div className="flex items-center justify-between p-6 pb-4" style={{ borderBottom: "1px solid var(--border)" }}>
           <div>

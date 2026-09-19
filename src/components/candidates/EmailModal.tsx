@@ -280,17 +280,17 @@ export default function EmailModal({ candidate, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-black/70 backdrop-blur-3xl border-l border-border shadow-[0_0_40px_rgba(0,0,0,0.9)] flex flex-col animate-slide-in-right"
+    <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-[var(--glass-2)] backdrop-blur-3xl border-l border-border shadow-[0_0_40px_rgba(0,0,0,0.9)] flex flex-col animate-slide-in-right"
       style={{ boxShadow: "-20px 0 60px rgba(0,0,0,0.9)" }}>
       
-      <div className="p-6 border-b border-border flex items-center justify-between bg-gradient-to-b from-white/[0.08] to-transparent relative overflow-hidden">
+      <div className="p-6 border-b border-border flex items-center justify-between bg-gradient-to-b from-[var(--text)]/[0.08] to-transparent relative overflow-hidden">
         <div className="absolute top-0 left-10 right-10 h-[100px] bg-blue-500/20 blur-[60px] rounded-full pointer-events-none"></div>
         <div className="flex items-center gap-4 relative z-10">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-900/40 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-[0_0_20px_rgba(59,130,246,0.3)] backdrop-blur-md">
             <EmailIcon className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-400 tracking-tight leading-none">Email Outreach</h3>
+            <h3 className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-[var(--text)] to-[var(--text-3)] tracking-tight leading-none">Email Outreach</h3>
             <span className="text-xs text-text-2 font-medium mt-1.5 block">Recipient: <span className="text-text font-bold">{candidate.name}</span></span>
           </div>
         </div>
@@ -303,7 +303,7 @@ export default function EmailModal({ candidate, onClose }: Props) {
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar relative">
         
-        <div className="p-5 rounded-2xl bg-white/[0.02] border border-border shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] flex flex-col gap-4 backdrop-blur-md transition-all hover:bg-white/[0.03]">
+        <div className="p-5 rounded-2xl bg-[var(--glass-2)] border border-border shadow-[inset_0_1px_1px_var(--glass-2)] flex flex-col gap-4 backdrop-blur-md transition-all hover:bg-[var(--glass-2)]">
           <div className="text-[16px] uppercase font-black tracking-[0.2em] text-blue-500/80 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span>
             Configuration
@@ -375,7 +375,7 @@ export default function EmailModal({ candidate, onClose }: Props) {
                   className={`p-3.5 rounded-xl border text-left transition-all duration-300 flex flex-col gap-2 relative overflow-hidden group ${
                     active
                       ? "border-blue-500/50 bg-blue-500/10 text-text shadow-[0_0_20px_rgba(59,130,246,0.1)] scale-[1.02]"
-                      : "border-border bg-white/[0.02] hover:bg-white/[0.06] hover:border-border-2 text-text-2"
+                      : "border-border bg-[var(--glass-2)] hover:bg-[var(--glass-2)] hover:border-border-2 text-text-2"
                   }`}
                 >
                   {active && <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-transparent pointer-events-none"></div>}
@@ -429,12 +429,12 @@ export default function EmailModal({ candidate, onClose }: Props) {
               className="w-full bg-transparent resize-none p-5 text-sm font-medium text-text outline-none leading-relaxed custom-scrollbar"
             />
             
-            <div className="px-4 py-2 border-t border-zinc-900 bg-[var(--card-bg)]/80 flex items-center justify-between text-[16px] text-text-3 font-medium">
+            <div className="px-4 py-2 border-t border-[var(--border-2)] bg-[var(--card-bg)]/80 flex items-center justify-between text-[16px] text-text-3 font-medium">
               <div className="flex gap-2">
-                <span className={`px-1.5 py-0.2 rounded font-bold ${messageBody.includes(candidate.name) ? "text-blue-400 bg-blue-500/10" : "text-zinc-600 bg-[var(--card-bg)]"}`}>
+                <span className={`px-1.5 py-0.2 rounded font-bold ${messageBody.includes(candidate.name) ? "text-blue-400 bg-blue-500/10" : "text-[var(--text-3)] bg-[var(--card-bg)]"}`}>
                   Name Replaced
                 </span>
-                <span className={`px-1.5 py-0.2 rounded font-bold ${messageBody.includes(roleInput) ? "text-blue-400 bg-blue-500/10" : "text-zinc-600 bg-[var(--card-bg)]"}`}>
+                <span className={`px-1.5 py-0.2 rounded font-bold ${messageBody.includes(roleInput) ? "text-blue-400 bg-blue-500/10" : "text-[var(--text-3)] bg-[var(--card-bg)]"}`}>
                   Role Replaced
                 </span>
               </div>
@@ -455,7 +455,7 @@ export default function EmailModal({ candidate, onClose }: Props) {
           <div className="text-[16px] uppercase font-bold tracking-widest text-text-3">Outreach History Audit</div>
           
           {history.length === 0 ? (
-            <div className="text-center py-6 bg-[var(--card-bg)]/10 border border-dashed border-zinc-900 rounded-2xl text-[15px] text-zinc-600">
+            <div className="text-center py-6 bg-[var(--card-bg)]/10 border border-dashed border-[var(--border-2)] rounded-2xl text-[15px] text-[var(--text-3)]">
               No Email outreach records tracked for this candidate.
             </div>
           ) : (
@@ -465,9 +465,9 @@ export default function EmailModal({ candidate, onClose }: Props) {
                   month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
                 });
                 return (
-                  <div key={index} className="p-3 bg-[var(--card-bg)]/50 border border-zinc-900/60 rounded-xl space-y-1.5 text-[15px]">
+                  <div key={index} className="p-3 bg-[var(--card-bg)]/50 border border-[var(--border)] rounded-xl space-y-1.5 text-[15px]">
                     <div className="flex items-center justify-between">
-                      <span className="font-extrabold text-text uppercase tracking-wider text-[9px] bg-[var(--card-bg)] px-1.5 py-0.2 rounded border border-zinc-800">
+                      <span className="font-extrabold text-text uppercase tracking-wider text-[9px] bg-[var(--card-bg)] px-1.5 py-0.2 rounded border border-[var(--border-2)]">
                         {log.templateName}
                       </span>
                       <span className="text-[9px] text-text-3 font-mono font-medium">{date}</span>
@@ -488,7 +488,7 @@ export default function EmailModal({ candidate, onClose }: Props) {
       </div>
 
       <div className="p-5 border-t border-border bg-gradient-to-t from-black to-white/[0.02] flex items-center justify-end gap-3 backdrop-blur-md">
-        <Btn variant="outline" size="md" onClick={onClose} className="rounded-xl border-border hover:bg-white/5 text-text-2 font-bold transition-all">
+        <Btn variant="outline" size="md" onClick={onClose} className="rounded-xl border-border hover:bg-[var(--glass-2)] text-text-2 font-bold transition-all">
           Cancel
         </Btn>
         
@@ -498,11 +498,11 @@ export default function EmailModal({ candidate, onClose }: Props) {
           className={`inline-flex items-center gap-2.5 font-bold uppercase tracking-wider rounded-xl text-xs px-6 py-3 transition-all duration-300 select-none ${
             isEmailValid && !isSending
               ? "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-text shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_30px_rgba(59,130,246,0.5)] active:scale-95 hover:-translate-y-0.5 border-none"
-              : "bg-white/5 text-zinc-600 border border-border cursor-not-allowed"
+              : "bg-[var(--glass-2)] text-[var(--text-3)] border border-border cursor-not-allowed"
           }`}
         >
           {isSending ? (
-            <div className="w-4 h-4 border-2 border-zinc-600 border-t-white rounded-full animate-spin"></div>
+            <div className="w-4 h-4 border-2 border-[var(--border-3)] border-t-[var(--text)] rounded-full animate-spin"></div>
           ) : (
             <EmailIcon className="w-4 h-4 text-text drop-shadow-md" />          )}
           <span>{isSending ? "Sending..." : "Send via Email"}</span>

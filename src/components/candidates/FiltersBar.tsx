@@ -207,22 +207,7 @@ export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
         <button
           type="button"
           onClick={onBulkDelete}
-          className="h-[40px] px-3.5 rounded-[9px] text-[11.5px] font-semibold tracking-wide transition-all duration-150 inline-flex items-center justify-center gap-1.5 cursor-pointer select-none active:scale-[0.98] whitespace-nowrap flex-shrink-0"
-          style={{
-            background: "#151719",
-            border: "1px solid #303238",
-            color: "#9A9FA8",
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.background = "rgba(239, 68, 68, 0.10)";
-            e.currentTarget.style.borderColor = "rgba(239, 68, 68, 0.35)";
-            e.currentTarget.style.color = "#EF4444";
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.background = "#151719";
-            e.currentTarget.style.borderColor = "#303238";
-            e.currentTarget.style.color = "#9A9FA8";
-          }}
+          className="h-[40px] px-3.5 rounded-[9px] text-[11.5px] font-semibold tracking-wide transition-all duration-150 inline-flex items-center justify-center gap-1.5 cursor-pointer select-none active:scale-[0.98] whitespace-nowrap flex-shrink-0 bg-[var(--input-bg)] border border-[var(--input-border)] text-[var(--text-3)] hover:bg-red-500/10 hover:border-[#EF4444]/35 hover:text-[#EF4444]"
         >
           <span>⌀</span>
           <span>BULK DELETE</span>

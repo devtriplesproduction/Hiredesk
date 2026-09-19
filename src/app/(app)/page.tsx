@@ -192,7 +192,7 @@ export default function DashboardPage() {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
               TALENT PIPELINE ACTIVE · TRIPLE S PRODUCTION
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-text flex items-center gap-3">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text flex items-center gap-3">
               Hiring Command Center
             </h1>
             <p className="text-xs sm:text-sm text-[var(--text-2)] mt-1.5 max-w-xl">
@@ -247,20 +247,24 @@ export default function DashboardPage() {
           <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-cyan-500/10 blur-3xl group-hover:bg-cyan-500/20 transition-all" />
 
           <div>
-            {/* Header: Icon + Title + Status Pill */}
+            {/* Top Row: Icon + Status Pill */}
             <div className="flex items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400 shrink-0">
-                  <Users size={17} />
-                </div>
-                <div>
-                  <div className="text-xs font-semibold text-text tracking-tight">Total Candidates</div>
-                  <div className="text-[11px] text-[var(--text-3)] font-medium">Pipeline Intake</div>
-                </div>
+              <div className="w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400 shrink-0">
+                <Users size={17} />
               </div>
               <span className="text-[10.5px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 whitespace-nowrap">
                 Active Pool
               </span>
+            </div>
+
+            {/* Title & Subtitle */}
+            <div>
+              <div className="text-sm font-semibold text-text tracking-tight whitespace-nowrap">
+                Total Candidates
+              </div>
+              <div className="text-[11px] text-[var(--text-3)] font-medium mt-0.5 whitespace-nowrap">
+                Pipeline Intake
+              </div>
             </div>
 
             {/* Primary Value */}
@@ -289,20 +293,24 @@ export default function DashboardPage() {
           <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-emerald-500/10 blur-3xl group-hover:bg-emerald-500/20 transition-all" />
 
           <div>
-            {/* Header: Icon + Title + Status Pill */}
+            {/* Top Row: Icon + Status Pill */}
             <div className="flex items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shrink-0">
-                  <FileText size={17} />
-                </div>
-                <div>
-                  <div className="text-xs font-semibold text-text tracking-tight">Offers Extended</div>
-                  <div className="text-[11px] text-[var(--text-3)] font-medium">Contract Status</div>
-                </div>
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shrink-0">
+                <FileText size={17} />
               </div>
               <span className="text-[10.5px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
                 {offersStats.total > 0 ? Math.round((offersStats.accepted / offersStats.total) * 100) : 0}% Accept Rate
               </span>
+            </div>
+
+            {/* Title & Subtitle */}
+            <div>
+              <div className="text-sm font-semibold text-text tracking-tight whitespace-nowrap">
+                Offers Extended
+              </div>
+              <div className="text-[11px] text-[var(--text-3)] font-medium mt-0.5 whitespace-nowrap">
+                Contract Status
+              </div>
             </div>
 
             {/* Primary Value */}
@@ -338,20 +346,24 @@ export default function DashboardPage() {
           <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-purple-500/10 blur-3xl group-hover:bg-purple-500/20 transition-all" />
 
           <div>
-            {/* Header: Icon + Title + Status Pill */}
+            {/* Top Row: Icon + Status Pill */}
             <div className="flex items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-400 shrink-0">
-                  <Sparkles size={17} />
-                </div>
-                <div>
-                  <div className="text-xs font-semibold text-text tracking-tight">Average ATS Score</div>
-                  <div className="text-[11px] text-[var(--text-3)] font-medium">Candidate Quality</div>
-                </div>
+              <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-400 shrink-0">
+                <Sparkles size={17} />
               </div>
               <span className="text-[10.5px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 whitespace-nowrap">
                 {avgScore >= 70 ? "Strong Fit" : avgScore >= 50 ? "Healthy Pool" : "Expanding"}
               </span>
+            </div>
+
+            {/* Title & Subtitle */}
+            <div>
+              <div className="text-sm font-semibold text-text tracking-tight whitespace-nowrap">
+                Average ATS Score
+              </div>
+              <div className="text-[11px] text-[var(--text-3)] font-medium mt-0.5 whitespace-nowrap">
+                Candidate Quality
+              </div>
             </div>
 
             {/* Primary Value */}
@@ -389,20 +401,24 @@ export default function DashboardPage() {
           <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-amber-500/10 blur-3xl group-hover:bg-amber-500/20 transition-all" />
 
           <div>
-            {/* Header: Icon + Title + Status Pill */}
+            {/* Top Row: Icon + Status Pill */}
             <div className="flex items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 shrink-0">
-                  <Calendar size={17} />
-                </div>
-                <div>
-                  <div className="text-xs font-semibold text-text tracking-tight">Interviews Held</div>
-                  <div className="text-[11px] text-[var(--text-3)] font-medium">Evaluation Rounds</div>
-                </div>
+              <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400 shrink-0">
+                <Calendar size={17} />
               </div>
               <span className="text-[10.5px] font-mono font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap">
                 Evaluations
               </span>
+            </div>
+
+            {/* Title & Subtitle */}
+            <div>
+              <div className="text-sm font-semibold text-text tracking-tight whitespace-nowrap">
+                Interviews Held
+              </div>
+              <div className="text-[11px] text-[var(--text-3)] font-medium mt-0.5 whitespace-nowrap">
+                Evaluation Rounds
+              </div>
             </div>
 
             {/* Primary Value */}
@@ -884,10 +900,10 @@ export default function DashboardPage() {
               <table className="w-full border-collapse">
                 <thead style={{ background: "#0D0E11" }}>
                   <tr>
-                    <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-left border-b border-[var(--table-border)] select-none whitespace-nowrap w-[24%]">
+                    <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-left border-b border-[var(--table-border)] select-none whitespace-nowrap w-[25%]">
                       Candidate
                     </th>
-                    <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-left border-b border-[var(--table-border)] select-none whitespace-nowrap w-[15%]">
+                    <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-left border-b border-[var(--table-border)] select-none whitespace-nowrap w-[16%]">
                       Role
                     </th>
                     <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-center border-b border-[var(--table-border)] select-none whitespace-nowrap w-[7%]">
@@ -896,16 +912,13 @@ export default function DashboardPage() {
                     <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-left border-b border-[var(--table-border)] select-none whitespace-nowrap w-[12%]">
                       Status
                     </th>
-                    <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-left border-b border-[var(--table-border)] select-none whitespace-nowrap w-[9%]">
+                    <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-left border-b border-[var(--table-border)] select-none whitespace-nowrap w-[10%]">
                       City
                     </th>
-                    <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-left border-b border-[var(--table-border)] select-none whitespace-nowrap w-[8%]">
-                      Gender
-                    </th>
-                    <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-left border-b border-[var(--table-border)] select-none whitespace-nowrap w-[11%]">
+                    <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-left border-b border-[var(--table-border)] select-none whitespace-nowrap w-[12%]">
                       Employment
                     </th>
-                    <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-left border-b border-[var(--table-border)] select-none whitespace-nowrap w-[7%]">
+                    <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-left border-b border-[var(--table-border)] select-none whitespace-nowrap w-[8%]">
                       Exp
                     </th>
                     <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-left border-b border-[var(--table-border)] select-none whitespace-nowrap w-[10%]">
@@ -950,9 +963,6 @@ export default function DashboardPage() {
                         </td>
                         <td className="px-3.5 py-3 border-b border-[var(--table-border)] align-middle text-xs text-[var(--text-2)]">
                           {c.city || "—"}
-                        </td>
-                        <td className="px-3.5 py-3 border-b border-[var(--table-border)] align-middle text-xs text-[var(--text-2)]">
-                          {c.gender || "—"}
                         </td>
                         <td className="px-3.5 py-3 border-b border-[var(--table-border)] align-middle">
                           <EmploymentBadge status={c.employmentStatus} />

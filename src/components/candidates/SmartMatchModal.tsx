@@ -135,7 +135,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
         </div>
         <button
           onClick={onClose}
-          className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-[var(--text)] hover:bg-white/[0.06] border border-transparent hover:border-[var(--border-3)] transition-all"
+          className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-3)] hover:text-[var(--text)] hover:bg-[var(--glass-2)] border border-transparent hover:border-[var(--border-3)] transition-all"
           aria-label="Close"
         >
           ✕
