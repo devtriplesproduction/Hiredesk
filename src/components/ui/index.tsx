@@ -9,7 +9,7 @@ export function Btn({ variant="ghost", size="md", className, children, ...props 
     <button className={clsx(
       "inline-flex items-center gap-1.5 font-semibold uppercase tracking-wide rounded-xl cursor-pointer transition-all duration-150 border",
       size==="sm" ? "text-xs px-3 py-2" : "text-sm px-4 py-2.5",
-      variant==="primary" && "bg-accent text-bg2 border-accent hover:opacity-90",
+      variant==="primary" && "bg-[var(--btn-primary-bg)] text-[var(--btn-primary-text)] border-[var(--btn-primary-bg)] hover:opacity-90",
       variant==="ghost"   && "bg-[var(--glass-2)] text-[var(--text)] border-[var(--border-2)] hover:bg-[var(--glass-3)] hover:border-[var(--border-3)]",
       variant==="danger"  && "bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20",
       variant==="outline" && "bg-transparent text-[var(--text-2)] border-[var(--border)] hover:text-[var(--text)] hover:border-[var(--border-2)]",

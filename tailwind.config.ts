@@ -4,8 +4,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-syne)", "sans-serif"],
-        mono: ["var(--font-dm-mono)", "monospace"],
+        sans: ["var(--font-inter)", "Inter", "system-ui", "-apple-system", "sans-serif"],
+        mono: ["var(--font-inter)", "Inter", "system-ui", "-apple-system", "sans-serif"],
       },
       fontSize: {
         xs: ['0.85rem', { lineHeight: '1.25rem' }],

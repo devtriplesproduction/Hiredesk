@@ -40,8 +40,10 @@
   --green: #22C55E;
   --yellow: #F5C542;
   --red: #EF4444;
+  --btn-primary-bg: var(--accent);
+  --btn-primary-text: var(--bg2);
   --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-mono), 'JetBrains Mono', monospace;
+  --font-mono: var(--font-inter), system-ui, -apple-system, sans-serif;
 
   /* Theme-specific tokens (dark defaults) */
   --topbar-bg: rgba(10, 10, 10, 0.95);
@@ -100,6 +102,8 @@
   --green: #16A34A;
   --yellow: #D97706;
   --red: #DC2626;
+  --btn-primary-bg: #111111;
+  --btn-primary-text: #FFFFFF;
 
   --topbar-bg: rgba(255, 255, 255, 0.92);
   --sidebar-bg: #FAFBFC;
@@ -254,7 +258,7 @@ input[type="range"]::-webkit-slider-thumb {
     background: white !important;
     color: black !important;
     padding: 25mm !important;
-    font-family: Arial, Helvetica, sans-serif !important;
+    font-family: var(--font-inter), sans-serif !important;
   }
 }
 

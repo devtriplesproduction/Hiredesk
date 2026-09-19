@@ -37,6 +37,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [inspectCandidate, setInspectCandidate] = useState<Candidate | null>(null);
   const [showFunnel, setShowFunnel] = useState(false);
+  const [showQuality, setShowQuality] = useState(false);
 
   const total = candidates.length;
 
@@ -441,195 +442,288 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* ─── Interactive Pipeline Stage Strip with Tab Toggle ───────────────────────── */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <button
-            type="button"
-            onClick={() => setShowFunnel(prev => !prev)}
-            className={clsx(
-              "px-3.5 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 inline-flex items-center gap-2 cursor-pointer border select-none",
-              showFunnel
-                ? "bg-cyan-500/15 border-cyan-500/40 text-cyan-400 shadow-[0_0_15px_rgba(0,217,255,0.15)]"
-                : "bg-white/[0.04] border-border text-[var(--text-2)] hover:text-text hover:bg-white/[0.08] hover:border-border-2"
+            {/* ─── Interactive Pipeline Stage Strip & Talent Quality ───────────────── */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
+        {/* Left: Hiring Funnel Status */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <button
+              type="button"
+              onClick={() => setShowFunnel(prev => !prev)}
+              className={clsx(
+                "px-3.5 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 inline-flex items-center gap-2 cursor-pointer border select-none",
+                showFunnel
+                  ? "bg-cyan-500/15 border-cyan-500/40 text-cyan-400 shadow-[0_0_15px_rgba(0,217,255,0.15)]"
+                  : "bg-white/[0.04] border-border text-[var(--text-2)] hover:text-text hover:bg-white/[0.08] hover:border-border-2"
+              )}
+            >
+              <Activity size={14} className={showFunnel ? "text-cyan-400" : "text-[var(--text-3)]"} />
+              <span>Hiring Funnel Status</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-[var(--text-3)]">
+                {showFunnel ? "Hide" : "Show 6 Stages"}
+              </span>
+              {showFunnel ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+
+            {showFunnel && (
+              <span className="text-[11px] text-[var(--text-3)] hidden sm:inline animate-fade-in">
+                Click any stage to filter candidates
+              </span>
             )}
-          >
-            <Activity size={14} className={showFunnel ? "text-cyan-400" : "text-[var(--text-3)]"} />
-            <span>Hiring Funnel Status</span>
-            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-[var(--text-3)]">
-              {showFunnel ? "Hide" : "Show 6 Stages"}
-            </span>
-            {showFunnel ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
+          </div>
 
           {showFunnel && (
-            <span className="text-[11px] text-[var(--text-3)] hidden sm:inline animate-fade-in">
-              Click any stage to filter candidates
-            </span>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 animate-fade-in">
+              {[
+                { 
+                  key: "new", 
+                  label: "New", 
+                  color: "cyan", 
+                  bg: "hover:border-cyan-500/30", 
+                  dot: "bg-cyan-400",
+                  count: newCount,
+                },
+                { 
+                  key: "review", 
+                  label: "In Review", 
+                  color: "amber", 
+                  bg: "hover:border-amber-500/30", 
+                  dot: "bg-amber-400",
+                  count: inReview,
+                },
+                { 
+                  key: "shortlisted", 
+                  label: "Shortlisted", 
+                  color: "purple", 
+                  bg: "hover:border-purple-500/30", 
+                  dot: "bg-purple-400",
+                  count: shortlisted,
+                },
+                { 
+                  key: "offer_accepted", 
+                  label: "Offered", 
+                  color: "emerald", 
+                  bg: "hover:border-emerald-500/30", 
+                  dot: "bg-emerald-400",
+                  count: offerAccepted,
+                },
+                { 
+                  key: "rejected", 
+                  label: "Rejected", 
+                  color: "rose", 
+                  bg: "hover:border-rose-500/30", 
+                  dot: "bg-rose-400",
+                  count: rejected,
+                },
+                { 
+                  key: "hired", 
+                  label: "Hired", 
+                  color: "blue", 
+                  bg: "hover:border-blue-500/30", 
+                  dot: "bg-blue-400",
+                  count: hired,
+                },
+              ].map(stage => {
+                const pct = total > 0 ? Math.round((stage.count / total) * 100) : 0;
+                return (
+                  <button
+                    key={stage.key}
+                    onClick={() => goFiltered(stage.key)}
+                    className={`glass p-3.5 sm:p-4 rounded-xl text-left transition-all duration-200 hover:bg-[var(--glass-2)] ${stage.bg} group relative overflow-hidden cursor-pointer`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${stage.dot}`} />
+                        <span className="text-xs font-medium text-[var(--text-2)] group-hover:text-text transition-colors">
+                          {stage.label}
+                        </span>
+                      </div>
+                      <span className="font-mono text-[10px] text-[var(--text-3)]">{pct}%</span>
+                    </div>
+                    <div className="text-xl sm:text-2xl font-bold text-text tracking-tight">
+                      {stage.count}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
 
-        {showFunnel && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 animate-fade-in">
-            {[
-              { 
-                key: "new", 
-                label: "New", 
-                color: "cyan", 
-                bg: "hover:border-cyan-500/30", 
-                dot: "bg-cyan-400",
-                count: newCount,
-              },
-              { 
-                key: "review", 
-                label: "In Review", 
-                color: "amber", 
-                bg: "hover:border-amber-500/30", 
-                dot: "bg-amber-400",
-                count: inReview,
-              },
-              { 
-                key: "shortlisted", 
-                label: "Shortlisted", 
-                color: "purple", 
-                bg: "hover:border-purple-500/30", 
-                dot: "bg-purple-400",
-                count: shortlisted,
-              },
-              { 
-                key: "offer_accepted", 
-                label: "Offer Accepted", 
-                color: "teal", 
-                bg: "hover:border-teal-500/30", 
-                dot: "bg-teal-400",
-                count: offerAccepted,
-              },
-              { 
-                key: "hired", 
-                label: "Hired", 
-                color: "emerald", 
-                bg: "hover:border-emerald-500/30", 
-                dot: "bg-emerald-400",
-                count: hired,
-              },
-              { 
-                key: "rejected", 
-                label: "Rejected", 
-                color: "rose", 
-                bg: "hover:border-rose-500/30", 
-                dot: "bg-rose-400",
-                count: rejected,
-              },
-            ].map(stage => {
-              const pct = total > 0 ? Math.round((stage.count / total) * 100) : 0;
-              return (
-                <button
-                  key={stage.key}
-                  type="button"
-                  onClick={() => goFiltered(stage.key)}
-                  className={`glass p-3.5 sm:p-4 rounded-xl text-left transition-all duration-200 hover:bg-[var(--glass-2)] ${stage.bg} group relative overflow-hidden cursor-pointer`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${stage.dot}`} />
-                      <span className="text-xs font-medium text-[var(--text-2)] group-hover:text-text transition-colors">
-                        {stage.label}
-                      </span>
-                    </div>
-                    <span className="font-mono text-[10px] text-[var(--text-3)]">{pct}%</span>
-                  </div>
-                  <div className="text-xl sm:text-2xl font-bold text-text tracking-tight">
-                    {stage.count}
-                  </div>
-                </button>
-              );
-            })}
+        {/* Right: Talent Quality & Score Distribution */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <button
+              type="button"
+              onClick={() => setShowQuality(prev => !prev)}
+              className={clsx(
+                "px-3.5 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all duration-200 inline-flex items-center gap-2 cursor-pointer border select-none",
+                showQuality
+                  ? "bg-purple-500/15 border-purple-500/40 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.15)]"
+                  : "bg-white/[0.04] border-border text-[var(--text-2)] hover:text-text hover:bg-white/[0.08] hover:border-border-2"
+              )}
+            >
+              <Sparkles size={14} className={showQuality ? "text-purple-400" : "text-[var(--text-3)]"} />
+              <span>Talent Quality & Score Distribution</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-[var(--text-3)]">
+                {showQuality ? "Hide" : "Show Breakdown"}
+              </span>
+              {showQuality ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
+
+            {showQuality && (
+              <span className="text-[11px] font-mono text-[var(--text-3)] hidden sm:inline animate-fade-in">
+                Total Resumes Evaluated: {total}
+              </span>
+            )}
           </div>
-        )}
+
+          {showQuality && (
+            <div className="glass p-5 rounded-2xl animate-fade-in">
+              {/* Multi-tier bar */}
+              <div className="h-3 w-full rounded-full bg-white/5 overflow-hidden flex border border-border mb-3.5">
+                <div
+                  title={`Exceptional (80+): ${scoreBands.exceptional}`}
+                  className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-500"
+                  style={{ width: `${total > 0 ? (scoreBands.exceptional / total) * 100 : 0}%` }}
+                />
+                <div
+                  title={`Strong (65-79): ${scoreBands.strong}`}
+                  className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full transition-all duration-500"
+                  style={{ width: `${total > 0 ? (scoreBands.strong / total) * 100 : 0}%` }}
+                />
+                <div
+                  title={`Moderate (45-64): ${scoreBands.moderate}`}
+                  className="bg-gradient-to-r from-amber-400 to-orange-400 h-full transition-all duration-500"
+                  style={{ width: `${total > 0 ? (scoreBands.moderate / total) * 100 : 0}%` }}
+                />
+                <div
+                  title={`Low (<45): ${scoreBands.low}`}
+                  className="bg-gradient-to-r from-rose-500 to-red-500 h-full transition-all duration-500"
+                  style={{ width: `${total > 0 ? (scoreBands.low / total) * 100 : 0}%` }}
+                />
+              </div>
+
+              {/* Legend */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400 flex-shrink-0" />
+                  <div>
+                    <span className="text-text font-semibold">{scoreBands.exceptional}</span>
+                    <span className="text-[var(--text-3)] ml-1">Exceptional (80+)</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-cyan-400 flex-shrink-0" />
+                  <div>
+                    <span className="text-text font-semibold">{scoreBands.strong}</span>
+                    <span className="text-[var(--text-3)] ml-1">Strong (65-79)</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 flex-shrink-0" />
+                  <div>
+                    <span className="text-text font-semibold">{scoreBands.moderate}</span>
+                    <span className="text-[var(--text-3)] ml-1">Moderate (45-64)</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-rose-400 flex-shrink-0" />
+                  <div>
+                    <span className="text-text font-semibold">{scoreBands.low}</span>
+                    <span className="text-[var(--text-3)] ml-1">Low (&lt;45)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* ─── Two Columns: Top Candidates & By Role (Redesigned!) ──────── */}
+{/* ─── Two Columns: Top Candidates & By Role (Redesigned!) ──────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left Column: Top Scoring Candidates (7 Cols) */}
-        <div className="lg:col-span-7 glass p-5 sm:p-6 rounded-2xl flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
-                  <Award size={16} />
+        <div className="lg:col-span-8 glass p-5 sm:p-6 rounded-2xl flex flex-col h-[520px]">
+          {/* Header */}
+          <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)] flex-shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-400">
+                <Award size={16} />
+              </div>
+              <div>
+                <div className="text-sm sm:text-base font-bold text-text tracking-tight">
+                  Top Candidates
                 </div>
-                <div>
-                  <div className="text-sm sm:text-base font-bold text-text tracking-tight">
-                    Top Candidates
-                  </div>
-                  <div className="text-[11px] text-[var(--text-3)]">
-                    Highest scoring profiles ranked by ATS resume parser
-                  </div>
+                <div className="text-[11px] text-[var(--text-3)]">
+                  Highest scoring profiles ranked by ATS resume parser
                 </div>
               </div>
-              <Btn
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setFilters({ search: "", roleId: "all", status: "all", city: "", gender: "all", ageRange: "all", exp: "all", sort: "score-desc" });
-                  router.push("/candidates");
-                }}
-                className="flex items-center gap-1 text-xs"
-              >
-                <span>View All</span>
-                <ChevronRight size={13} />
-              </Btn>
             </div>
+            <Btn
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setFilters({ search: "", roleId: "all", status: "all", city: "", gender: "all", ageRange: "all", exp: "all", sort: "score-desc" });
+                router.push("/candidates");
+              }}
+              className="flex items-center gap-1 text-xs"
+            >
+              <span>View All</span>
+              <ChevronRight size={13} />
+            </Btn>
+          </div>
 
-            {topCandidates.length === 0 ? (
-              <div className="font-mono text-xs text-[var(--text-3)] py-12 text-center">
-                No candidates evaluated yet
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {topCandidates.map((c, i) => {
-                  return (
-                    <div
-                      key={c.id}
-                      onClick={() => setInspectCandidate(c)}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-border transition-all duration-150 cursor-pointer group"
-                    >
-                      {/* Rank Medal */}
-                      <div className="w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0">
-                        {i === 0 && (
-                          <span className="w-6 h-6 rounded-md bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center text-[11px] shadow-[0_0_8px_rgba(245,158,11,0.2)]">
-                            1
-                          </span>
-                        )}
-                        {i === 1 && (
-                          <span className="w-6 h-6 rounded-md bg-slate-300/20 border border-slate-300/40 text-slate-200 flex items-center justify-center text-[11px]">
-                            2
-                          </span>
-                        )}
-                        {i === 2 && (
-                          <span className="w-6 h-6 rounded-md bg-orange-500/20 border border-orange-500/40 text-orange-300 flex items-center justify-center text-[11px]">
-                            3
-                          </span>
-                        )}
-                        {i > 2 && (
-                          <span className="w-6 h-6 rounded-md bg-white/5 border border-border text-[var(--text-3)] font-mono text-[11px] flex items-center justify-center">
-                            {i + 1}
-                          </span>
-                        )}
-                      </div>
+          {/* List */}
+          {topCandidates.length === 0 ? (
+            <div className="font-mono text-xs text-[var(--text-3)] text-center flex-1 flex items-center justify-center">
+              No candidates evaluated yet
+            </div>
+          ) : (
+            <div className="space-y-2.5 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+              {topCandidates.map((c, i) => {
+                return (
+                  <div
+                    key={c.id}
+                    onClick={() => setInspectCandidate(c)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-border transition-all duration-150 cursor-pointer group"
+                  >
+                    {/* Rank Medal */}
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0">
+                      {i === 0 && (
+                        <span className="w-7 h-7 rounded-md bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center text-[12px] shadow-[0_0_8px_rgba(245,158,11,0.2)]">
+                          1
+                        </span>
+                      )}
+                      {i === 1 && (
+                        <span className="w-7 h-7 rounded-md bg-slate-300/20 border border-slate-300/40 text-slate-200 flex items-center justify-center text-[12px]">
+                          2
+                        </span>
+                      )}
+                      {i === 2 && (
+                        <span className="w-7 h-7 rounded-md bg-orange-500/20 border border-orange-500/40 text-orange-300 flex items-center justify-center text-[12px]">
+                          3
+                        </span>
+                      )}
+                      {i > 2 && (
+                        <span className="w-7 h-7 rounded-md bg-white/5 border border-border text-[var(--text-3)] font-mono text-[12px] flex items-center justify-center">
+                          {i + 1}
+                        </span>
+                      )}
+                    </div>
 
-                      {/* Candidate Avatar Initial */}
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-border flex items-center justify-center font-bold text-sm text-text flex-shrink-0 group-hover:border-cyan-500/40 transition-colors">
-                        {c.name ? c.name[0]?.toUpperCase() : "?"}
-                      </div>
+                    {/* Candidate Avatar Initial */}
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-border flex items-center justify-center font-bold text-sm text-text flex-shrink-0 group-hover:border-cyan-500/40 transition-colors">
+                      {c.name ? c.name[0]?.toUpperCase() : "?"}
+                    </div>
 
-                      {/* Candidate Info */}
-                      <div className="flex-1 min-w-0">
+                    {/* Candidate Info */}
+                    <div className="flex-1 min-w-0 grid grid-cols-2 items-center gap-4">
+                      <div className="flex flex-col min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-semibold text-text truncate group-hover:text-cyan-400 transition-colors">
                             {c.name}
                           </span>
-                          <span className="hidden sm:inline-block font-mono text-[10px] text-[var(--text-3)]">
+                          <span className="hidden sm:inline-block font-mono text-[10px] text-[var(--text-3)] flex-shrink-0">
                             {c.city ? `· ${c.city}` : ""}
                           </span>
                         </div>
@@ -638,27 +732,26 @@ export default function DashboardPage() {
                             {c.roleName}
                           </span>
                           {c.exp && (
-                            <span className="font-mono text-[10px] text-[var(--text-3)] hidden md:inline">
+                            <span className="font-mono text-[10px] text-[var(--text-3)] hidden md:inline flex-shrink-0">
                               · {c.exp}
                             </span>
                           )}
                         </div>
                       </div>
-
-                      {/* Score & Status */}
-                      <div className="flex items-center gap-2.5 flex-shrink-0">
-                        <StatusBadge status={c.status} className="hidden sm:inline-flex" />
-                        <ScoreBadge score={c.score?.total || 0} />
-                        <ArrowUpRight size={14} className="text-[var(--text-3)] opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
+                      <div className="flex justify-end items-center gap-3 pr-2">
+                          <StatusBadge status={c.status} className="hidden sm:inline-flex" />
+                          <ScoreBadge score={c.score?.total || 0} />
+                          <ArrowUpRight size={14} className="text-[var(--text-3)] opacity-0 group-hover:opacity-100 transition-opacity hidden lg:block" />
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
-          <div className="mt-4 pt-3 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--text-3)]">
+          {/* Footer */}
+          <div className="mt-4 pt-3 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--text-3)] flex-shrink-0">
             <span>Showing top 5 talent matches</span>
             <button
               type="button"
@@ -671,95 +764,93 @@ export default function DashboardPage() {
         </div>
 
         {/* Right Column: By Role & Talent Distribution (User's Specific Image Focus!) (5 Cols) */}
-        <div className="lg:col-span-5 glass p-5 sm:p-6 rounded-2xl flex flex-col justify-between">
-          <div>
-            {/* Header */}
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400">
-                  <BarChart3 size={16} />
+        <div className="lg:col-span-4 glass p-5 sm:p-6 rounded-2xl flex flex-col h-[520px]">
+          {/* Header */}
+          <div className="flex items-start sm:items-center justify-between pb-4 mb-4 border-b border-[var(--border)] flex-shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center text-cyan-400 flex-shrink-0">
+                <BarChart3 size={16} />
+              </div>
+              <div className="min-w-0 pr-2">
+                <div className="text-sm sm:text-base font-bold text-text tracking-tight flex items-center gap-2">
+                  By Role
+                  <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-white/5 border border-border text-[var(--text-2)] flex-shrink-0">
+                    {roleBreakdown.length} Positions
+                  </span>
                 </div>
-                <div>
-                  <div className="text-sm sm:text-base font-bold text-text tracking-tight flex items-center gap-2">
-                    By Role
-                    <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-white/5 border border-border text-[var(--text-2)]">
-                      {roleBreakdown.length} Positions
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-[var(--text-3)]">
-                    Applicant density & talent score by department
-                  </div>
+                <div className="text-[10px] sm:text-[11px] text-[var(--text-3)] whitespace-nowrap overflow-hidden text-ellipsis">
+                  Applicant density & talent score by department
                 </div>
               </div>
-              <Btn
-                variant="outline"
-                size="sm"
-                onClick={() => router.push("/roles")}
-                className="flex items-center gap-1 text-xs"
-              >
-                <span>Roles</span>
-                <ChevronRight size={13} />
-              </Btn>
             </div>
-
-            {/* Role List */}
-            {roleBreakdown.length === 0 ? (
-              <div className="font-mono text-xs text-[var(--text-3)] py-12 text-center">
-                No active roles configured
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {roleBreakdown.slice(0, 6).map((r, i) => {
-                  const visual = getRoleVisual(r.name, i);
-                  const percentage = total > 0 ? Math.round((r.count / total) * 100) : 0;
-                  return (
-                    <div
-                      key={r.id}
-                      onClick={() => goRoleFiltered(r.id)}
-                      className="p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-border transition-all duration-150 cursor-pointer group"
-                      title={`Click to view all candidates for ${r.name}`}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2.5 min-w-0 mr-2">
-                          <div className={`w-7 h-7 rounded-lg ${visual.boxBg} border flex items-center justify-center flex-shrink-0 ${visual.glow}`}>
-                            {visual.icon}
-                          </div>
-                          <div className="min-w-0">
-                            <div className="text-xs sm:text-sm font-semibold text-text truncate group-hover:text-cyan-300 transition-colors">
-                              {r.name}
-                            </div>
-                            <div className="text-[10px] text-[var(--text-3)] font-mono">
-                              {r.type || "Full-time"} {r.avgScore > 0 ? `· Avg Score: ${r.avgScore}` : ""}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className="font-mono text-xs font-bold text-text">
-                            {r.count}
-                          </span>
-                          <span className="text-[11px] font-mono text-[var(--text-3)]">
-                            ({percentage}%)
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Vibrant Custom Progress Bar */}
-                      <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-border">
-                        <div
-                          className={`h-full rounded-full bg-gradient-to-r ${visual.barGradient} transition-all duration-700`}
-                          style={{ width: `${Math.max(percentage, 3)}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <Btn
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/roles")}
+              className="flex items-center gap-1 text-xs flex-shrink-0"
+            >
+              <span>Roles</span>
+              <ChevronRight size={13} />
+            </Btn>
           </div>
 
+          {/* Role List */}
+          {roleBreakdown.length === 0 ? (
+            <div className="font-mono text-xs text-[var(--text-3)] text-center flex-1 flex items-center justify-center">
+              No active roles configured
+            </div>
+          ) : (
+            <div className="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+              {roleBreakdown.map((r, i) => {
+                const visual = getRoleVisual(r.name, i);
+                const percentage = total > 0 ? Math.round((r.count / total) * 100) : 0;
+                return (
+                  <div
+                    key={r.id}
+                    onClick={() => goRoleFiltered(r.id)}
+                    className="p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-border transition-all duration-150 cursor-pointer group flex flex-col gap-2"
+                    title={`Click to view all candidates for ${r.name}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5 min-w-0 mr-2">
+                        <div className={`w-8 h-8 rounded-lg ${visual.boxBg} border flex items-center justify-center flex-shrink-0 ${visual.glow}`}>
+                          {visual.icon}
+                        </div>
+                        <div className="min-w-0 flex flex-col">
+                          <div className="text-[13px] font-semibold text-text truncate group-hover:text-cyan-300 transition-colors">
+                            {r.name}
+                          </div>
+                          <div className="text-[10px] text-[var(--text-3)] font-mono truncate">
+                            {r.type || "Full-time"} {r.avgScore > 0 ? `· Avg Score: ${r.avgScore}` : ""}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <span className="font-bold text-text text-sm">
+                          {r.count}
+                        </span>
+                        <span className="text-[10px] font-mono text-[var(--text-3)]">
+                          ({percentage}%)
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Vibrant Custom Progress Bar */}
+                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-border">
+                      <div
+                        className={`h-full rounded-full bg-gradient-to-r ${visual.barGradient} transition-all duration-700`}
+                        style={{ width: `${Math.max(percentage, 3)}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           {/* ─── Role Insights & Distribution Footer (Fills the previous empty void!) ─── */}
-          <div className="mt-4 pt-3.5 border-t border-[var(--border)]">
+          <div className="mt-4 pt-3.5 border-t border-[var(--border)] flex-shrink-0">
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.05]">
                 <div className="text-[10px] uppercase font-mono tracking-wider text-[var(--text-3)] mb-0.5">
@@ -788,78 +879,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-
-      {/* ─── Score Tier Distribution Strip ───────────────────────────── */}
-      <div className="glass p-5 rounded-2xl">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3.5">
-          <div className="flex items-center gap-2">
-            <Sparkles size={15} className="text-purple-400" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-[var(--text-2)]">
-              Talent Quality & Score Distribution
-            </span>
-          </div>
-          <div className="text-xs font-mono text-[var(--text-3)]">
-            Total Resumes Evaluated: {total}
-          </div>
-        </div>
-
-        {/* Multi-tier bar */}
-        <div className="h-3 w-full rounded-full bg-white/5 overflow-hidden flex border border-border mb-3.5">
-          <div
-            title={`Exceptional (80+): ${scoreBands.exceptional}`}
-            className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full transition-all duration-500"
-            style={{ width: `${total > 0 ? (scoreBands.exceptional / total) * 100 : 0}%` }}
-          />
-          <div
-            title={`Strong (65-79): ${scoreBands.strong}`}
-            className="bg-gradient-to-r from-cyan-400 to-blue-500 h-full transition-all duration-500"
-            style={{ width: `${total > 0 ? (scoreBands.strong / total) * 100 : 0}%` }}
-          />
-          <div
-            title={`Moderate (45-64): ${scoreBands.moderate}`}
-            className="bg-gradient-to-r from-amber-400 to-orange-400 h-full transition-all duration-500"
-            style={{ width: `${total > 0 ? (scoreBands.moderate / total) * 100 : 0}%` }}
-          />
-          <div
-            title={`Low (<45): ${scoreBands.low}`}
-            className="bg-gradient-to-r from-rose-500 to-red-500 h-full transition-all duration-500"
-            style={{ width: `${total > 0 ? (scoreBands.low / total) * 100 : 0}%` }}
-          />
-        </div>
-
-        {/* Legend */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400 flex-shrink-0" />
-            <div>
-              <span className="text-text font-semibold">{scoreBands.exceptional}</span>
-              <span className="text-[var(--text-3)] ml-1">Exceptional (80+)</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-sm bg-cyan-400 flex-shrink-0" />
-            <div>
-              <span className="text-text font-semibold">{scoreBands.strong}</span>
-              <span className="text-[var(--text-3)] ml-1">Strong (65–79)</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 flex-shrink-0" />
-            <div>
-              <span className="text-text font-semibold">{scoreBands.moderate}</span>
-              <span className="text-[var(--text-3)] ml-1">Moderate (45–64)</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-sm bg-rose-400 flex-shrink-0" />
-            <div>
-              <span className="text-text font-semibold">{scoreBands.low}</span>
-              <span className="text-[var(--text-3)] ml-1">Low (&lt;45)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* ─── Recent Candidate Stream / Table (Matches Candidate List Page) ─ */}
       <div className="glass p-5 sm:p-6 rounded-2xl">
         <div className="flex items-center justify-between pb-4 mb-4 border-b border-[var(--border)]">
@@ -894,11 +913,11 @@ export default function DashboardPage() {
         ) : (
           <div
             className="rounded-[11px] overflow-hidden border border-[var(--border-2)]"
-            style={{ background: "rgba(10, 11, 13, 0.55)" }}
+            style={{ background: "var(--card-bg)" }}
           >
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
-                <thead style={{ background: "#0D0E11" }}>
+                <thead style={{ background: "var(--bg2)" }}>
                   <tr>
                     <th className="font-semibold text-[10.5px] uppercase tracking-[0.06em] text-[var(--text-3)] px-3.5 py-3 text-left border-b border-[var(--table-border)] select-none whitespace-nowrap w-[25%]">
                       Candidate

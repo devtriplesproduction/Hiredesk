@@ -90,10 +90,7 @@ export default function ContractsList() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-7 items-start">
         {/* Left Column: Contracts List */}
         <div className="lg:col-span-8 flex flex-col gap-3.5">
-          <div className="flex items-center justify-between px-1 mb-0.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-2)]">Legal Templates</span>
-            <span className="text-[15px] text-[var(--text-3)] font-mono">Select a template to generate or edit</span>
-          </div>
+
 
           {contracts.map(c => {
             const meta = CONTRACT_META[c.id] ?? { color: "#a0a0a0", roles: [] };
@@ -179,10 +176,7 @@ export default function ContractsList() {
         <div className="lg:col-span-4 flex flex-col gap-6 lg:gap-7">
           {/* Section 1: Legal & Brand Settings (Legal Disclaimer) */}
           <div className="flex flex-col gap-3.5">
-            <div className="flex items-center justify-between px-1 mb-0.5">
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-2)]">Legal &amp; Brand Settings</span>
-              <span className="text-[15px] text-[var(--text-3)] font-mono">Global Configuration</span>
-            </div>
+
 
             {/* 1. Legal Disclaimer Card */}
             <div className="p-5 sm:p-5.5 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-2)] flex flex-col shadow-sm">

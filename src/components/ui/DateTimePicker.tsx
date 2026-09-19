@@ -320,7 +320,7 @@ export default function DateTimePicker({
           hasError
             ? "border border-red-500/50 bg-red-500/5"
             : isOpen
-            ? "border-[#A78BFA]/50 bg-[var(--card-bg)] shadow-[0_0_12px_rgba(167,139,250,0.15)]"
+            ? "border-[var(--tab-purple-border)] bg-[var(--bg2)] shadow-md"
             : "border-[var(--border)] bg-[var(--glass-3)] hover:border-[var(--border-2)] hover:bg-[var(--glass-2)]"
         } ${className}`}
       >
@@ -340,7 +340,7 @@ export default function DateTimePicker({
           style={{
             top: `${coords.top}px`,
             left: `${coords.left}px`,
-            background: "var(--card-bg)",
+            background: "var(--bg2)",
             border: "1px solid var(--border-2)",
             boxShadow: "0 20px 40px -10px rgba(0,0,0,0.3)",
             color: "var(--text)",
@@ -394,7 +394,7 @@ export default function DateTimePicker({
                   onClick={() => handleSelectDay(c.year, c.month, c.day)}
                   className={`h-7 rounded-lg text-xs font-mono font-medium flex items-center justify-center relative transition-all duration-100 ${
                     isSelected
-                      ? "text-[#00D9FF] bg-[rgba(0,217,255,0.15)] border border-[rgba(0,217,255,0.45)] font-bold shadow-[0_0_8px_rgba(0,217,255,0.2)]"
+                      ? "text-[var(--tab-cyan-text)] bg-[var(--tab-cyan-bg)] border border-[var(--tab-cyan-border)] font-bold shadow-sm"
                       : isCurrent
                       ? "text-[var(--text)] hover:bg-[var(--glass-2)] hover:text-[var(--text)]"
                       : "text-[var(--text-3)] hover:bg-[var(--glass-2)]"
@@ -402,7 +402,7 @@ export default function DateTimePicker({
                 >
                   <span>{c.day}</span>
                   {isToday && !isSelected && (
-                    <span className="absolute bottom-1 w-1 h-1 rounded-full bg-[#00D9FF]" />
+                    <span className="absolute bottom-1 w-1 h-1 rounded-full bg-[var(--tab-cyan-text)]" />
                   )}
                 </button>
               );
@@ -420,7 +420,7 @@ export default function DateTimePicker({
                   <span className="text-[16px] font-mono font-bold uppercase tracking-widest text-[var(--text-2)]">
                     Time
                   </span>
-                  <span className="text-[16px] font-mono text-[#A78BFA]">
+                  <span className="text-[16px] font-mono text-[var(--tab-purple-text)]">
                     {String(hour).padStart(2, "0")}:{String(minute).padStart(2, "0")} {period}
                   </span>
                 </div>
@@ -480,7 +480,7 @@ export default function DateTimePicker({
                       onClick={() => handleTimeChange(hour, minute, "AM")}
                       className={`px-2 py-1 rounded text-[16px] font-mono font-bold transition-all ${
                         period === "AM"
-                          ? "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border border-[rgba(167,139,250,0.35)] shadow-sm"
+                          ? "text-[var(--tab-purple-text)] bg-[var(--tab-purple-bg)] border border-[var(--tab-purple-border)] shadow-sm"
                           : "text-[var(--text-2)] hover:text-[var(--text)] border border-transparent"
                       }`}
                     >
@@ -491,7 +491,7 @@ export default function DateTimePicker({
                       onClick={() => handleTimeChange(hour, minute, "PM")}
                       className={`px-2 py-1 rounded text-[16px] font-mono font-bold transition-all ${
                         period === "PM"
-                          ? "text-[#A78BFA] bg-[rgba(167,139,250,0.15)] border border-[rgba(167,139,250,0.35)] shadow-sm"
+                          ? "text-[var(--tab-purple-text)] bg-[var(--tab-purple-bg)] border border-[var(--tab-purple-border)] shadow-sm"
                           : "text-[var(--text-2)] hover:text-[var(--text)] border border-transparent"
                       }`}
                     >
@@ -517,7 +517,7 @@ export default function DateTimePicker({
               <button
                 type="button"
                 onClick={handleToday}
-                className="text-[15px] font-mono text-[#00D9FF] hover:text-[#00D9FF]/80 transition-colors"
+                className="text-[15px] font-mono text-[var(--tab-cyan-text)] hover:text-[var(--tab-cyan-text)]/80 transition-colors"
               >
                 Today
               </button>
