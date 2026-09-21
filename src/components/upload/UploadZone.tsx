@@ -207,7 +207,6 @@ export default function UploadZone() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-7 items-start">
         {/* ─── LEFT / PRIMARY AREA ─────────────────────────────────────── */}
         <div className="lg:col-span-8 flex flex-col gap-6 w-full min-w-0">
-
           <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between bg-[var(--card-bg)] p-4 rounded-xl border border-[var(--border-2)] gap-3 shadow-sm">
             <div className="flex flex-col">
               <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">Target Role</div>
