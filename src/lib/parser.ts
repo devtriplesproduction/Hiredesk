@@ -561,10 +561,31 @@ function extractOCRNameFallback(ocrText: string): string {
  * Standard utility string matching for contacts
  */
 function extractEmail(text: string): string {
-  const match = text.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/);
-  if (match) return match[0].trim();
-  const fallback = text.match(/[\w.+%-]+(?:\s*@\s*|\s+at\s+)[\w.-]+(?:\s*\.\s*|\s+dot\s+)[a-z]{2,}/i);
-  if (fallback) return fallback[0].replace(/\s+at\s+/i, "@").replace(/\s+dot\s+/i, ".").replace(/\s+/g, "").trim();
+  const matches = text.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g) || [];
+  const personalDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'live.com', 'protonmail.com'];
+  
+  if (matches.length > 0) {
+    const personal = matches.find(m => personalDomains.some(d => m.toLowerCase().includes(d)));
+    if (personal) return personal.trim();
+    return matches[0]!.trim();
+  }
+  
+  const fallbacks = text.match(/[\w.+%-]+(?:\s*@\s*|\s+at\s+)[\w.-]+(?:\s*\.\s*|\s+dot\s+)[a-z]{2,}/ig) || [];
+  if (fallbacks.length > 0) {
+    const personal = fallbacks.find(m => personalDomains.some(d => m.toLowerCase().includes(d)));
+    const selected = personal || fallbacks[0]!;
+    return selected.replace(/\s+at\s+/i, "@").replace(/\s+dot\s+/i, ".").replace(/\s+/g, "").trim();
+  }
+
+  // Fallback: strip spaces for PDFs with errant spacing
+  const noSpaceText = text.replace(/\s+/g, "");
+  const noSpaceMatches = noSpaceText.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/ig) || [];
+  if (noSpaceMatches.length > 0) {
+    const personal = noSpaceMatches.find(m => personalDomains.some(d => m.toLowerCase().includes(d)));
+    if (personal) return personal.trim();
+    return noSpaceMatches[0]!.trim();
+  }
+  
   return "";
 }
 
@@ -587,12 +608,34 @@ function extractCity(text: string): string {
     }
   }
 
+  const stateMatch = text.match(/([A-Z][a-z]+)[,\s]+(Maharashtra|Karnataka|Gujarat|Tamil Nadu|Telangana|Delhi|Uttar Pradesh|Haryana|West Bengal)\b/i);
+  if (stateMatch && stateMatch[1]) {
+    const c = stateMatch[1].trim();
+    if (c.toLowerCase() !== "new") return c;
+  }
+  
+  const pinMatch = text.match(/([A-Z][a-z]+)\s*(?:-|,)?\s*(?:40|41|42|43|44|11|50|56|60|70)\d{4}\b/i);
+  if (pinMatch && pinMatch[1]) {
+      return pinMatch[1].trim();
+  }
+
   const cities = [
-    "Mumbai", "Navi Mumbai", "Thane", "Pune", "Talegaon", "Satara", "Kolhapur", "Nashik", "Nagpur", "Aurangabad", "Solapur",
+    "Mumbai", "Navi Mumbai", "Thane", "Pune", "Talegaon", "Satara", "Kolhapur", "Nashik", "Nagpur", "Aurangabad", "Solapur", "Sangli", "Amravati", "Nanded", "Jalgaon", "Akola", "Latur", "Dhule", "Ahmednagar", "Chandrapur", "Parbhani", "Jalna", "Kalyan", "Dombivli", "Vasai", "Virar", "Mira Bhayandar", "Bhiwandi", "Ulhasnagar", "Ambarnath", "Badlapur", "Panvel", "Khopoli", "Ratnagiri", "Wardha",
     "Delhi", "New Delhi", "Noida", "Gurugram", "Gurgaon", "Faridabad", "Ghaziabad", "Chandigarh",
-    "Bangalore", "Bengaluru", "Hyderabad", "Secunderabad", "Chennai", "Kolkata", "Ahmedabad", "Surat", "Vadodara", "Rajkot",
-    "Jaipur", "Indore", "Bhopal", "Lucknow", "Kanpur", "Patna", "Kochi", "Cochin", "Trivandrum", "Thiruvananthapuram",
-    "Coimbatore", "Visakhapatnam", "Bhubaneswar", "Dehradun", "Goa", "Panaji", "Remote"
+    "Bangalore", "Bengaluru", "Mysore", "Mangalore", "Hubli", "Belgaum",
+    "Hyderabad", "Secunderabad", "Warangal",
+    "Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem",
+    "Kolkata", "Howrah", "Durgapur", "Asansol",
+    "Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar",
+    "Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer",
+    "Indore", "Bhopal", "Jabalpur", "Gwalior", "Ujjain",
+    "Lucknow", "Kanpur", "Agra", "Varanasi", "Prayagraj", "Meerut",
+    "Patna", "Gaya", "Bhagalpur",
+    "Kochi", "Cochin", "Trivandrum", "Thiruvananthapuram", "Kozhikode", "Thrissur",
+    "Visakhapatnam", "Vijayawada", "Guntur",
+    "Bhubaneswar", "Cuttack", "Rourkela",
+    "Dehradun", "Haridwar", "Roorkee",
+    "Goa", "Panaji", "Remote"
   ];
   const lower = text.toLowerCase();
   for (const c of cities) {
@@ -604,11 +647,11 @@ function extractCity(text: string): string {
 
 function extractEducation(text: string): string {
   const patterns = [
-    /\b(Bachelor\s+of\s+(?:Engineering|Technology|Science|Commerce|Arts|Business\s+Administration|Computer\s+Applications|Design)(?:\s+in\s+[^\n\r,•|0-9]{3,40})?)/i,
-    /\b(Master\s+of\s+(?:Engineering|Technology|Science|Commerce|Arts|Business\s+Administration|Computer\s+Applications|Design)(?:\s+in\s+[^\n\r,•|0-9]{3,40})?)/i,
+    /\b(Bachelor(?:'s)?\s+(?:Degree\s+)?(?:of|in)?\s+(?:Engineering|Technology|Science|Commerce|Arts|Business\s+Administration|Computer\s+Applications|Design|Computer\s+Science|Information\s+Technology)(?:\s+in\s+[^\n\r,•|0-9]{3,40})?)/i,
+    /\b(Master(?:'s)?\s+(?:Degree\s+)?(?:of|in)?\s+(?:Engineering|Technology|Science|Commerce|Arts|Business\s+Administration|Computer\s+Applications|Design|Computer\s+Science|Information\s+Technology)(?:\s+in\s+[^\n\r,•|0-9]{3,40})?)/i,
     /\b(Diploma\s+in\s+[^\n\r,•|0-9]{3,40})/i,
     /\b(Ph\.?D(?:\s+in\s+[^\n\r,•|0-9]{3,40})?)/i,
-    /\b(B\.?E\.?|B\.?Tech\.?|M\.?Tech\.?|M\.?C\.?A\.?|B\.?C\.?A\.?|M\.?B\.?A\.?|B\.?B\.?A\.?|B\.?Sc\.?|M\.?Sc\.?|B\.?Com\.?|M\.?Com\.?|B\.?Des\.?|B\.?A\.?|M\.?A\.?)(?:\s+in\s+[^\n\r,•|0-9]{3,40})?/i,
+    /\b(B\.?E\.?|B\.?Tech\.?|M\.?Tech\.?|M\.?C\.?A\.?|B\.?C\.?A\.?|M\.?B\.?A\.?|B\.?B\.?A\.?|B\.?Sc\.?|M\.?Sc\.?|B\.?Com\.?|M\.?Com\.?|B\.?Des\.?|B\.?A\.?|M\.?A\.?)(?:\s+(?:in|of)\s+[^\n\r,•|0-9]{3,40})?/i,
     /\b(12th(?:\s+Grade|\s+Pass)?|HSC|10th(?:\s+Grade|\s+Pass)?|SSC)\b/i,
   ];
 
@@ -625,6 +668,15 @@ function extractEducation(text: string): string {
     const reg = new RegExp(`\\b${d.replace(".", "\\.")}\\b`, "i");
     if (reg.test(text)) return d;
   }
+  
+  if (/\b(?:btech|mtech|bsc|msc|bcom|mcom|bba)\b/i.test(text)) {
+      const m = text.match(/\b(btech|mtech|bsc|msc|bcom|mcom|bba)\b/i);
+      if (m) return m[1].toUpperCase();
+  }
+  
+  if (text.toLowerCase().includes("bachelor of")) return "Bachelor's Degree";
+  if (text.toLowerCase().includes("master of")) return "Master's Degree";
+  if (/\b(?:bachelors|masters|degree)\b/i.test(text)) return "Degree";
 
   return "Not specified";
 }
@@ -804,7 +856,7 @@ function extractAge(text: string): number {
     if (val > 1950 && val < 2010) return new Date().getFullYear() - val;
     if (val >= 18 && val <= 65) return val;
   }
-  return Math.floor(Math.random() * 10) + 22;
+  return (text.length % 10) + 22;
 }
 
 function extractSkills(text: string, roleId: string): string[] {

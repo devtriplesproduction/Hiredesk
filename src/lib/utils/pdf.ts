@@ -1,8 +1,8 @@
 import * as pdfjs from "pdfjs-dist";
 
-// Configure worker using local static asset to prevent CDN/version mismatches and CORS issues
+// Configure worker using a CDN with the exact matching version to prevent fatal mismatches
 if (typeof window !== "undefined") {
-  pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 }
 
 export interface PDFTextLine {
@@ -317,6 +317,24 @@ export async function extractTextAndMetaFromPDF(file: File): Promise<PDFParsedRe
         }
       } catch (srvErr) {
         console.warn("[HireDesk PDF] Server parse fallback failed:", srvErr);
+      }
+
+      // 4. If still sparse after server fallback (e.g. image-based PDF), perform OCR!
+      if (fullText.length < 80 && pdf && pdf.numPages > 0) {
+        try {
+          console.log("[HireDesk PDF] Still sparse, attempting OCR on first page...");
+          const page = await pdf.getPage(1);
+          const blob = await renderPageToImageBlob(page);
+          const extractedOcr = await performOCROnImageBlob(blob);
+          if (extractedOcr && extractedOcr.length > 50) {
+            fullText = extractedOcr;
+            ocrUsed = true;
+            ocrText = extractedOcr;
+            console.log("[HireDesk PDF] OCR successfully extracted text.");
+          }
+        } catch (ocrErr) {
+          console.error("[HireDesk PDF] OCR fallback failed:", ocrErr);
+        }
       }
     }
 

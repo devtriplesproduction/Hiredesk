@@ -89,15 +89,127 @@ function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length
 function pickN<T>(arr: T[], n: number): T[] { return [...arr].sort(() => Math.random() - .5).slice(0, n); }
 
 function genScore(roleId: string, text: string): ScoreBreakdown {
-  const keywords = DEFAULT_ROLES.find(r => r.id === roleId)?.keywords ?? [];
+  const role = DEFAULT_ROLES.find(r => r.id === roleId);
+  const keywords = role?.keywords ?? [];
   const lower = text.toLowerCase();
-  const matched = keywords.filter(k => lower.includes(k)).length;
-  const skillsRaw = keywords.length > 0 ? Math.min(100, Math.round((matched / keywords.length) * 100) + Math.floor(Math.random() * 20)) : Math.floor(Math.random() * 60) + 30;
-  const expRaw = Math.floor(Math.random() * 50) + 30;
-  const eduRaw = Math.floor(Math.random() * 40) + 40;
-  const compRaw = Math.floor(Math.random() * 30) + 50;
-  const total = Math.min(100, Math.round(skillsRaw * .4 + expRaw * .25 + eduRaw * .2 + compRaw * .15));
-  return { skills: Math.min(100, skillsRaw), exp: Math.min(100, expRaw), edu: Math.min(100, eduRaw), completeness: Math.min(100, compRaw), total };
+
+  // --- Skills: deterministic keyword matching ---
+  const matchedSkills: string[] = [];
+  const missingSkills: string[] = [];
+  
+  const checkSkillMatch = (kw: string, textLower: string) => {
+    // Ignore non-technical/unrelated terms
+    if (['basics', 'intern', 'knowledge', 'experience', 'fresher'].includes(kw.toLowerCase().trim())) {
+      return null; // Signals to ignore this keyword entirely
+    }
+
+    // Advanced Normalization
+    const normalize = (s: string) => {
+      let n = s.toLowerCase().trim();
+      n = n.replace(/html5/g, 'html');
+      n = n.replace(/css3/g, 'css');
+      n = n.replace(/react\.js/g, 'react');
+      n = n.replace(/next\.js/g, 'nextjs');
+      n = n.replace(/node\.js/g, 'nodejs');
+      n = n.replace(/vue\.js/g, 'vuejs');
+      n = n.replace(/github/g, 'git');
+      n = n.replace(/gitlab/g, 'git');
+      n = n.replace(/bitbucket/g, 'git');
+      return n.replace(/[^\w\s+#]/g, ' ').replace(/\s+/g, ' ').trim();
+    };
+
+    const normText = ' ' + normalize(textLower) + ' ';
+    const normKw = normalize(kw);
+
+    // Check composite skills like HTML/CSS
+    if (kw.includes('/')) {
+      const parts = kw.split('/').map(p => normalize(p));
+      if (parts.every(p => normText.includes(' ' + p + ' '))) {
+        return true;
+      }
+    }
+
+    if (normKw && normText.includes(' ' + normKw + ' ')) {
+      return true;
+    }
+
+    return false;
+  };
+
+  let totalValidKeywords = 0;
+  for (const kw of keywords) {
+    const match = checkSkillMatch(kw, lower);
+    if (match === true) {
+      matchedSkills.push(kw);
+      totalValidKeywords++;
+    } else if (match === false) {
+      missingSkills.push(kw);
+      totalValidKeywords++;
+    }
+  }
+  const skillsRaw = totalValidKeywords > 0
+    ? Math.round((matchedSkills.length / totalValidKeywords) * 100)
+    : 0;
+
+  // --- Experience: deterministic heuristic ---
+  let expRaw = 30; // base
+  const expMatch = text.match(/(\d+)\+?\s*(?:years?|yrs?)\s*(?:of\s+)?(?:experience|exp)?/i);
+  if (expMatch) {
+    const years = parseInt(expMatch[1], 10);
+    if (years >= 5) expRaw = 95;
+    else if (years >= 3) expRaw = 80;
+    else if (years >= 1) expRaw = 60;
+    else expRaw = 40;
+  } else if (/fresher|entry[\s-]?level|graduate|student/i.test(text)) {
+    expRaw = 25;
+  } else if (/intern/i.test(text)) {
+    expRaw = 20;
+  }
+
+  // --- Education: deterministic heuristic ---
+  let eduRaw = 30; // base
+  const eduKeywords: [RegExp, number][] = [
+    [/\b(Ph\.?D|Doctorate)\b/i, 100],
+    [/\b(M\.?Tech|M\.?S\.?|M\.?Sc|MBA|MCA|Masters?)\b/i, 85],
+    [/\b(B\.?Tech|B\.?E\.?|B\.?Sc|BCA|B\.?Com|B\.?A\.?|BDes|Bachelors?|Degree)\b/i, 65],
+    [/\b(Diploma|Associate)\b/i, 50],
+    [/\b(12th|HSC|Higher Secondary|Intermediate)\b/i, 35],
+    [/\b(10th|SSC|Matriculation)\b/i, 25],
+  ];
+  for (const [pattern, score] of eduKeywords) {
+    if (pattern.test(text)) {
+      eduRaw = Math.max(eduRaw, score);
+    }
+  }
+
+  // --- Completeness: deterministic check for profile fields ---
+  let compRaw = 0;
+  if (/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/.test(text)) compRaw += 20; // email
+  if (/(?:\+91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}/.test(text)) compRaw += 20; // phone
+  if (text.length > 300) compRaw += 15; // meaningful content
+  if (text.length > 800) compRaw += 10; // detailed resume
+  if (/\b(experience|work\s+history|employment)\b/i.test(text)) compRaw += 15; // experience section
+  if (/\b(education|qualification|academic)\b/i.test(text)) compRaw += 10; // education section
+  if (/\b(skill|proficiency|competenc|technologies)\b/i.test(text)) compRaw += 10; // skills section
+  compRaw = Math.min(100, compRaw);
+
+  // --- Total: weighted deterministic calculation ---
+  const total = Math.min(100, Math.round(
+    Math.min(100, skillsRaw) * 0.40 +
+    Math.min(100, expRaw) * 0.25 +
+    Math.min(100, eduRaw) * 0.20 +
+    Math.min(100, compRaw) * 0.15
+  ));
+
+  return {
+    skills: Math.min(100, skillsRaw),
+    exp: Math.min(100, expRaw),
+    edu: Math.min(100, eduRaw),
+    completeness: Math.min(100, compRaw),
+    total,
+    matchedSkills,
+    missingSkills,
+  };
 }
 
 export function makeCandidate(roleId: string, overrides: Partial<Candidate> = {}): Candidate {

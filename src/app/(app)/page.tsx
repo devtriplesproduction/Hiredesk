@@ -184,51 +184,25 @@ export default function DashboardPage() {
   return (
     <div className="animate-fade-in space-y-6 pb-12">
       {/* ─── Hero Header ─────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-gradient-to-r from-white/[0.04] via-white/[0.02] to-transparent p-5 sm:p-6 backdrop-blur-xl">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-blue-500/10 via-purple-500/5 to-transparent rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+      <div className="pb-2">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-mono font-medium tracking-wide mb-2.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-              TALENT PIPELINE ACTIVE · TRIPLE S PRODUCTION
-            </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text flex items-center gap-3">
               Hiring Command Center
             </h1>
-            <p className="text-xs sm:text-sm text-[var(--text-2)] mt-1.5 max-w-xl">
-              Real-time candidate tracking, AI-assisted resume evaluation, and role distribution across active hiring rounds.
+            <p className="text-xs sm:text-sm text-[var(--text-2)] mt-1.5 max-w-2xl">
+              Real-time tracking, AI resume evaluation, and role distribution.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 flex-shrink-0">
             <Btn
-              variant="outline"
-              size="md"
-              onClick={() => router.push("/roles")}
-              className="flex items-center gap-2"
-            >
-              <Layers size={15} />
-              <span>Roles ({roles.length})</span>
-            </Btn>
-
-            <Btn
-              variant="outline"
-              size="md"
-              onClick={() => router.push("/candidates")}
-              className="flex items-center gap-2"
-            >
-              <Users size={15} />
-              <span>Candidates</span>
-            </Btn>
-
-            <Btn
               variant="primary"
-              size="md"
+              size="sm"
               onClick={() => router.push("/upload")}
               className="flex items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.15)] hover:shadow-[0_0_25px_rgba(255,255,255,0.25)] transition-all active:scale-95"
             >
-              <Plus size={16} strokeWidth={2.5} />
+              <Plus size={14} strokeWidth={2.5} />
               <span>Upload Resumes</span>
             </Btn>
           </div>
@@ -258,19 +232,21 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            {/* Title & Subtitle */}
-            <div>
-              <div className="text-sm font-semibold text-text tracking-tight whitespace-nowrap">
-                Total Candidates
+            <div className="flex items-center justify-between mb-2">
+              {/* Title & Subtitle */}
+              <div>
+                <div className="text-sm font-semibold text-text tracking-tight whitespace-nowrap">
+                  Total Candidates
+                </div>
+                <div className="text-[11px] text-[var(--text-3)] font-medium mt-0.5 whitespace-nowrap">
+                  Pipeline Intake
+                </div>
               </div>
-              <div className="text-[11px] text-[var(--text-3)] font-medium mt-0.5 whitespace-nowrap">
-                Pipeline Intake
-              </div>
-            </div>
 
-            {/* Primary Value */}
-            <div className="text-[32px] font-extrabold tracking-tight text-text leading-none my-2.5">
-              {total}
+              {/* Primary Value */}
+              <div className="text-[32px] font-extrabold tracking-tight text-text leading-none">
+                {total}
+              </div>
             </div>
           </div>
 
@@ -304,19 +280,21 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            {/* Title & Subtitle */}
-            <div>
-              <div className="text-sm font-semibold text-text tracking-tight whitespace-nowrap">
-                Offers Extended
+            <div className="flex items-center justify-between mb-2">
+              {/* Title & Subtitle */}
+              <div>
+                <div className="text-sm font-semibold text-text tracking-tight whitespace-nowrap">
+                  Offers Extended
+                </div>
+                <div className="text-[11px] text-[var(--text-3)] font-medium mt-0.5 whitespace-nowrap">
+                  Contract Status
+                </div>
               </div>
-              <div className="text-[11px] text-[var(--text-3)] font-medium mt-0.5 whitespace-nowrap">
-                Contract Status
-              </div>
-            </div>
 
-            {/* Primary Value */}
-            <div className="text-[32px] font-extrabold tracking-tight text-text leading-none my-2.5">
-              {offersStats.total}
+              {/* Primary Value */}
+              <div className="text-[32px] font-extrabold tracking-tight text-text leading-none">
+                {offersStats.total}
+              </div>
             </div>
           </div>
 
@@ -357,22 +335,24 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            {/* Title & Subtitle */}
-            <div>
-              <div className="text-sm font-semibold text-text tracking-tight whitespace-nowrap">
-                Average ATS Score
+            <div className="flex items-center justify-between mb-2">
+              {/* Title & Subtitle */}
+              <div>
+                <div className="text-sm font-semibold text-text tracking-tight whitespace-nowrap">
+                  Average ATS
+                </div>
+                <div className="text-[11px] text-[var(--text-3)] font-medium mt-0.5 whitespace-nowrap">
+                  Candidate Quality
+                </div>
               </div>
-              <div className="text-[11px] text-[var(--text-3)] font-medium mt-0.5 whitespace-nowrap">
-                Candidate Quality
-              </div>
-            </div>
 
-            {/* Primary Value */}
-            <div className="flex items-baseline gap-1.5 my-2.5">
-              <span className="text-[32px] font-extrabold tracking-tight text-text leading-none">
-                {avgScore}
-              </span>
-              <span className="text-sm font-mono text-[var(--text-3)] font-semibold">/ 100</span>
+              {/* Primary Value */}
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[32px] font-extrabold tracking-tight text-text leading-none">
+                  {avgScore}
+                </span>
+                <span className="text-sm font-mono text-[var(--text-3)] font-semibold">/ 100</span>
+              </div>
             </div>
           </div>
 
@@ -412,19 +392,21 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            {/* Title & Subtitle */}
-            <div>
-              <div className="text-sm font-semibold text-text tracking-tight whitespace-nowrap">
-                Interviews Held
+            <div className="flex items-center justify-between mb-2">
+              {/* Title & Subtitle */}
+              <div>
+                <div className="text-sm font-semibold text-text tracking-tight whitespace-nowrap">
+                  Interviews Held
+                </div>
+                <div className="text-[11px] text-[var(--text-3)] font-medium mt-0.5 whitespace-nowrap">
+                  Evaluation Rounds
+                </div>
               </div>
-              <div className="text-[11px] text-[var(--text-3)] font-medium mt-0.5 whitespace-nowrap">
-                Evaluation Rounds
-              </div>
-            </div>
 
-            {/* Primary Value */}
-            <div className="text-[32px] font-extrabold tracking-tight text-text leading-none my-2.5">
-              {interviewStats.total}
+              {/* Primary Value */}
+              <div className="text-[32px] font-extrabold tracking-tight text-text leading-none">
+                {interviewStats.total}
+              </div>
             </div>
           </div>
 

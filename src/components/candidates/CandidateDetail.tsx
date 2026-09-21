@@ -3,7 +3,7 @@ import { useStore } from "@/lib/store";
 import { getDocumentSignedUrl } from "@/lib/supabase";
 import { Btn, ScoreBadge, StatusBadge, SkillTag, dialog } from "@/components/ui";
 import type { Candidate, EmploymentStatus, Employee } from "@/types";
-import { getEmploymentStatusMeta } from "@/lib/data";
+import { getEmploymentStatusMeta, scoreCandidateFromText } from "@/lib/data";
 import { clsx } from "clsx";
 import { useRouter } from "next/navigation";
 import { getPublicBaseUrl } from "@/lib/url";
@@ -598,7 +598,10 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     value={editState.roleId || c.roleId} 
                     onChange={e => {
                       const role = roles.find(r => r.id === e.target.value);
-                      setEditState(prev => ({ ...prev, roleId: role?.id, roleName: role?.name }));
+                      if (role) {
+                        const newScore = scoreCandidateFromText(c.resumeText || "", role.id);
+                        setEditState(prev => ({ ...prev, roleId: role.id, roleName: role.name, score: newScore }));
+                      }
                     }}
                     className="bg-[var(--glass-2)] border border-border rounded-lg px-2 py-1 outline-none focus:border-[var(--border-2)] text-text"
                   >
@@ -1117,29 +1120,80 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
               </div>
               )}
 
-              {/* 2. Detected Skills */}
+              {/* 2. Detected Skills & Role Match */}
               {(profileSubTab === "skills" || profileSubTab === "all") && (
-                <div className="rounded-2xl border border-[var(--border-2)] bg-[var(--card-bg)] p-5 sm:p-6 flex flex-col gap-3 shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-bold uppercase tracking-wider text-text-2 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-cyan-400" />
-                    <span>Detected Skills ({cleanSkills.length})</span>
+                <div className="rounded-2xl border border-[var(--border-2)] bg-[var(--card-bg)] p-5 sm:p-6 flex flex-col gap-4 shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
+                
+                {/* Matched Skills */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-xs font-bold uppercase tracking-wider text-text-2 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      <span>Matched Skills ({c.score?.matchedSkills?.length || 0})</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {(c.score?.matchedSkills && c.score.matchedSkills.length > 0) ? (
+                      c.score.matchedSkills.map(s => (
+                        <span
+                          key={s}
+                          className="px-3 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:border-emerald-400/60 transition-colors"
+                        >
+                          {s}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-text-3 italic">No matched skills</span>
+                    )}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {cleanSkills.length > 0 ? (
-                    cleanSkills.map(s => (
+
+                {/* Missing Skills */}
+                {c.score?.missingSkills && c.score.missingSkills.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-xs font-bold uppercase tracking-wider text-text-2 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-400" />
+                      <span>Missing Skills ({c.score.missingSkills.length})</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {c.score.missingSkills.map(s => (
                       <span
                         key={s}
-                        className="px-3 py-1 rounded-lg text-xs font-medium bg-[var(--glass-2)] text-text border border-[var(--border-2)] hover:border-cyan-500/40 hover:text-cyan-300 transition-colors"
+                        className="px-3 py-1 rounded-lg text-xs font-medium bg-red-500/10 text-red-400/80 border border-red-500/20 hover:border-red-400/50 transition-colors"
                       >
                         {s}
                       </span>
-                    ))
-                  ) : (
-                    <span className="text-xs text-text-3 italic">No skills detected</span>
-                  )}
+                    ))}
+                  </div>
                 </div>
+                )}
+
+                {/* All Detected Skills from Resume */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-xs font-bold uppercase tracking-wider text-text-2 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-cyan-400" />
+                      <span>Detected Skills ({cleanSkills.length})</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {cleanSkills.length > 0 ? (
+                      cleanSkills.map(s => (
+                        <span
+                          key={s}
+                          className="px-3 py-1 rounded-lg text-xs font-medium bg-[var(--glass-2)] text-text border border-[var(--border-2)] hover:border-cyan-500/40 hover:text-cyan-300 transition-colors"
+                        >
+                          {s}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-text-3 italic">No skills detected</span>
+                    )}
+                  </div>
+                </div>
+
               </div>
               )}
 

@@ -4,6 +4,7 @@ import { useStore } from "@/lib/store";
 import { parseResumeFile } from "@/lib/parser";
 import type { Candidate } from "@/types";
 import { clsx } from "clsx";
+import { FilterSelect } from "@/components/candidates/FilterSelect";
 import {
   UploadCloud,
   FileText,
@@ -91,6 +92,11 @@ export default function UploadZone() {
   const { roles, addCandidates } = useStore();
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>('auto');
+
+  const roleOptions = useMemo(() => [
+    { value: "auto", label: "Auto-detect (Smart Match)" },
+    ...roles.map(r => ({ value: r.id, label: r.name })),
+  ], [roles]);
   const [isDrag, setIsDrag] = useState(false);
   const [processing, setProcessing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -212,16 +218,13 @@ export default function UploadZone() {
               <div className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">Target Role</div>
               <span className="text-[11px] text-[var(--text-3)] mt-0.5">Score resumes against a specific role&apos;s keywords</span>
             </div>
-            <select
+            <FilterSelect
+              options={roleOptions}
               value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value)}
-              className="bg-[var(--glass-2)] border border-[var(--border)] rounded-xl text-[var(--text)] text-sm px-3.5 py-2.5 transition-colors cursor-pointer appearance-none outline-none focus:border-[var(--border-3)] [&>option]:bg-[var(--card-bg)] [&>option]:text-[var(--text)] w-full sm:w-auto sm:min-w-[220px]"
-            >
-              <option value="auto">Auto-detect (Smart Match)</option>
-              {roles.map(r => (
-                <option key={r.id} value={r.id}>{r.name}</option>
-              ))}
-            </select>
+              onChange={val => setSelectedRole(val)}
+              placeholder="Auto-detect (Smart Match)"
+              containerClassName="w-full sm:w-auto sm:min-w-[240px]"
+            />
           </div>
 
           {/* Upload Dropzone */}

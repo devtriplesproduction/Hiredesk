@@ -73,6 +73,8 @@ export interface ScoreBreakdown {
   edu: number;
   completeness: number;
   total: number;
+  matchedSkills?: string[];
+  missingSkills?: string[];
 }
 
 export type EmploymentStatus = "CURRENTLY_WORKING" | "STUDENT_FRESHER" | "NOT_CURRENTLY_WORKING" | "UNKNOWN";
