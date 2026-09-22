@@ -17,7 +17,6 @@ export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
     filters.roleId !== "all" ||
     filters.status !== "all" ||
     filters.city ||
-    filters.gender !== "all" ||
     filters.exp !== "all" ||
     (filters.employmentStatus && filters.employmentStatus !== "all")
   );
@@ -89,17 +88,7 @@ export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
     { value: "rejected", label: "Rejected" },
   ], []);
 
-  const genderOptions: FilterOption[] = useMemo(() => {
-    const seen = new Set<string>(["Male", "Female", "Non-binary", "Prefer not to say"]);
-    candidates.forEach(c => {
-      const g = (c.gender || "").trim();
-      if (g && g !== "—") seen.add(g);
-    });
-    return [
-      { value: "all", label: "All Genders" },
-      ...Array.from(seen).map(g => ({ value: g, label: g })),
-    ];
-  }, [candidates]);
+
 
   const expOptions: FilterOption[] = useMemo(() => {
     const seen = new Set<string>(EXP_LEVELS);
@@ -164,14 +153,7 @@ export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
         containerClassName="flex-1 min-w-[100px]"
       />
 
-      {/* 4. All Genders */}
-      <FilterSelect
-        options={genderOptions}
-        value={filters.gender}
-        onChange={val => setFilters({ gender: val })}
-        placeholder="All Genders"
-        containerClassName="flex-1 min-w-[95px]"
-      />
+
 
       {/* 5. All Exp. */}
       <FilterSelect
