@@ -5,16 +5,16 @@ import { Btn, Modal, Input } from "@/components/ui";
 import { FilterSelect, type FilterOption } from "@/components/candidates/FilterSelect";
 import { useRouter } from "next/navigation";
 import { clsx } from "clsx";
-import { 
-  Trash2, 
-  Pencil, 
-  Search, 
-  X, 
-  Briefcase, 
-  GraduationCap, 
-  Zap, 
-  Users, 
-  Layers, 
+import {
+  Trash2,
+  Pencil,
+  Search,
+  X,
+  Briefcase,
+  GraduationCap,
+  Zap,
+  Users,
+  Layers,
   Sparkles,
   SlidersHorizontal
 } from "lucide-react";
@@ -53,11 +53,10 @@ export default function RolesGrid() {
   const [type, setType] = useState<"Full-time" | "Intern" | "Freelance">("Full-time");
   const [skills, setSkills] = useState("");
 
-  // Selection & bulk delete
   const [selectedRoleIds, setSelectedRoleIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Edit Role state
+
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [editName, setEditName] = useState("");
   const [editType, setEditType] = useState<"Full-time" | "Intern" | "Freelance">("Full-time");
@@ -209,11 +208,11 @@ export default function RolesGrid() {
   // Filter roles based on search and employment type
   const filteredRoles = useMemo(() => {
     return roles.filter(r => {
-      const matchesSearch = 
+      const matchesSearch =
         !searchQuery.trim() ||
         r.name.toLowerCase().includes(searchQuery.toLowerCase().trim()) ||
         r.keywords.some(k => k.toLowerCase().includes(searchQuery.toLowerCase().trim()));
-      
+
       const matchesType = activeTypeFilter === "All" || r.type === activeTypeFilter;
       return matchesSearch && matchesType;
     });
@@ -396,11 +395,11 @@ export default function RolesGrid() {
                   </div>
 
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <span 
+                    <span
                       className={clsx(
                         "font-mono text-[15px] px-2 py-0.5 rounded-lg border font-semibold flex items-center gap-1",
-                        r.count > 0 
-                          ? "bg-cyan-500/10 text-cyan-300 border-cyan-500/30" 
+                        r.count > 0
+                          ? "bg-cyan-500/10 text-cyan-300 border-cyan-500/30"
                           : "bg-[var(--card-bg)] text-[var(--text-3)] border-[var(--border-2)]"
                       )}
                       title={`${r.count} candidate(s) mapped`}
@@ -431,17 +430,17 @@ export default function RolesGrid() {
 
                 {/* Candidate Share Progress Bar */}
                 <div className="h-[3px] bg-[var(--card-bg)] rounded-full my-3 overflow-hidden">
-                  <div 
-                    className="h-full bg-gradient-to-r from-[#00D9FF] to-[#3B82F6] rounded-full transition-all duration-700" 
-                    style={{ width: `${pct}%` }} 
+                  <div
+                    className="h-full bg-gradient-to-r from-[#00D9FF] to-[#3B82F6] rounded-full transition-all duration-700"
+                    style={{ width: `${pct}%` }}
                   />
                 </div>
 
                 {/* Keywords Chips */}
                 <div className="flex flex-wrap gap-1 mb-3">
                   {r.keywords.slice(0, 4).map(k => (
-                    <span 
-                      key={k} 
+                    <span
+                      key={k}
                       className="font-mono text-[9.5px] px-2 py-0.5 rounded-md border border-[var(--border-2)] bg-[var(--card-bg)] text-[var(--text-3)] uppercase font-medium hover:text-[var(--text)] transition-colors"
                     >
                       {k}
@@ -462,8 +461,8 @@ export default function RolesGrid() {
                   <span className={clsx(
                     "px-2 py-0.5 rounded-md font-bold text-xs",
                     avgScore >= 70 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/25" :
-                    avgScore >= 45 ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/25" :
-                    "bg-amber-500/10 text-amber-400 border border-amber-500/25"
+                      avgScore >= 45 ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/25" :
+                        "bg-amber-500/10 text-amber-400 border border-amber-500/25"
                   )}>
                     {Math.round(avgScore)}
                   </span>
@@ -523,11 +522,11 @@ export default function RolesGrid() {
         <div className="h-px bg-[var(--card-bg)] my-4" />
 
         <div className="flex flex-col gap-4">
-          <Input 
-            label="Role Name" 
-            placeholder="e.g. Brand Strategist" 
-            value={name} 
-            onChange={e => setName(e.target.value)} 
+          <Input
+            label="Role Name"
+            placeholder="e.g. Brand Strategist"
+            value={name}
+            onChange={e => setName(e.target.value)}
           />
 
           {/* Employment Type using candidate-themed FilterSelect */}
@@ -546,11 +545,11 @@ export default function RolesGrid() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Input 
-              label="Key Skills / Keywords (comma separated)" 
+            <Input
+              label="Key Skills / Keywords (comma separated)"
               placeholder="e.g. branding, strategy, market research, analysis"
-              value={skills} 
-              onChange={e => setSkills(e.target.value)} 
+              value={skills}
+              onChange={e => setSkills(e.target.value)}
             />
 
             {/* Live keyword chip preview */}
@@ -560,8 +559,8 @@ export default function RolesGrid() {
                   Keyword Preview ({skills.split(",").filter(s => s.trim()).length}):
                 </div>
                 {skills.split(",").map(s => s.trim()).filter(Boolean).map(tag => (
-                  <span 
-                    key={tag} 
+                  <span
+                    key={tag}
                     className="font-mono text-[16px] px-2 py-0.5 rounded-md bg-[var(--card-bg)] text-cyan-300 border border-cyan-500/25"
                   >
                     {tag}
@@ -633,8 +632,8 @@ export default function RolesGrid() {
                   Keyword Preview ({editSkills.split(",").filter(s => s.trim()).length}):
                 </div>
                 {editSkills.split(",").map(s => s.trim()).filter(Boolean).map(tag => (
-                  <span 
-                    key={tag} 
+                  <span
+                    key={tag}
                     className="font-mono text-[16px] px-2 py-0.5 rounded-md bg-[var(--card-bg)] text-cyan-300 border border-cyan-500/25"
                   >
                     {tag}
