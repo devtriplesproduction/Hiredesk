@@ -88,9 +88,7 @@ function uid() { return typeof crypto !== 'undefined' && crypto.randomUUID ? cry
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 function pickN<T>(arr: T[], n: number): T[] { return [...arr].sort(() => Math.random() - .5).slice(0, n); }
 
-function genScore(roleId: string, text: string): ScoreBreakdown {
-  const role = DEFAULT_ROLES.find(r => r.id === roleId);
-  const keywords = role?.keywords ?? [];
+function genScore(text: string, keywords: string[], info: Partial<Candidate> = {}): ScoreBreakdown {
   const lower = text.toLowerCase();
 
   // --- Skills: deterministic keyword matching ---
@@ -152,45 +150,43 @@ function genScore(roleId: string, text: string): ScoreBreakdown {
     : 0;
 
   // --- Experience: deterministic heuristic ---
-  let expRaw = 30; // base
-  const expMatch = text.match(/(\d+)\+?\s*(?:years?|yrs?)\s*(?:of\s+)?(?:experience|exp)?/i);
-  if (expMatch) {
-    const years = parseInt(expMatch[1], 10);
-    if (years >= 5) expRaw = 95;
-    else if (years >= 3) expRaw = 80;
-    else if (years >= 1) expRaw = 60;
-    else expRaw = 40;
-  } else if (/fresher|entry[\s-]?level|graduate|student/i.test(text)) {
-    expRaw = 25;
-  } else if (/intern/i.test(text)) {
-    expRaw = 20;
+  let expRaw = 20;
+  if (info.exp) {
+    const expStr = info.exp.toLowerCase();
+    if (expStr.includes("5+")) expRaw = 95;
+    else if (expStr.includes("3")) expRaw = 80;
+    else if (expStr.includes("2")) expRaw = 60;
+    else if (expStr.includes("1")) expRaw = 40;
+    else if (expStr.includes("fresher") || expStr.includes("intern")) expRaw = 20;
+    else expRaw = 40; // Default fallback
   }
 
   // --- Education: deterministic heuristic ---
-  let eduRaw = 30; // base
-  const eduKeywords: [RegExp, number][] = [
-    [/\b(Ph\.?D|Doctorate)\b/i, 100],
-    [/\b(M\.?Tech|M\.?S\.?|M\.?Sc|MBA|MCA|Masters?)\b/i, 85],
-    [/\b(B\.?Tech|B\.?E\.?|B\.?Sc|BCA|B\.?Com|B\.?A\.?|BDes|Bachelors?|Degree)\b/i, 65],
-    [/\b(Diploma|Associate)\b/i, 50],
-    [/\b(12th|HSC|Higher Secondary|Intermediate)\b/i, 35],
-    [/\b(10th|SSC|Matriculation)\b/i, 25],
-  ];
-  for (const [pattern, score] of eduKeywords) {
-    if (pattern.test(text)) {
-      eduRaw = Math.max(eduRaw, score);
+  let eduRaw = 0;
+  if (info.education && info.education !== "Not specified") {
+    const eduStr = info.education;
+    const eduKeywords: [RegExp, number][] = [
+      [/\b(Ph\.?D|Doctorate)\b/i, 100],
+      [/\b(M\.?Tech|M\.?S\.?|M\.?Sc|MBA|MCA|Masters?)\b/i, 85],
+      [/\b(B\.?Tech|B\.?E\.?|B\.?Sc|BCA|B\.?Com|B\.?A\.?|BDes|Bachelors?|Degree)\b/i, 65],
+      [/\b(Diploma|Associate)\b/i, 50],
+      [/\b(12th|HSC|Higher Secondary|Intermediate)\b/i, 35],
+      [/\b(10th|SSC|Matriculation)\b/i, 25],
+    ];
+    for (const [pattern, score] of eduKeywords) {
+      if (pattern.test(eduStr)) {
+        eduRaw = Math.max(eduRaw, score);
+      }
     }
   }
 
   // --- Completeness: deterministic check for profile fields ---
   let compRaw = 0;
-  if (/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/.test(text)) compRaw += 20; // email
-  if (/(?:\+91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}/.test(text)) compRaw += 20; // phone
-  if (text.length > 300) compRaw += 15; // meaningful content
-  if (text.length > 800) compRaw += 10; // detailed resume
-  if (/\b(experience|work\s+history|employment)\b/i.test(text)) compRaw += 15; // experience section
-  if (/\b(education|qualification|academic)\b/i.test(text)) compRaw += 10; // education section
-  if (/\b(skill|proficiency|competenc|technologies)\b/i.test(text)) compRaw += 10; // skills section
+  if (info.name) compRaw += 20;
+  if (info.email) compRaw += 20;
+  if (info.phone) compRaw += 20;
+  if (info.city && info.city !== "Not specified") compRaw += 20;
+  if (info.skills && info.skills.length > 0) compRaw += 20;
   compRaw = Math.min(100, compRaw);
 
   // --- Total: weighted deterministic calculation ---
@@ -217,12 +213,11 @@ export function makeCandidate(roleId: string, overrides: Partial<Candidate> = {}
   const role = DEFAULT_ROLES.find(r => r.id === roleId) ?? DEFAULT_ROLES[0];
   const pool = SKILLS_POOL[roleId] ?? ["Communication", "Teamwork"];
   const seedOffset = Math.random() * 30 * 86400000; // random within last 30 days for seed data
-  return {
+  const baseCandidate = {
     id: uid(), name: `${fn} ${ln}`,
     email: `${fn.toLowerCase()}.${ln.toLowerCase()}@gmail.com`,
     phone: `+91 ${Math.floor(Math.random() * 9000000000 + 1000000000)}`,
     roleId, roleName: role.name,
-    score: genScore(roleId, pickN(role.keywords, 4).join(" ")),
     status: pick(STATUSES), city: pick(CITIES), gender: pick(GENDERS),
     age: Math.floor(Math.random() * 18) + 21, exp: pick(EXP_LEVELS), education: pick(EDU),
     skills: pickN(pool, Math.floor(Math.random() * 3) + 2),
@@ -231,11 +226,21 @@ export function makeCandidate(roleId: string, overrides: Partial<Candidate> = {}
     createdAt: new Date(Date.now() - seedOffset).toISOString(),
     note: "", ...overrides,
   };
+  const mockScore = genScore(pickN(role.keywords, 4).join(" "), role.keywords, {
+    exp: baseCandidate.exp,
+    education: baseCandidate.education,
+    name: baseCandidate.name,
+    email: baseCandidate.email,
+    phone: baseCandidate.phone,
+    city: baseCandidate.city,
+    skills: baseCandidate.skills
+  });
+  return { ...baseCandidate, score: mockScore };
 }
 
 
-export function scoreCandidateFromText(text: string, roleId: string): ScoreBreakdown {
-  return genScore(roleId, text);
+export function scoreCandidateFromText(text: string, keywords: string[], info: Partial<Candidate> = {}): ScoreBreakdown {
+  return genScore(text, keywords, info);
 }
 
 export function extractInfoFromText(text: string): Partial<Candidate> {

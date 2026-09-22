@@ -947,10 +947,9 @@ export async function parseResumeFile(
     }
   }
 
-  // 2. ATS score matching
+  // 2. Role detection
   const roleId = selectedRoleId && selectedRoleId !== 'auto' ? selectedRoleId : detectBestRole(text, roles);
   const role = roles.find(r => r.id === roleId) ?? roles[0];
-  const score = scoreCandidateFromText(text, roleId);
 
   // 3. Multi-Stage Extraction
   const rawNLP = extractNLPPersonName(text);
@@ -1091,6 +1090,17 @@ export async function parseResumeFile(
   const gender = extractGender(text, resolvedName);
   const age = extractAge(text);
   const skills = extractSkills(text, roleId);
+
+  // ATS deterministic score matching
+  const score = scoreCandidateFromText(text, role.keywords, {
+    name: resolvedName,
+    email: email || "",
+    phone: phone || "",
+    city,
+    education,
+    exp,
+    skills
+  });
 
   // Construct final Candidate object
   return makeCandidate(roleId, {

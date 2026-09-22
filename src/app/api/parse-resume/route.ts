@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+// @ts-expect-error - no default export in types
 import pdfParse from "pdf-parse";
 
 export const dynamic = "force-dynamic";
@@ -20,8 +21,8 @@ export async function POST(req: NextRequest) {
     
     // We can't extract geometric layout with pdf-parse as easily as pdfjs-dist,
     // but we can just split by lines to simulate firstPageLines for the fallback
-    const lines = data.text.split('\n').filter(l => l.trim().length > 0);
-    const firstPageLines = lines.slice(0, 30).map((str, idx) => ({
+    const lines = data.text.split('\n').filter((l: string) => l.trim().length > 0);
+    const firstPageLines = lines.slice(0, 30).map((str: string, idx: number) => ({
       text: str.trim(),
       fontSize: 12,
       y: idx * 20,

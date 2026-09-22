@@ -599,7 +599,15 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     onChange={e => {
                       const role = roles.find(r => r.id === e.target.value);
                       if (role) {
-                        const newScore = scoreCandidateFromText(c.resumeText || "", role.id);
+                        const newScore = scoreCandidateFromText(c.resumeText || "", role.keywords, {
+                          name: c.name,
+                          email: c.email,
+                          phone: c.phone,
+                          city: c.city,
+                          education: c.education,
+                          exp: c.exp,
+                          skills: c.skills
+                        });
                         setEditState(prev => ({ ...prev, roleId: role.id, roleName: role.name, score: newScore }));
                       }
                     }}
