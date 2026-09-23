@@ -759,7 +759,7 @@ function extractExperience(text: string): string {
     return "Intern (Fresher)";
   }
 
-  return "Fresher";
+  return "Not specified";
 }
 
 function extractEmploymentStatus(text: string): {
@@ -900,7 +900,7 @@ function extractSkills(text: string, roleId: string): string[] {
   if (unique.length > 0) {
     return unique.slice(0, 10);
   }
-  return rolePool.slice(0, 5);
+  return [];
 }
 
 /**

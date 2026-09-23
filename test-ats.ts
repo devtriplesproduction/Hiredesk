@@ -36,3 +36,18 @@ const missingReq = { keywords: ["react", "python", "aws", "docker"] };
 const missingScore = calculateMatchScore(resumeText, missingReq, info);
 console.log(`Expected Skills: 25 (1/4)`);
 console.log(`Actual: Total = ${missingScore.total}, Skills = ${missingScore.skills}, Matched = ${missingScore.matchedSkills}, Missing = ${missingScore.missingSkills}`);
+
+console.log("\n=== SCENARIO 5: Java vs JavaScript (Word Boundary Validation) ===");
+const jsResume = "I am a frontend developer with experience in JavaScript.";
+const javaReq = { keywords: ["java"] };
+const javaScore = calculateMatchScore(jsResume, javaReq, info);
+console.log(`Expected Skills: 0 (Java should not match JavaScript)`);
+console.log(`Actual: Skills = ${javaScore.skills}, Matched = ${javaScore.matchedSkills}`);
+
+console.log("\n=== SCENARIO 6: Experience 'Not specified' Fallback ===");
+const noExpInfo = { ...info, exp: "Not specified" };
+const reqExpReq = { keywords: ["react"], exp: "2 yrs" };
+const noExpScore = calculateMatchScore("No exp mentioned", reqExpReq, noExpInfo);
+console.log(`Expected Exp: 0 (Not specified should yield 0)`);
+console.log(`Actual: Exp = ${noExpScore.exp}`);
+
