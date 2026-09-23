@@ -190,33 +190,28 @@ export default function ContractEditor({ contract, onBack }: Props) {
   useLayoutEffect(() => {
     if (!editorRef.current) return;
 
-    // Self-heal exp_letter if DOM has header title, non-centered title, or old logo/sign sizes
-    if (
-      contract.id === "exp_letter" &&
-      (!editorRef.current.innerHTML.includes("exp-cert-page") ||
-        !editorRef.current.innerHTML.includes("Shital Khulape") ||
-        editorRef.current.innerHTML.includes("translateX(-50%)") ||
-        !editorRef.current.innerHTML.includes("text-align:center") ||
-        editorRef.current.innerHTML.includes("height:48px") ||
-        editorRef.current.innerHTML.includes("height: 48px") ||
-        editorRef.current.innerHTML.includes("height:50px") ||
-        editorRef.current.innerHTML.includes("margin-top:auto") ||
-        editorRef.current.innerHTML.includes(">Triple S</span>") ||
-        editorRef.current.innerHTML.includes("height:28px"))
-    ) {
-      import("@/lib/data").then(({ getContractTemplates }) => {
-        const freshTpl = getContractTemplates().find(t => t.id === "exp_letter");
-        if (freshTpl && editorRef.current) {
-          const fresh = ensureA4Pages(ensureCurrentDate(freshTpl.body), "exp_letter");
-          const rendered = renderContractHtml(fresh, resolvedAssets);
-          editorRef.current.innerHTML = rendered;
-          editorRef.current.querySelectorAll(".contract-logo-slot, .contract-sign-slot").forEach(el => el.setAttribute("contenteditable", "false"));
-          lastHtmlRef.current = rendered;
-          savedRangeRef.current = null;
-          updateContract("exp_letter", freshTpl.body);
-        }
-      });
-      return;
+    // Self-heal exp_letter if it was accidentally overwritten by another document
+    if (contract.id === "exp_letter") {
+      const savedBody = typeof window !== "undefined" ? localStorage.getItem("hd_contract_exp_letter_body") : null;
+      const html = editorRef.current.innerHTML;
+      
+      const isClearlyWrong = html.includes("Letter of Appointment") || !html.includes("Experience Certificate");
+      const hasValidSavedBody = savedBody && savedBody.includes("Experience Certificate");
+
+      if (isClearlyWrong && !hasValidSavedBody) {
+        import("@/lib/data").then(({ getContractTemplates }) => {
+          const freshTpl = getContractTemplates().find(t => t.id === "exp_letter");
+          if (freshTpl && editorRef.current) {
+            const fresh = ensureA4Pages(ensureCurrentDate(freshTpl.body), "exp_letter");
+            const rendered = renderContractHtml(fresh, resolvedAssets);
+            editorRef.current.innerHTML = rendered;
+            editorRef.current.querySelectorAll(".contract-logo-slot, .contract-sign-slot").forEach(el => el.setAttribute("contenteditable", "false"));
+            lastHtmlRef.current = rendered;
+            savedRangeRef.current = null;
+          }
+        });
+        return;
+      }
     }
 
     if (currentLoadedIdRef.current !== contract.id) {
@@ -229,7 +224,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
       savedRangeRef.current = null;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contract.id, updateContract]);
+  }, [contract.id]);
 
   // Dynamically update DOM asset slots when resolved assets change
   useEffect(() => {
@@ -506,7 +501,8 @@ export default function ContractEditor({ contract, onBack }: Props) {
         updateContract(contract.id, cleanStorageHtml);
       }
       setHasPermanentSaved(true);
-      setTimeout(() => setHasPermanentSaved(false), 2000);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
     } else {
       setHasPermanentSaved(false);
     }
@@ -1208,7 +1204,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
               <div
                 style={{
                   width: "210mm",
-                  zoom: zoom,
+                  transform: `scale(${zoom})`,
                   transformOrigin: "top center",
                 }}
               >

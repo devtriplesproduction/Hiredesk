@@ -105,6 +105,16 @@ export function calculateMatchScore(text: string, reqs: MatchRequirements, info:
     if (['basics', 'intern', 'knowledge', 'experience', 'fresher'].includes(kw.toLowerCase().trim())) {
       return null;
     }
+    
+    // Normalize textLower for common variations
+    let normText = textLower;
+    normText = normText.replace(/react\.js/g, 'react');
+    normText = normText.replace(/next\.js/g, 'nextjs');
+    normText = normText.replace(/node\.js/g, 'nodejs');
+    normText = normText.replace(/vue\.js/g, 'vuejs');
+    normText = normText.replace(/html5/g, 'html');
+    normText = normText.replace(/css3/g, 'css');
+    
     let normKw = kw.toLowerCase().trim();
     normKw = normKw.replace(/html5/g, 'html');
     normKw = normKw.replace(/css3/g, 'css');
@@ -113,18 +123,18 @@ export function calculateMatchScore(text: string, reqs: MatchRequirements, info:
     normKw = normKw.replace(/node\.js/g, 'nodejs');
     normKw = normKw.replace(/vue\.js/g, 'vuejs');
     
-    if (normKw === 'aws' && textLower.includes('amazon web services')) return true;
+    if (normKw === 'aws' && normText.includes('amazon web services')) return true;
 
     if (kw.includes('/')) {
       const parts = kw.split('/').map(p => p.toLowerCase().trim());
       if (parts.every(p => {
         const escaped = p.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-        return new RegExp(`\\b${escaped}\\b`, 'i').test(textLower);
+        return new RegExp(`\\b${escaped}\\b`, 'i').test(normText);
       })) return true;
     }
     
     const escaped = normKw.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    return new RegExp(`\\b${escaped}\\b`, 'i').test(textLower);
+    return new RegExp(`\\b${escaped}\\b`, 'i').test(normText);
   };
 
   let totalValidKeywords = 0;
@@ -276,18 +286,67 @@ export function extractInfoFromText(text: string): Partial<Candidate> {
   const expMatch = text.match(/(\d+)\+?\s*(?:year|yr)/i);
   const cityMatch = ["Mumbai", "Delhi", "Pune", "Bangalore", "Hyderabad", "Chennai", "Kolkata", "Nashik", "Ahmedabad", "Jaipur", "Surat"].find(c => text.includes(c));
   const eduMatch = ["B.Tech", "BCA", "MBA", "BDes", "B.Sc", "BA", "B.Com", "MCA", "M.Tech", "Diploma"].find(e => text.includes(e));
+  
+  // Basic skill extraction using a common pool
+  const allSkills = new Set<string>();
+  Object.values(SKILLS_POOL).forEach(skills => skills.forEach(s => allSkills.add(s)));
+  
+  let normText = text.toLowerCase();
+  normText = normText.replace(/react\.js/g, 'react');
+  normText = normText.replace(/next\.js/g, 'nextjs');
+  normText = normText.replace(/node\.js/g, 'nodejs');
+  normText = normText.replace(/vue\.js/g, 'vuejs');
+  
+  const foundSkills: string[] = [];
+  Array.from(allSkills).forEach(skill => {
+    let normKw = skill.toLowerCase().trim();
+    normKw = normKw.replace(/react\.js/g, 'react');
+    normKw = normKw.replace(/next\.js/g, 'nextjs');
+    normKw = normKw.replace(/node\.js/g, 'nodejs');
+    normKw = normKw.replace(/vue\.js/g, 'vuejs');
+    
+    const escaped = normKw.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    if (new RegExp(`\\b${escaped}\\b`, 'i').test(normText)) {
+      foundSkills.push(skill);
+    }
+  });
+
   return {
     name: nameMatch?.[1] ?? "", email: emailMatch?.[0] ?? "", phone: phoneMatch?.[0] ?? "",
     city: cityMatch ?? "Not specified", education: eduMatch ?? "Not specified",
     exp: expMatch ? `${expMatch[1]} yr${Number(expMatch[1]) > 1 ? "s" : ""}` : "Not specified",
+    skills: foundSkills,
   };
 }
 
 export function detectBestRole(text: string, roles: Role[]): string {
-  const lower = text.toLowerCase();
+  let normText = text.toLowerCase();
+  normText = normText.replace(/react\.js/g, 'react');
+  normText = normText.replace(/next\.js/g, 'nextjs');
+  normText = normText.replace(/node\.js/g, 'nodejs');
+  normText = normText.replace(/vue\.js/g, 'vuejs');
+  normText = normText.replace(/html5/g, 'html');
+  normText = normText.replace(/css3/g, 'css');
+
   let best = { id: "dev-ft", score: 0 };
   for (const role of roles) {
-    const score = role.keywords.filter(k => lower.includes(k)).length;
+    let score = 0;
+    for (const kw of role.keywords) {
+      let normKw = kw.toLowerCase().trim();
+      normKw = normKw.replace(/html5/g, 'html');
+      normKw = normKw.replace(/css3/g, 'css');
+      normKw = normKw.replace(/react\.js/g, 'react');
+      normKw = normKw.replace(/next\.js/g, 'nextjs');
+      normKw = normKw.replace(/node\.js/g, 'nodejs');
+      normKw = normKw.replace(/vue\.js/g, 'vuejs');
+
+      const escaped = normKw.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      if (new RegExp(`\\b${escaped}\\b`, 'i').test(normText)) {
+        score++;
+      } else if (normKw === 'aws' && normText.includes('amazon web services')) {
+        score++;
+      }
+    }
     if (score > best.score) best = { id: role.id, score };
   }
   return best.id;

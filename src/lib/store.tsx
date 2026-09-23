@@ -334,7 +334,21 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           console.log("[HireDesk Auth] User logged out. Clearing sensitive client state.");
           setCandidatesRaw([]);
           setRolesRaw(computeRoleCounts([], DEFAULT_ROLES));
-          setContracts(getContractTemplates());
+          
+          const attachDocAssets = (list: Contract[]) => {
+            return list.map(c => {
+              const storedLogo = typeof window !== "undefined" ? localStorage.getItem(`doc_${c.id}_logo`) : "";
+              const storedSign = typeof window !== "undefined" ? localStorage.getItem(`doc_${c.id}_sign`) : "";
+              const storedBody = typeof window !== "undefined" ? localStorage.getItem(`hd_contract_${c.id}_body`) : "";
+              return {
+                ...c,
+                body: storedBody || c.body,
+                logoUrl: c.logoUrl || storedLogo || "",
+                signUrl: c.signUrl || storedSign || "",
+              };
+            });
+          };
+          setContracts(attachDocAssets(getContractTemplates()));
         }
       });
       
