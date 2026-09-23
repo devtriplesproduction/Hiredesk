@@ -39,6 +39,27 @@ const EMPLOYMENT_TYPE_OPTIONS: FilterOption[] = [
   },
 ];
 
+const EXP_OPTIONS: FilterOption[] = [
+  { value: "all", label: "Any Experience", icon: <Layers size={14} className="text-gray-400" /> },
+  { value: "0", label: "0–1 years", icon: <Briefcase size={14} className="text-cyan-400" /> },
+  { value: "1", label: "1–2 years", icon: <Briefcase size={14} className="text-cyan-400" /> },
+  { value: "2", label: "2–3 years", icon: <Briefcase size={14} className="text-cyan-400" /> },
+  { value: "3", label: "3–5 years", icon: <Briefcase size={14} className="text-cyan-400" /> },
+  { value: "5", label: "5+ years", icon: <Briefcase size={14} className="text-cyan-400" /> },
+];
+
+const EDU_OPTIONS: FilterOption[] = [
+  { value: "all", label: "Any Education", icon: <Layers size={14} className="text-gray-400" /> },
+  { value: "10th", label: "10th", icon: <GraduationCap size={14} className="text-purple-400" /> },
+  { value: "12th", label: "12th", icon: <GraduationCap size={14} className="text-purple-400" /> },
+  { value: "diploma", label: "Diploma", icon: <GraduationCap size={14} className="text-purple-400" /> },
+  { value: "b.tech", label: "B.Tech / B.E.", icon: <GraduationCap size={14} className="text-purple-400" /> },
+  { value: "bca", label: "BCA / MCA", icon: <GraduationCap size={14} className="text-purple-400" /> },
+  { value: "bachelor", label: "Any Bachelor's Degree", icon: <GraduationCap size={14} className="text-purple-400" /> },
+  { value: "m.tech", label: "M.Tech / M.E.", icon: <GraduationCap size={14} className="text-purple-400" /> },
+  { value: "master", label: "Any Master's Degree", icon: <GraduationCap size={14} className="text-purple-400" /> },
+];
+
 export default function RolesGrid() {
   const { roles, addRole, updateRole, deleteRole, deleteRoles, setFilters, candidates } = useStore();
   const router = useRouter();
@@ -52,6 +73,8 @@ export default function RolesGrid() {
   const [name, setName] = useState("");
   const [type, setType] = useState<"Full-time" | "Intern" | "Freelance">("Full-time");
   const [skills, setSkills] = useState("");
+  const [reqExp, setReqExp] = useState<string>("all");
+  const [reqEdu, setReqEdu] = useState<string>("all");
 
   const [selectedRoleIds, setSelectedRoleIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
@@ -61,6 +84,8 @@ export default function RolesGrid() {
   const [editName, setEditName] = useState("");
   const [editType, setEditType] = useState<"Full-time" | "Intern" | "Freelance">("Full-time");
   const [editSkills, setEditSkills] = useState("");
+  const [editReqExp, setEditReqExp] = useState<string>("all");
+  const [editReqEdu, setEditReqEdu] = useState<string>("all");
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   function handleAdd() {
@@ -69,8 +94,9 @@ export default function RolesGrid() {
     addRole({
       id: name.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now(),
       name: name.trim(), type, keywords, count: 0, isActive: true,
+      reqExp, reqEdu
     });
-    setName(""); setSkills(""); setType("Full-time"); setShowAdd(false);
+    setName(""); setSkills(""); setType("Full-time"); setReqExp("all"); setReqEdu("all"); setShowAdd(false);
     dialog.success({
       title: "Role Created",
       message: `Role "${name.trim()}" has been successfully added.`,
@@ -83,6 +109,8 @@ export default function RolesGrid() {
     setEditName(r.name);
     setEditType(r.type);
     setEditSkills(r.keywords.join(", "));
+    setEditReqExp(r.reqExp || "all");
+    setEditReqEdu(r.reqEdu || "all");
   }
 
   async function handleSaveEdit() {
@@ -94,6 +122,8 @@ export default function RolesGrid() {
         name: editName.trim(),
         type: editType,
         keywords,
+        reqExp: editReqExp,
+        reqEdu: editReqEdu,
       });
       setEditingRole(null);
       dialog.success({
@@ -544,6 +574,35 @@ export default function RolesGrid() {
             />
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">
+                Experience Required
+              </label>
+              <FilterSelect
+                options={EXP_OPTIONS}
+                value={reqExp}
+                onChange={val => setReqExp(val)}
+                placeholder="Select Experience"
+                containerClassName="w-full"
+                menuClassName="w-full max-w-none bg-[var(--input-bg)] border-[var(--border-2)] shadow-2xl"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">
+                Education Required
+              </label>
+              <FilterSelect
+                options={EDU_OPTIONS}
+                value={reqEdu}
+                onChange={val => setReqEdu(val)}
+                placeholder="Select Education"
+                containerClassName="w-full"
+                menuClassName="w-full max-w-none bg-[var(--input-bg)] border-[var(--border-2)] shadow-2xl"
+              />
+            </div>
+          </div>
+
           <div className="flex flex-col gap-1.5">
             <Input
               label="Key Skills / Keywords (comma separated)"
@@ -615,6 +674,35 @@ export default function RolesGrid() {
               containerClassName="w-full"
               menuClassName="w-full max-w-none bg-[var(--input-bg)] border-[var(--border-2)] shadow-2xl"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">
+                Experience Required
+              </label>
+              <FilterSelect
+                options={EXP_OPTIONS}
+                value={editReqExp}
+                onChange={val => setEditReqExp(val)}
+                placeholder="Select Experience"
+                containerClassName="w-full"
+                menuClassName="w-full max-w-none bg-[var(--input-bg)] border-[var(--border-2)] shadow-2xl"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">
+                Education Required
+              </label>
+              <FilterSelect
+                options={EDU_OPTIONS}
+                value={editReqEdu}
+                onChange={val => setEditReqEdu(val)}
+                placeholder="Select Education"
+                containerClassName="w-full"
+                menuClassName="w-full max-w-none bg-[var(--input-bg)] border-[var(--border-2)] shadow-2xl"
+              />
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5">

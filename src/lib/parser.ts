@@ -1070,6 +1070,8 @@ export async function parseResumeFile(
   const age = extractAge(text) || (Math.floor(Math.random() * 18) + 21);
   const skills = extractSkills(text, roleId);
 
+  console.log(`=== ATS RUNTIME DEBUG ===\n\nResume:\n${file.name}\n\nRole ID:\n${role.id}\n\nRole name:\n${role.name}\n\nRole keywords:\n${role.keywords}\n\nRequired experience:\n${role.reqExp}\n\nRequired education:\n${role.reqEdu}\n\nCandidate experience:\n${exp}\n\nCandidate education:\n${education}\n\nCandidate skills:\n${skills}`);
+
   // ATS deterministic score matching
   const score = scoreCandidateFromText(text, { 
     keywords: role.keywords,
@@ -1085,8 +1087,10 @@ export async function parseResumeFile(
     skills
   });
 
+  console.log(`Score returned:\n${JSON.stringify(score)}\n\nSkill score:\n${score.skills}\n\nExperience score:\n${score.exp}\n\nEducation score:\n${score.edu}\n\nCompleteness score:\n${score.completeness}\n\nFinal total:\n${score.total}`);
+
   // Construct final Candidate object
-  return makeCandidate(roleId, {
+  const candidate = makeCandidate(roleId, {
     name: resolvedName,
     email: email || "",
     phone: phone || "",
@@ -1116,4 +1120,8 @@ export async function parseResumeFile(
       firstPageLines
     }
   });
+
+  console.log(`Candidate score:\n${JSON.stringify(candidate.score)}\n\nCandidate role:\n${candidate.roleId}\n\nCandidate resumeFile:\n${candidate.resumeFile}`);
+
+  return candidate;
 }

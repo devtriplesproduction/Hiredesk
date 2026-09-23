@@ -186,7 +186,12 @@ export default function UploadZone() {
       if (r) collectedCandidates.push(r);
     });
 
-    if (collectedCandidates.length) addCandidates(collectedCandidates);
+    if (collectedCandidates.length) {
+      collectedCandidates.forEach(c => {
+        console.log(`=== CANDIDATE SAVE DEBUG ===\nCandidate ID:\n${c.id}\nCandidate resumeFile:\n${c.resumeFile}\nCandidate score.total:\n${c.score.total}`);
+      });
+      addCandidates(collectedCandidates);
+    }
     setProcessing(false);
   }, [queue, processing, roles, addCandidates]);
 
