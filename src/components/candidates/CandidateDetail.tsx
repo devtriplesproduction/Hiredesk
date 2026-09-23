@@ -599,7 +599,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                     onChange={e => {
                       const role = roles.find(r => r.id === e.target.value);
                       if (role) {
-                        const newScore = scoreCandidateFromText(c.resumeText || "", role.keywords, {
+                        const newScore = scoreCandidateFromText(c.resumeText || "", { keywords: role.keywords }, {
                           name: c.name,
                           email: c.email,
                           phone: c.phone,

@@ -1092,7 +1092,7 @@ export async function parseResumeFile(
   const skills = extractSkills(text, roleId);
 
   // ATS deterministic score matching
-  const score = scoreCandidateFromText(text, role.keywords, {
+  const score = scoreCandidateFromText(text, { keywords: role.keywords }, {
     name: resolvedName,
     email: email || "",
     phone: phone || "",

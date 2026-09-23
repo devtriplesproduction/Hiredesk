@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import { Modal, Btn } from "@/components/ui";
 import { useStore } from "@/lib/store";
-import { DEFAULT_ROLES, SKILLS_POOL, EXP_LEVELS, EDU } from "@/lib/data";
+import { DEFAULT_ROLES, SKILLS_POOL, EXP_LEVELS, EDU, calculateMatchScore } from "@/lib/data";
 import type { Candidate } from "@/types";
 import { clsx } from "clsx";
 
@@ -68,40 +68,22 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
     });
 
     const results = filtered.map(c => {
-      // 1. Role match: 20 points (always true since we filtered)
-      const rolePoints = 20;
-
-      // 2. Experience match: 20 points
-      const expPoints = prefExp === "all" || c.exp === prefExp ? 20 : 0;
-
-      // 3. Education match: 20 points
-      const eduPoints = prefEdu === "all" || c.education === prefEdu ? 20 : 0;
-
-      // 4. Skills match: 40 points
-      let skillPoints = 40;
-      let matchedSkillsList: string[] = [];
-      let missingSkillsList: string[] = [];
-
-      if (selectedSkills.size > 0) {
-        const reqSkills = Array.from(selectedSkills);
-        const hasCount = reqSkills.filter(s => c.skills.includes(s)).length;
-        skillPoints = Math.round((hasCount / reqSkills.length) * 40);
-        matchedSkillsList = reqSkills.filter(s => c.skills.includes(s));
-        missingSkillsList = reqSkills.filter(s => !c.skills.includes(s));
-      }
-
-      const totalMatchScore = rolePoints + expPoints + eduPoints + skillPoints;
+      const matchBreakdown = calculateMatchScore(c.resumeText || c.skills.join(" "), {
+        keywords: Array.from(selectedSkills),
+        exp: prefExp,
+        education: prefEdu
+      }, c);
 
       return {
         candidate: c,
-        matchScore: totalMatchScore,
-        rolePoints,
-        expPoints,
-        eduPoints,
+        matchScore: matchBreakdown.total,
+        rolePoints: matchBreakdown.total > 0 ? 20 : 0, // Mocked for UI compat
+        expPoints: matchBreakdown.exp > 0 ? 20 : 0,
+        eduPoints: matchBreakdown.edu > 0 ? 20 : 0,
         scorePoints: 10,
-        skillPoints,
-        matchedSkillsList,
-        missingSkillsList,
+        skillPoints: matchBreakdown.skills > 0 ? 40 : 0,
+        matchedSkillsList: matchBreakdown.matchedSkills || [],
+        missingSkillsList: matchBreakdown.missingSkills || [],
       };
     });
 

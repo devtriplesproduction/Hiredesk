@@ -88,7 +88,13 @@ function uid() { return typeof crypto !== 'undefined' && crypto.randomUUID ? cry
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }
 function pickN<T>(arr: T[], n: number): T[] { return [...arr].sort(() => Math.random() - .5).slice(0, n); }
 
-function genScore(text: string, keywords: string[], info: Partial<Candidate> = {}): ScoreBreakdown {
+export interface MatchRequirements {
+  keywords: string[];
+  exp?: string;
+  education?: string;
+}
+
+export function calculateMatchScore(text: string, reqs: MatchRequirements, info: Partial<Candidate> = {}): ScoreBreakdown {
   const lower = text.toLowerCase();
 
   // --- Skills: deterministic keyword matching ---
@@ -96,46 +102,33 @@ function genScore(text: string, keywords: string[], info: Partial<Candidate> = {
   const missingSkills: string[] = [];
   
   const checkSkillMatch = (kw: string, textLower: string) => {
-    // Ignore non-technical/unrelated terms
     if (['basics', 'intern', 'knowledge', 'experience', 'fresher'].includes(kw.toLowerCase().trim())) {
-      return null; // Signals to ignore this keyword entirely
+      return null;
     }
+    let normKw = kw.toLowerCase().trim();
+    normKw = normKw.replace(/html5/g, 'html');
+    normKw = normKw.replace(/css3/g, 'css');
+    normKw = normKw.replace(/react\.js/g, 'react');
+    normKw = normKw.replace(/next\.js/g, 'nextjs');
+    normKw = normKw.replace(/node\.js/g, 'nodejs');
+    normKw = normKw.replace(/vue\.js/g, 'vuejs');
+    
+    if (normKw === 'aws' && textLower.includes('amazon web services')) return true;
 
-    // Advanced Normalization
-    const normalize = (s: string) => {
-      let n = s.toLowerCase().trim();
-      n = n.replace(/html5/g, 'html');
-      n = n.replace(/css3/g, 'css');
-      n = n.replace(/react\.js/g, 'react');
-      n = n.replace(/next\.js/g, 'nextjs');
-      n = n.replace(/node\.js/g, 'nodejs');
-      n = n.replace(/vue\.js/g, 'vuejs');
-      n = n.replace(/github/g, 'git');
-      n = n.replace(/gitlab/g, 'git');
-      n = n.replace(/bitbucket/g, 'git');
-      return n.replace(/[^\w\s+#]/g, ' ').replace(/\s+/g, ' ').trim();
-    };
-
-    const normText = ' ' + normalize(textLower) + ' ';
-    const normKw = normalize(kw);
-
-    // Check composite skills like HTML/CSS
     if (kw.includes('/')) {
-      const parts = kw.split('/').map(p => normalize(p));
-      if (parts.every(p => normText.includes(' ' + p + ' '))) {
-        return true;
-      }
+      const parts = kw.split('/').map(p => p.toLowerCase().trim());
+      if (parts.every(p => {
+        const escaped = p.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        return new RegExp(`\\b${escaped}\\b`, 'i').test(textLower);
+      })) return true;
     }
-
-    if (normKw && normText.includes(' ' + normKw + ' ')) {
-      return true;
-    }
-
-    return false;
+    
+    const escaped = normKw.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    return new RegExp(`\\b${escaped}\\b`, 'i').test(textLower);
   };
 
   let totalValidKeywords = 0;
-  for (const kw of keywords) {
+  for (const kw of reqs.keywords) {
     const match = checkSkillMatch(kw, lower);
     if (match === true) {
       matchedSkills.push(kw);
@@ -145,42 +138,55 @@ function genScore(text: string, keywords: string[], info: Partial<Candidate> = {
       totalValidKeywords++;
     }
   }
-  const skillsRaw = totalValidKeywords > 0
-    ? Math.round((matchedSkills.length / totalValidKeywords) * 100)
-    : 0;
+  const skillsRaw = totalValidKeywords > 0 ? Math.round((matchedSkills.length / totalValidKeywords) * 100) : 0;
 
-  // --- Experience: deterministic heuristic ---
-  let expRaw = 20;
-  if (info.exp) {
-    const expStr = info.exp.toLowerCase();
-    if (expStr.includes("5+")) expRaw = 95;
-    else if (expStr.includes("3")) expRaw = 80;
-    else if (expStr.includes("2")) expRaw = 60;
-    else if (expStr.includes("1")) expRaw = 40;
-    else if (expStr.includes("fresher") || expStr.includes("intern")) expRaw = 20;
-    else expRaw = 40; // Default fallback
-  }
-
-  // --- Education: deterministic heuristic ---
-  let eduRaw = 0;
-  if (info.education && info.education !== "Not specified") {
-    const eduStr = info.education;
-    const eduKeywords: [RegExp, number][] = [
-      [/\b(Ph\.?D|Doctorate)\b/i, 100],
-      [/\b(M\.?Tech|M\.?S\.?|M\.?Sc|MBA|MCA|Masters?)\b/i, 85],
-      [/\b(B\.?Tech|B\.?E\.?|B\.?Sc|BCA|B\.?Com|B\.?A\.?|BDes|Bachelors?|Degree)\b/i, 65],
-      [/\b(Diploma|Associate)\b/i, 50],
-      [/\b(12th|HSC|Higher Secondary|Intermediate)\b/i, 35],
-      [/\b(10th|SSC|Matriculation)\b/i, 25],
-    ];
-    for (const [pattern, score] of eduKeywords) {
-      if (pattern.test(eduStr)) {
-        eduRaw = Math.max(eduRaw, score);
+  // --- Experience: Score ONLY if explicitly required ---
+  let expRaw = 0;
+  let hasExpReq = false;
+  if (reqs.exp && reqs.exp !== "all") {
+    hasExpReq = true;
+    const parseExp = (s?: string) => {
+      if (!s) return 0;
+      const str = s.toLowerCase();
+      const match = str.match(/(\d+(?:\.\d+)?)/);
+      if (match) {
+        const val = parseFloat(match[1]);
+        if (str.includes("month") || str.includes("mo")) return val / 12;
+        return val;
       }
-    }
+      if (str.includes("fresher") || str.includes("intern")) return 0;
+      return 0; // Unparsed
+    };
+    const candYrs = parseExp(info.exp);
+    const reqYrs = parseExp(reqs.exp);
+    if (candYrs >= reqYrs) expRaw = 100;
+    else if (reqYrs > 0) expRaw = Math.round((candYrs / reqYrs) * 100);
+    else expRaw = 0;
   }
 
-  // --- Completeness: deterministic check for profile fields ---
+  // --- Education: Score ONLY if explicitly required ---
+  let eduRaw = 0;
+  let hasEduReq = false;
+  if (reqs.education && reqs.education !== "all") {
+    hasEduReq = true;
+    const eduTier = (s?: string) => {
+      if (!s) return 0;
+      const str = s.toLowerCase();
+      if (/ph\.?d|doctorate/.test(str)) return 5;
+      if (/m\.?tech|m\.?s\.?|m\.?sc|mba|mca|master/.test(str)) return 4;
+      if (/b\.?tech|b\.?e\.?|b\.?sc|bca|b\.?com|b\.?a\.?|bdes|bachelor|degree/.test(str)) return 3;
+      if (/diploma|associate/.test(str)) return 2;
+      if (/12th|hsc|10th|ssc/.test(str)) return 1;
+      return 0;
+    };
+    const candTier = eduTier(info.education);
+    const reqTier = eduTier(reqs.education);
+    if (candTier >= reqTier) eduRaw = 100;
+    else if (reqTier > 0) eduRaw = Math.round((candTier / reqTier) * 100);
+    else eduRaw = 0;
+  }
+
+  // --- Completeness (General resume quality) ---
   let compRaw = 0;
   if (info.name) compRaw += 20;
   if (info.email) compRaw += 20;
@@ -189,19 +195,42 @@ function genScore(text: string, keywords: string[], info: Partial<Candidate> = {
   if (info.skills && info.skills.length > 0) compRaw += 20;
   compRaw = Math.min(100, compRaw);
 
-  // --- Total: weighted deterministic calculation ---
+  // Dynamic weights based on provided requirements
+  let expWeight = hasExpReq ? 0.25 : 0;
+  let eduWeight = hasEduReq ? 0.20 : 0;
+  const compWeight = 0.15;
+  const hasSkillsReq = totalValidKeywords > 0;
+  
+  let skillWeight = 0;
+  if (hasSkillsReq) {
+    skillWeight = 1.0 - (expWeight + eduWeight + compWeight);
+  } else {
+    // If no skills required, distribute remainder evenly among active reqs (if any)
+    const remainder = 1.0 - compWeight - expWeight - eduWeight;
+    if (hasExpReq && hasEduReq) { expWeight += remainder / 2; eduWeight += remainder / 2; }
+    else if (hasExpReq) expWeight += remainder;
+    else if (hasEduReq) eduWeight += remainder;
+  }
+
+  // If role does not contain enough info to calculate a meaningful requirement match
+  if (!hasSkillsReq && !hasExpReq && !hasEduReq) {
+    return {
+      skills: 0, exp: 0, edu: 0, completeness: compRaw, total: 0, matchedSkills: [], missingSkills: []
+    };
+  }
+
   const total = Math.min(100, Math.round(
-    Math.min(100, skillsRaw) * 0.40 +
-    Math.min(100, expRaw) * 0.25 +
-    Math.min(100, eduRaw) * 0.20 +
-    Math.min(100, compRaw) * 0.15
+    skillsRaw * skillWeight +
+    expRaw * expWeight +
+    eduRaw * eduWeight +
+    compRaw * compWeight
   ));
 
   return {
-    skills: Math.min(100, skillsRaw),
-    exp: Math.min(100, expRaw),
-    edu: Math.min(100, eduRaw),
-    completeness: Math.min(100, compRaw),
+    skills: skillsRaw,
+    exp: expRaw,
+    edu: eduRaw,
+    completeness: compRaw,
     total,
     matchedSkills,
     missingSkills,
@@ -226,7 +255,7 @@ export function makeCandidate(roleId: string, overrides: Partial<Candidate> = {}
     createdAt: new Date(Date.now() - seedOffset).toISOString(),
     note: "", ...overrides,
   };
-  const mockScore = genScore(pickN(role.keywords, 4).join(" "), role.keywords, {
+  const mockScore = calculateMatchScore(pickN(role.keywords, 4).join(" "), { keywords: role.keywords }, {
     exp: baseCandidate.exp,
     education: baseCandidate.education,
     name: baseCandidate.name,
@@ -239,8 +268,8 @@ export function makeCandidate(roleId: string, overrides: Partial<Candidate> = {}
 }
 
 
-export function scoreCandidateFromText(text: string, keywords: string[], info: Partial<Candidate> = {}): ScoreBreakdown {
-  return genScore(text, keywords, info);
+export function scoreCandidateFromText(text: string, reqs: MatchRequirements, info: Partial<Candidate> = {}): ScoreBreakdown {
+  return calculateMatchScore(text, reqs, info);
 }
 
 export function extractInfoFromText(text: string): Partial<Candidate> {
