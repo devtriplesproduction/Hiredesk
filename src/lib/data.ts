@@ -145,8 +145,8 @@ export function calculateMatchScore(text: string, reqs: MatchRequirements, info:
   let hasExpReq = false;
   if (reqs.exp && reqs.exp !== "all") {
     hasExpReq = true;
-    const parseExp = (s?: string) => {
-      if (!s) return 0;
+    const parseExp = (s?: string): number | null => {
+      if (!s) return null;
       const str = s.toLowerCase();
       const match = str.match(/(\d+(?:\.\d+)?)/);
       if (match) {
@@ -155,13 +155,20 @@ export function calculateMatchScore(text: string, reqs: MatchRequirements, info:
         return val;
       }
       if (str.includes("fresher") || str.includes("intern")) return 0;
-      return 0; // Unparsed
+      return null; // Unparsed
     };
     const candYrs = parseExp(info.exp);
     const reqYrs = parseExp(reqs.exp);
-    if (candYrs >= reqYrs) expRaw = 100;
-    else if (reqYrs > 0) expRaw = Math.round((candYrs / reqYrs) * 100);
-    else expRaw = 0;
+    
+    if (candYrs === null) {
+      expRaw = 0;
+    } else if (reqYrs !== null && candYrs >= reqYrs) {
+      expRaw = 100;
+    } else if (reqYrs !== null && reqYrs > 0) {
+      expRaw = Math.round((candYrs / reqYrs) * 100);
+    } else {
+      expRaw = 0;
+    }
   }
 
   // --- Education: Score ONLY if explicitly required ---
