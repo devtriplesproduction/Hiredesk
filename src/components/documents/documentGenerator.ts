@@ -230,7 +230,7 @@ export function generateDocument(dt: string, rawD: DocumentData, LOGO_BLACK: str
     }
     function contentWm() {
       const src = ICON_BLACK || LOGO_BLACK || "/logo.png";
-      return '<img src="' + src + '" alt="" class="page-wm" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:135mm;height:135mm;opacity:0.04;filter:grayscale(100%);z-index:0;pointer-events:none;">';
+      return '<img src="' + src + '" alt="" class="page-wm" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:140mm;height:140mm;opacity:0.05;filter:grayscale(100%);z-index:0;pointer-events:none;object-fit:contain;">';
     }
     function page(inner: string, pageNo: number, d: DocumentData, title?: string, total?: number) {
       return '<div class="page">' + contentWm() + header(pageNo, title, total) + '<div class="content" style="z-index:1;">' + inner + '</div>' + footer(d) + '</div>';
@@ -238,7 +238,7 @@ export function generateDocument(dt: string, rawD: DocumentData, LOGO_BLACK: str
 
     function buildPage1(d: DocumentData) {
       const logoSrc = LOGO_WHITE || LOGO_BLACK || "/logo.png";
-      const wmImg = '<img class="wm" src="' + logoSrc + '" alt="" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:145mm;height:145mm;opacity:0.055;pointer-events:none;">';
+      const wmImg = '<img class="wm" src="' + logoSrc + '" alt="" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:140mm;height:140mm;opacity:0.05;filter:grayscale(100%);pointer-events:none;object-fit:contain;">';
       const logoImg = '<img src="' + logoSrc + '" alt="Logo" style="height:52px;width:auto;object-fit:contain;">';
       return '<div class="page cover">' +
         wmImg +
@@ -424,8 +424,8 @@ export function generateDocument(dt: string, rawD: DocumentData, LOGO_BLACK: str
     }
 
     function buildPage8(d: DocumentData) {
-      const wm8Img = '<img class="wm8" src="' + (LOGO_WHITE || LOGO_BLACK || "/logo.png") + '" alt="" style="pointer-events:none;">';
-      const stampWm = '<img class="stamp-wm" src="' + (ICON_BLACK || LOGO_BLACK || "/logo.png") + '" alt="" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:70mm;height:70mm;opacity:0.045;filter:grayscale(100%);pointer-events:none;">';
+      const wm8Img = '<img class="wm8" src="' + (LOGO_WHITE || LOGO_BLACK || "/logo.png") + '" alt="" style="pointer-events:none;object-fit:contain;">';
+      const stampWm = '<img class="stamp-wm" src="' + (ICON_BLACK || LOGO_BLACK || "/logo.png") + '" alt="" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:70mm;height:70mm;opacity:0.045;filter:grayscale(100%);pointer-events:none;object-fit:contain;">';
       const inner =
         '<h1 class="pt">Acceptance of Offer</h1>' +
         '<p class="statement8">I, ' + val(d.candidateName) + ', confirm that I have read, understood, and voluntarily accept the terms of this Letter of Appointment and its Annexures, issued by Triple S Production. I understand that a detailed Employment Agreement will be executed separately on or before my date of joining.</p>' +
@@ -445,7 +445,7 @@ export function generateDocument(dt: string, rawD: DocumentData, LOGO_BLACK: str
     // ============== INTERNSHIP OFFER (8-page kit) ==============
     function buildIntern1(d: DocumentData) {
       const logoSrc = LOGO_WHITE || LOGO_BLACK || "/logo.png";
-      const wmImg = '<img class="wm" src="' + logoSrc + '" alt="" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:145mm;height:145mm;opacity:0.055;pointer-events:none;">';
+      const wmImg = '<img class="wm" src="' + logoSrc + '" alt="" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:140mm;height:140mm;opacity:0.05;filter:grayscale(100%);pointer-events:none;object-fit:contain;">';
       const logoImg = '<img src="' + logoSrc + '" alt="Logo" style="height:52px;width:auto;object-fit:contain;">';
       return '<div class="page cover">' +
         wmImg +
@@ -624,8 +624,8 @@ export function generateDocument(dt: string, rawD: DocumentData, LOGO_BLACK: str
       return page(inner, 7, d, "Letter of Internship");
     }
     function buildIntern8(d: DocumentData) {
-      const wm8Img = '<img class="wm8" src="' + (LOGO_WHITE || LOGO_BLACK || "/logo.png") + '" alt="" style="pointer-events:none;">';
-      const stampWm = '<img class="stamp-wm" src="' + (ICON_BLACK || LOGO_BLACK || "/logo.png") + '" alt="" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:70mm;height:70mm;opacity:0.045;filter:grayscale(100%);pointer-events:none;">';
+      const wm8Img = '<img class="wm8" src="' + (LOGO_WHITE || LOGO_BLACK || "/logo.png") + '" alt="" style="pointer-events:none;object-fit:contain;">';
+      const stampWm = '<img class="stamp-wm" src="' + (ICON_BLACK || LOGO_BLACK || "/logo.png") + '" alt="" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:70mm;height:70mm;opacity:0.045;filter:grayscale(100%);pointer-events:none;object-fit:contain;">';
       const inner =
         '<h1 class="pt">Acceptance of Offer</h1>' +
         '<p class="statement8">I, ' + val(d.candidateName) + ', confirm that I have read, understood, and voluntarily accept the terms of this Letter of Internship and its Annexures, issued by Triple S Production. I understand that a detailed Internship Agreement will be executed separately on or before my date of joining.</p>' +

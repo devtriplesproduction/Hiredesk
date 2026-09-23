@@ -609,41 +609,47 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
             {/* Fixed Top Toolbar Area */}
             <div className="w-full flex flex-col items-center gap-3 p-4 sm:p-6 pb-0 z-30 shrink-0">
               {/* Top Toolbar: Mode Controls + Status + Direct Editing Pill */}
-              <div className="w-full max-w-[850px] flex flex-col sm:flex-row items-center justify-between p-2 pl-4 rounded-2xl bg-[#121214] shadow-2xl border border-white/10 ring-1 ring-black/50">
+              <div className="w-full max-w-[1000px] flex flex-col sm:flex-row items-center justify-between p-2 pl-5 rounded-2xl bg-white/[0.03] backdrop-blur-xl shadow-2xl border border-white/10 relative overflow-hidden group transition-all duration-500 hover:bg-white/[0.05]">
+                {/* Optional subtle glow behind */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#A78BFA]/10 via-transparent to-[#10B981]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                
                 {/* Left: Document info */}
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 pr-2">
-                    <div className="p-1.5 rounded-lg bg-[#A78BFA]/10">
+                <div className="flex items-center gap-4 relative z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-gradient-to-br from-[#A78BFA]/20 to-[#A78BFA]/5 border border-[#A78BFA]/20 shadow-inner">
                       <FileText className="w-4 h-4 text-[#A78BFA]" />
                     </div>
-                    <span className="text-sm font-semibold tracking-wide text-zinc-100">
+                    <span className="text-[15px] font-semibold tracking-wide text-zinc-100">
                       {DOC_OPTIONS.find((o) => o.value === docType)?.label}
                     </span>
                   </div>
                   
-                  <div className="w-px h-4 bg-white/10" />
+                  <div className="w-px h-5 bg-white/10 rounded-full" />
                   
-                  <span className="font-mono text-xs text-zinc-400">
+                  <span className="font-mono text-xs text-zinc-400 font-medium tracking-wide">
                     A4 • 210 × 297mm
                   </span>
                   
-                  <div className="w-px h-4 bg-white/10" />
+                  <div className="w-px h-5 bg-white/10 rounded-full" />
                   
-                  <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
-                    <span className="text-[11px] uppercase font-bold tracking-wider text-emerald-400">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400">
                       Live Preview
                     </span>
                   </div>
                 </div>
 
                 {/* Right: Temporary vs Permanent Edit controls */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 relative z-10 mt-3 sm:mt-0">
                   {templateHasOverrides && (
                     <button
                       type="button"
                       onClick={handleResetTemplate}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all cursor-pointer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-xl transition-all duration-300 cursor-pointer border border-transparent hover:border-amber-500/20"
                       title="Reset this template back to factory default"
                     >
                       <RotateCcw className="w-3.5 h-3.5" />
@@ -655,9 +661,9 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleModeToggle("temporary")}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[11px] font-bold tracking-widest uppercase transition-all duration-300 cursor-pointer ${
                         editMode === "temporary"
-                          ? "bg-amber-500/20 text-amber-400 ring-1 ring-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.15)]"
+                          ? "bg-gradient-to-r from-amber-500/20 to-amber-600/20 text-amber-400 ring-1 ring-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.2)]"
                           : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
                       }`}
                       title="Edits apply ONLY to this session and document. Does not modify saved templates."
@@ -669,9 +675,9 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
                     <button
                       type="button"
                       onClick={() => handleModeToggle("permanent")}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold tracking-wider uppercase transition-all duration-300 cursor-pointer ${
+                      className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[11px] font-bold tracking-widest uppercase transition-all duration-300 cursor-pointer ${
                         editMode === "permanent"
-                          ? "bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.15)]"
+                          ? "bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 text-emerald-400 ring-1 ring-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
                           : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
                       }`}
                       title="Save edited document/template changes persistently for future documents."
@@ -683,42 +689,6 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
                 </div>
               </div>
 
-              {/* Active Mode Indication Banner */}
-              <div
-                className="w-full max-w-[850px] flex items-center justify-between px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all"
-                style={{
-                  background: editMode === "temporary" ? "rgba(245, 158, 11, 0.09)" : "rgba(16, 185, 129, 0.09)",
-                  border: `1px solid ${editMode === "temporary" ? "rgba(245, 158, 11, 0.28)" : "rgba(16, 185, 129, 0.28)"}`,
-                }}
-              >
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className="w-1.5 h-1.5 rounded-full animate-pulse"
-                    style={{ background: editMode === "temporary" ? "#F59E0B" : "#10B981" }}
-                  />
-                  <span style={{ color: editMode === "temporary" ? "#FCD34D" : "#6EE7B7" }}>
-                    {editMode === "temporary" ? (
-                      <>
-                        <strong>Temporary Mode</strong> — Edits apply only to this session.
-                      </>
-                    ) : (
-                      <>
-                        <strong>Permanent Mode</strong> — Edits saved for future documents.
-                      </>
-                    )}
-                  </span>
-                  {editMode === "permanent" && hasPermanentSaved && (
-                    <span className="inline-flex items-center gap-0.5 text-[12px] font-bold text-emerald-400 bg-emerald-500/15 px-1 py-0.5 rounded border border-emerald-500/30 ml-1">
-                      <Check className="w-2.5 h-2.5" /> Saved
-                    </span>
-                  )}
-                </div>
-
-                <span className="text-[13px] text-[var(--text-2)] hidden sm:flex items-center gap-1">
-                  <Edit3 className="w-2.5 h-2.5 text-[#A78BFA]" />
-                  <span>Click to edit text directly</span>
-                </span>
-              </div>
             </div>
 
             <div
