@@ -202,39 +202,30 @@ export function calculateMatchScore(text: string, reqs: MatchRequirements, info:
   if (info.skills && info.skills.length > 0) compRaw += 20;
   compRaw = Math.min(100, compRaw);
 
-  // Dynamic weights based on provided requirements
-  let expWeight = hasExpReq ? 0.25 : 0;
-  let eduWeight = hasEduReq ? 0.20 : 0;
   const hasSkillsReq = totalValidKeywords > 0;
-  
-  let skillWeight = 0;
-  if (hasSkillsReq) {
-    skillWeight = 1.0 - (expWeight + eduWeight);
-  } else {
-    // If no skills required, distribute remainder evenly among active reqs (if any)
-    const remainder = 1.0 - expWeight - eduWeight;
-    if (hasExpReq && hasEduReq) { expWeight += remainder / 2; eduWeight += remainder / 2; }
-    else if (hasExpReq) expWeight += remainder;
-    else if (hasEduReq) eduWeight += remainder;
-  }
 
   // If role does not contain enough info to calculate a meaningful requirement match
   if (!hasSkillsReq && !hasExpReq && !hasEduReq) {
     return {
-      skills: 0, exp: 0, edu: 0, completeness: compRaw, total: 0, matchedSkills: [], missingSkills: []
+      skills: 100, exp: 100, edu: 100, completeness: compRaw, total: Math.round(compRaw * 0.15), matchedSkills: [], missingSkills: []
     };
   }
 
+  const finalSkillsRaw = hasSkillsReq ? skillsRaw : 100;
+  const finalExpRaw = hasExpReq ? expRaw : 100;
+  const finalEduRaw = hasEduReq ? eduRaw : 100;
+
   const total = Math.min(100, Math.round(
-    skillsRaw * skillWeight +
-    expRaw * expWeight +
-    eduRaw * eduWeight
+    finalSkillsRaw * 0.40 +
+    finalExpRaw * 0.25 +
+    finalEduRaw * 0.20 +
+    compRaw * 0.15
   ));
 
   return {
-    skills: skillsRaw,
-    exp: expRaw,
-    edu: eduRaw,
+    skills: finalSkillsRaw,
+    exp: finalExpRaw,
+    edu: finalEduRaw,
     completeness: compRaw,
     total,
     matchedSkills,
