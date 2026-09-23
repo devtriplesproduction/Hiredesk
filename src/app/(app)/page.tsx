@@ -669,30 +669,6 @@ export default function DashboardPage() {
                     onClick={() => setInspectCandidate(c)}
                     className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.04] hover:border-border transition-all duration-150 cursor-pointer group"
                   >
-                    {/* Rank Medal */}
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0">
-                      {i === 0 && (
-                        <span className="w-7 h-7 rounded-md bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center text-[12px] shadow-[0_0_8px_rgba(245,158,11,0.2)]">
-                          1
-                        </span>
-                      )}
-                      {i === 1 && (
-                        <span className="w-7 h-7 rounded-md bg-slate-300/20 border border-slate-300/40 text-slate-200 flex items-center justify-center text-[12px]">
-                          2
-                        </span>
-                      )}
-                      {i === 2 && (
-                        <span className="w-7 h-7 rounded-md bg-orange-500/20 border border-orange-500/40 text-orange-300 flex items-center justify-center text-[12px]">
-                          3
-                        </span>
-                      )}
-                      {i > 2 && (
-                        <span className="w-7 h-7 rounded-md bg-white/5 border border-border text-[var(--text-3)] font-mono text-[12px] flex items-center justify-center">
-                          {i + 1}
-                        </span>
-                      )}
-                    </div>
-
                     {/* Candidate Avatar Initial */}
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-border flex items-center justify-center font-bold text-sm text-text flex-shrink-0 group-hover:border-cyan-500/40 transition-colors">
                       {c.name ? c.name[0]?.toUpperCase() : "?"}
