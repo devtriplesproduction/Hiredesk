@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 // @ts-expect-error - no default export in types
-import pdfParse from "pdf-parse";
+import * as pdfParse from "pdf-parse";
 
 export const dynamic = "force-dynamic";
 

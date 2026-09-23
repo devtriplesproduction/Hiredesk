@@ -812,7 +812,7 @@ function extractEmploymentStatus(text: string): {
     return { status: "CURRENTLY_WORKING", currentRole: currentRole || undefined, currentCompany: currentCompany || undefined };
   }
 
-  return { status: "STUDENT_FRESHER", currentRole: undefined, currentCompany: undefined };
+  return { status: "UNKNOWN", currentRole: undefined, currentCompany: undefined };
 }
 
 function extractGender(text: string, name: string): string {
@@ -825,38 +825,17 @@ function extractGender(text: string, name: string): string {
     if (g === "male" || g === "m") return "Male";
   }
 
-  const sheCount = (lowerText.match(/\b(she|her|hers)\b/g) || []).length;
-  const heCount = (lowerText.match(/\b(he|him|his)\b/g) || []).length;
-  if (sheCount > heCount + 2) return "Female";
-  if (heCount > sheCount + 2) return "Male";
-
-  if (name) {
-    const firstName = name.split(/\s+/)[0].toLowerCase();
-    const femaleNames = ["priya","sneha","neha","ananya","pooja","riya","meera","shruti","zara","tanya","ayesha","simran","deepika","mitali","aditi","kavya","anushka","snehal","swati","sakshi","shreya","rashi","kirti","tripti","divya","kajal","isha","ekta","sheetal","shital","rashmi","poornima","preeti","sonia","monika","payal","sunita","anisha","priti","pritee"];
-    const maleNames = ["omkar","aarav","rohit","arjun","vikram","raj","dev","ishaan","siddharth","aditya","manish","omar","nikhil","dhruv","ratan","vivek","amit","abhishek","rahul","sachin","saurabh","gaurav","pankaj","sanjay","anil","sunil","vijay","raju","ram","shyam","harsh","aman","kunal","yash","rohan","sourabh","akshay","amol","ashish","tanmay","aniket","swapnil","chinmay","rushikesh","shubham","sanket","shantanu","mayur","chetan","suraj","prasad"];
-    
-    if (femaleNames.includes(firstName)) return "Female";
-    if (maleNames.includes(firstName)) return "Male";
-    
-    if (/(i|ee|ya|a)$/.test(firstName)) {
-      const maleSuffixExceptions = ["aditya","yash","amit","sharma","gupta","kumar","singh","verma","mehta","shah","joshi","nair","iyer","reddy","bose","khanna","malhotra","kapoor","desai","pillai","rao","agarwal"];
-      if (!maleSuffixExceptions.includes(firstName)) {
-        return "Female";
-      }
-    }
-  }
-
   return "Not specified";
 }
 
-function extractAge(text: string): number {
+function extractAge(text: string): number | null {
   const m = text.match(/[Aa]ge[:\s]+(\d{2})/) ?? text.match(/DOB[:\s\-]+\d{1,2}[\/-]\d{1,2}[\/-](\d{4})/);
   if (m) {
     const val = parseInt(m[1]);
     if (val > 1950 && val < 2010) return new Date().getFullYear() - val;
     if (val >= 18 && val <= 65) return val;
   }
-  return (text.length % 10) + 22;
+  return null;
 }
 
 function extractSkills(text: string, roleId: string): string[] {
@@ -1123,7 +1102,7 @@ export async function parseResumeFile(
     score,
     resumeFile: file.name,
     resumeText: text,
-    skills: skills.length > 0 ? skills : ["See resume"],
+    skills: skills,
     status: "new",
     appliedAt: new Date().toLocaleDateString("en-IN"),
     createdAt: new Date().toISOString(),

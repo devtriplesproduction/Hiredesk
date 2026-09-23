@@ -90,7 +90,7 @@ export interface Candidate {
   status: Status;
   city: string;
   gender: string;
-  age: number;
+  age: number | null;
   employmentStatus?: EmploymentStatus;
   employmentStatusConfidence?: number;
   currentCompany?: string;

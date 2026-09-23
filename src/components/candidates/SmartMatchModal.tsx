@@ -61,13 +61,13 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
 
   // Calculate real-time candidate match scores
   const matchedCandidates = useMemo(() => {
-    const filtered = candidates.filter(c => {
+    // Keep role filtering separate.
+    const filteredByRole = candidates.filter(c => {
       if (roleId !== "all" && c.roleId !== roleId) return false;
-      if (c.score.total < minScore) return false;
       return true;
     });
 
-    const results = filtered.map(c => {
+    const results = filteredByRole.map(c => {
       const matchBreakdown = calculateMatchScore(c.resumeText || c.skills.join(" "), {
         keywords: Array.from(selectedSkills),
         exp: prefExp,
@@ -77,18 +77,16 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
       return {
         candidate: c,
         matchScore: matchBreakdown.total,
-        rolePoints: matchBreakdown.total > 0 ? 20 : 0, // Mocked for UI compat
-        expPoints: matchBreakdown.exp > 0 ? 20 : 0,
-        eduPoints: matchBreakdown.edu > 0 ? 20 : 0,
-        scorePoints: 10,
-        skillPoints: matchBreakdown.skills > 0 ? 40 : 0,
         matchedSkillsList: matchBreakdown.matchedSkills || [],
         missingSkillsList: matchBreakdown.missingSkills || [],
       };
     });
 
+    // Apply minScore to the newly calculated Smart Match score.
+    const finalResults = results.filter(r => r.matchScore >= minScore);
+
     // Sort by match score descending, then by ATS score descending
-    return results.sort((a, b) => b.matchScore - a.matchScore || b.candidate.score.total - a.candidate.score.total);
+    return finalResults.sort((a, b) => b.matchScore - a.matchScore || b.candidate.score.total - a.candidate.score.total);
   }, [candidates, roleId, minScore, prefExp, prefEdu, selectedSkills]);
 
   return (
@@ -107,7 +105,7 @@ export default function SmartMatchModal({ open, onClose, onViewCandidate }: Prop
             <div className="text-[16px] font-bold tracking-tight text-text flex items-center gap-2">
               <span>Requirements Smart Matcher</span>
               <span className="text-[11px] font-bold uppercase tracking-wider text-[#00D9FF] bg-[#00D9FF]/10 border border-[#00D9FF]/25 px-2 py-0.5 rounded-md">
-                Live AI Match
+                Smart Match
               </span>
             </div>
             <div className="text-[15px] text-[var(--text-3)] mt-0.5">
