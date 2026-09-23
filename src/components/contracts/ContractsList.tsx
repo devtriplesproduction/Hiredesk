@@ -179,45 +179,51 @@ export default function ContractsList() {
 
 
             {/* 1. Legal Disclaimer Card */}
-            <div className="p-5 sm:p-5.5 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-2)] flex flex-col shadow-sm">
-              <div className="flex items-center gap-2.5 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-[#F5C542]/10 border border-[#F5C542]/25 flex items-center justify-center text-sm flex-shrink-0">
+            <div className="relative p-5 sm:p-5.5 rounded-2xl bg-[var(--card-bg)]/80 backdrop-blur-md border border-[var(--border-2)] overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.12)] group">
+              {/* Subtle animated gradient background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#F5C542]/5 via-transparent to-[#F5C542]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              
+              <div className="relative z-10 flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F5C542]/20 to-[#F5C542]/5 border border-[#F5C542]/30 flex items-center justify-center text-lg shadow-[inset_0_0_12px_rgba(245,197,66,0.2)]">
                   ⚖️
                 </div>
                 <div>
-                  <h2 className="text-[14.5px] font-bold text-[var(--text)] tracking-tight">Legal Disclaimer</h2>
-                  <p className="text-[15px] text-[var(--text-3)] font-mono uppercase tracking-wider">Indian Jurisdiction</p>
+                  <h2 className="text-[15px] font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 tracking-tight">Legal Disclaimer</h2>
+                  <p className="text-[11px] text-[#F5C542] font-mono uppercase tracking-widest mt-0.5">Indian Jurisdiction</p>
                 </div>
               </div>
 
-              <p className="text-[12.5px] text-[var(--text)] leading-[1.65]">
+              <p className="relative z-10 text-[13px] text-[var(--text-2)] leading-relaxed">
                 These templates are drafted under standard Indian employment &amp; commercial law.
                 All bracketed fields such as{" "}
-                <code className="text-[#F5C542] bg-[#F5C542]/10 px-1.5 py-0.5 rounded text-[15px] font-mono font-semibold border border-[#F5C542]/20">
+                <code className="text-[#F5C542] bg-[#F5C542]/10 px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold border border-[#F5C542]/20 shadow-sm">
                   [BRACKETS]
                 </code>{" "}
                 must be filled and customized before issuing to candidates.
               </p>
 
-              <div className="mt-4 pt-3.5 border-t border-[var(--border)] flex items-center gap-2 text-[11.5px] text-[var(--text)]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] flex-shrink-0" />
-                <span>Recommended: Review with legal counsel prior to formal execution</span>
+              <div className="relative z-10 mt-4 pt-4 border-t border-[var(--border-2)] flex items-start gap-2.5 text-[11.5px] text-[var(--text-3)] font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] flex-shrink-0 mt-1 shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse" />
+                <span>Recommended: Review with legal counsel prior to formal execution to ensure full compliance.</span>
               </div>
             </div>
           </div>
 
           {/* 2. Global Brand Assets Card */}
-          <div className="p-5 sm:p-5.5 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-2)] flex flex-col shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-[11.5px] font-bold text-[var(--text)] uppercase tracking-[0.1em]">
+          <div className="relative p-5 sm:p-5.5 rounded-2xl bg-[var(--card-bg)]/80 backdrop-blur-md border border-[var(--border-2)] flex flex-col shadow-[0_4px_24px_rgba(0,0,0,0.12)] overflow-hidden group">
+            {/* Subtle animated gradient background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#00D9FF]/5 via-transparent to-[#00D9FF]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+            <div className="relative z-10 flex items-center justify-between mb-5">
+              <div className="text-[13px] font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 uppercase tracking-[0.1em]">
                 Global Brand Assets
               </div>
-              <span className="text-[10.5px] font-mono text-[var(--text-3)] bg-[var(--glass)] px-2 py-0.5 rounded-md border border-[var(--border)]">
+              <span className="text-[10.5px] font-mono text-[#00D9FF] bg-[#00D9FF]/10 px-2.5 py-1 rounded-md border border-[#00D9FF]/20 shadow-sm animate-pulse">
                 Auto-Applied
               </span>
             </div>
 
-            <div className="flex flex-col gap-3.5">
+            <div className="relative z-10 flex flex-col gap-4">
               {/* Asset 1: Company Logo */}
               <div className="p-4 rounded-xl bg-[var(--card-bg)] border border-[var(--border-2)] flex flex-col gap-3 transition-colors hover:border-[var(--border-3)]">
                 <div className="flex items-center justify-between">

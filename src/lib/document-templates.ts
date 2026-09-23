@@ -81,7 +81,7 @@ export function buildPage1(d: any) {
         ["scale", "Intellectual Property", "All work product created during employment belongs to the Company or its clients."]
       ];
       const cards = items.map(function (it) {
-        return '<div class="lcard">' + badge(it[0], 36) + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
+        return '<div class="lcard">' + badge(it[0], 36, true) + '<div><div class="h">' + it[1] + '</div><div class="d">' + it[2] + '</div></div></div>';
       }).join("");
       const inner =
         '<h1 class="pt">Key Terms &amp; Conditions</h1>' +

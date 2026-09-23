@@ -517,12 +517,18 @@ export async function getDBContracts(): Promise<any[]> {
 
 export async function insertDBContracts(contracts: any[]): Promise<void> {
   if (contracts.length === 0) return;
-  const { error } = await supabase.from("contracts").upsert(contracts);
+  const cleaned = contracts.map(c => {
+    const { logoUrl, signUrl, ...rest } = c;
+    return rest;
+  });
+  const { error } = await supabase.from("contracts").upsert(cleaned);
   if (error) throw error;
 }
 
 export async function updateDBContract(id: string, patch: any): Promise<void> {
-  const { error } = await supabase.from("contracts").update(patch).eq("id", id);
+  const { logoUrl, signUrl, ...rest } = patch;
+  if (Object.keys(rest).length === 0) return;
+  const { error } = await supabase.from("contracts").update(rest).eq("id", id);
   if (error) throw error;
 }
 

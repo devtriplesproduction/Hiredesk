@@ -538,7 +538,7 @@ export default function RolesGrid() {
       )}
 
       {/* Add Role Modal */}
-      <Modal open={showAdd} onClose={() => setShowAdd(false)} className="max-w-[480px] w-full">
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} className="max-w-[600px] w-full">
         <div className="flex items-center gap-3 mb-1">
           <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
             <Layers size={16} />
@@ -552,26 +552,28 @@ export default function RolesGrid() {
         <div className="h-px bg-[var(--card-bg)] my-4" />
 
         <div className="flex flex-col gap-4">
-          <Input
-            label="Role Name"
-            placeholder="e.g. Brand Strategist"
-            value={name}
-            onChange={e => setName(e.target.value)}
-          />
-
-          {/* Employment Type using candidate-themed FilterSelect */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">
-              Employment Type
-            </label>
-            <FilterSelect
-              options={EMPLOYMENT_TYPE_OPTIONS}
-              value={type}
-              onChange={val => setType(val as typeof type)}
-              placeholder="Select Employment Type"
-              containerClassName="w-full"
-              menuClassName="w-full max-w-none bg-[var(--input-bg)] border-[var(--border-2)] shadow-2xl"
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Role Name"
+              placeholder="e.g. Brand Strategist"
+              value={name}
+              onChange={e => setName(e.target.value)}
             />
+
+            {/* Employment Type using candidate-themed FilterSelect */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">
+                Employment Type
+              </label>
+              <FilterSelect
+                options={EMPLOYMENT_TYPE_OPTIONS}
+                value={type}
+                onChange={val => setType(val as typeof type)}
+                placeholder="Select Employment Type"
+                containerClassName="w-full"
+                menuClassName="w-full max-w-none bg-[var(--input-bg)] border-[var(--border-2)] shadow-2xl"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -638,7 +640,7 @@ export default function RolesGrid() {
       </Modal>
 
       {/* Edit Role Modal */}
-      <Modal open={!!editingRole} onClose={() => setEditingRole(null)} className="max-w-[480px] w-full">
+      <Modal open={!!editingRole} onClose={() => setEditingRole(null)} className="max-w-[600px] w-full">
         <div className="flex items-center gap-3 mb-1">
           <div className="w-8 h-8 rounded-lg bg-[#00D9FF]/10 border border-[#00D9FF]/20 flex items-center justify-center text-[#00D9FF]">
             <Pencil size={15} />
@@ -654,26 +656,28 @@ export default function RolesGrid() {
         <div className="h-px bg-[var(--card-bg)] my-4" />
 
         <div className="flex flex-col gap-4">
-          <Input
-            label="Role Name"
-            placeholder="e.g. Brand Strategist"
-            value={editName}
-            onChange={e => setEditName(e.target.value)}
-          />
-
-          {/* Employment Type using candidate-themed FilterSelect */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">
-              Employment Type
-            </label>
-            <FilterSelect
-              options={EMPLOYMENT_TYPE_OPTIONS}
-              value={editType}
-              onChange={val => setEditType(val as typeof editType)}
-              placeholder="Select Employment Type"
-              containerClassName="w-full"
-              menuClassName="w-full max-w-none bg-[var(--input-bg)] border-[var(--border-2)] shadow-2xl"
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              label="Role Name"
+              placeholder="e.g. Brand Strategist"
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
             />
+
+            {/* Employment Type using candidate-themed FilterSelect */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-semibold text-[var(--text-3)] uppercase tracking-wider">
+                Employment Type
+              </label>
+              <FilterSelect
+                options={EMPLOYMENT_TYPE_OPTIONS}
+                value={editType}
+                onChange={val => setEditType(val as typeof editType)}
+                placeholder="Select Employment Type"
+                containerClassName="w-full"
+                menuClassName="w-full max-w-none bg-[var(--input-bg)] border-[var(--border-2)] shadow-2xl"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

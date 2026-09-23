@@ -126,6 +126,8 @@ export default function ContractEditor({ contract, onBack }: Props) {
 
   const [zoom, setZoom] = useState<number>(1);
   const [isSaved, setIsSaved] = useState(false);
+  const [editMode, setEditMode] = useState<"temporary" | "permanent">("temporary");
+  const [hasPermanentSaved, setHasPermanentSaved] = useState(false);
 
   // Asset priority: Specific document asset → Global Brand Asset → none ("")
   const specificLogo = currentContract.logoUrl || (typeof window !== "undefined" ? localStorage.getItem(`doc_${contract.id}_logo`) : "") || "";
@@ -323,9 +325,11 @@ export default function ContractEditor({ contract, onBack }: Props) {
 
     if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
     syncTimerRef.current = setTimeout(() => {
-      updateContract(contract.id, cleanStorageHtml);
+      if (editMode === "permanent") {
+        updateContract(contract.id, cleanStorageHtml);
+      }
     }, 400);
-  }, [contract.id, updateContract, saveSelection]);
+  }, [contract.id, updateContract, saveSelection, editMode]);
 
   // Accurate mouse-position handling so clicking anywhere sets caret right at that position
   const handleEditorMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -469,10 +473,28 @@ export default function ContractEditor({ contract, onBack }: Props) {
     if (editorRef.current) {
       const html = editorRef.current.innerHTML;
       lastHtmlRef.current = html;
-      const cleanStorageHtml = stripContractAssetsForStorage(html);
-      updateContract(contract.id, cleanStorageHtml);
+      if (editMode === "permanent") {
+        const cleanStorageHtml = stripContractAssetsForStorage(html);
+        updateContract(contract.id, cleanStorageHtml);
+      }
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
+    }
+  }, [contract.id, updateContract, editMode]);
+
+  const handleModeToggle = useCallback((mode: "temporary" | "permanent") => {
+    setEditMode(mode);
+    if (mode === "permanent") {
+      if (editorRef.current) {
+        const html = editorRef.current.innerHTML;
+        lastHtmlRef.current = html;
+        const cleanStorageHtml = stripContractAssetsForStorage(html);
+        updateContract(contract.id, cleanStorageHtml);
+      }
+      setHasPermanentSaved(true);
+      setTimeout(() => setHasPermanentSaved(false), 2000);
+    } else {
+      setHasPermanentSaved(false);
     }
   }, [contract.id, updateContract]);
 
@@ -846,53 +868,64 @@ export default function ContractEditor({ contract, onBack }: Props) {
       `}} />
 
       {/* Back + title */}
-      <div className="relative z-20 flex items-center justify-between gap-4 pb-2 border-b border-white/[0.06] bg-[var(--card-bg)]">
+      <div className="relative z-20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 mb-2 border-b border-[var(--border-2)]">
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-150 border cursor-pointer select-none outline-none flex-shrink-0 bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] active:bg-[var(--card-bg)] text-[var(--text)] hover:text-[var(--text)] active:text-[var(--text)] border-[var(--border-2)] hover:border-[#00D9FF]/60 focus-visible:border-[#00D9FF] focus-visible:ring-1 focus-visible:ring-[#00D9FF]/30 active:scale-[0.98]"
+          className="group inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 border cursor-pointer select-none outline-none flex-shrink-0 bg-gradient-to-r from-[var(--card-bg)] to-[var(--bg)] hover:from-[var(--table-row-hover)] hover:to-[var(--card-bg)] text-[var(--text)] border-[var(--border-2)] hover:border-[#00D9FF]/50 shadow-sm hover:shadow-[0_0_15px_rgba(0,217,255,0.15)] active:scale-[0.97]"
         >
-          <span className="text-sm leading-none text-[#00D9FF]">←</span>
+          <span className="text-sm leading-none text-[#00D9FF] group-hover:-translate-x-1 transition-transform duration-300">←</span>
           <span>BACK</span>
         </button>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--card-bg)] border border-[var(--border-2)]">
-          <span className="w-2 h-2 rounded-full bg-[#00D9FF] shadow-[0_0_8px_rgba(0,217,255,0.6)]" />
-          <span className="text-xs text-[var(--text)] font-semibold uppercase tracking-wider">Template:</span>
-          <span className="text-sm font-bold tracking-tight text-[var(--text)]">{contract.name}</span>
+        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-xl bg-[var(--card-bg)]/60 backdrop-blur-md border border-[var(--border-2)] shadow-sm">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00D9FF] opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#00D9FF] shadow-[0_0_10px_rgba(0,217,255,0.8)]"></span>
+          </span>
+          <span className="text-xs text-[var(--text-3)] font-semibold uppercase tracking-widest">Template</span>
+          <span className="text-sm font-extrabold tracking-tight text-[var(--text)] bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">{contract.name}</span>
         </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6 items-start w-full">
-        {/* Controls Sidebar - Solid Dark Panel */}
-        <div className="w-full lg:w-72 flex-shrink-0">
-          <div className="rounded-2xl border border-[var(--border-2)] bg-[var(--card-bg)] p-4 sm:p-5 flex flex-col gap-5 shadow-2xl">
+        {/* Controls Sidebar - Glassmorphic Panel */}
+        <div className="w-full lg:w-[320px] flex-shrink-0 lg:sticky lg:top-6 lg:max-h-[82vh] flex flex-col relative group">
+          {/* Ambient Glow */}
+          <div className="absolute -inset-0.5 bg-gradient-to-b from-[#00D9FF]/20 to-transparent rounded-[2rem] blur-xl opacity-50 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
+
+          <div className="rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur-2xl p-5 sm:p-6 flex flex-col gap-6 shadow-[0_16px_48px_rgba(0,0,0,0.5)] relative overflow-y-auto custom-scrollbar flex-1 z-10">
+            {/* Subtle top glow */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00D9FF]/60 to-transparent flex-shrink-0"></div>
 
             {/* Company Logo Upload */}
             <div>
-              <div className="text-[15px] font-bold uppercase tracking-wider text-[var(--text-3)] mb-2.5 flex items-center justify-between">
+              <div className="text-[11px] font-extrabold uppercase tracking-[0.15em] text-[var(--text-2)] mb-3 flex items-center justify-between">
                 <span>Company Logo</span>
                 {resolvedAssets.isSpecificLogo ? (
-                  <span className="text-[16px] text-emerald-400 font-semibold tracking-normal px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                    Doc Specific
+                  <span className="text-[9px] text-emerald-400 font-bold tracking-widest px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                    DOC SPECIFIC
                   </span>
                 ) : resolvedAssets.logoUrl ? (
-                  <span className="text-[16px] text-[#00D9FF] font-semibold tracking-normal px-1.5 py-0.5 rounded bg-[#00D9FF]/10 border border-[#00D9FF]/20">
-                    Inherited Global
+                  <span className="text-[9px] text-[#00D9FF] font-bold tracking-widest px-2 py-1 rounded-md bg-[#00D9FF]/10 border border-[#00D9FF]/20 shadow-[0_0_8px_rgba(0,217,255,0.2)]">
+                    INHERITED GLOBAL
                   </span>
                 ) : (
-                  <span className="text-[16px] text-[var(--text)] font-semibold tracking-normal">
-                    Default
+                  <span className="text-[9px] text-[var(--text-3)] font-bold tracking-widest px-2 py-1 rounded-md bg-white/5 border border-white/10">
+                    DEFAULT
                   </span>
                 )}
               </div>
               {resolvedAssets.logoUrl ? (
-                <div className="relative rounded-xl overflow-hidden border border-[var(--border-2)] bg-white p-2.5 shadow-sm">
-                  <img src={resolvedAssets.logoUrl} alt="Logo" className="w-full h-14 object-contain" />
+                <div className="relative rounded-2xl border border-white/10 bg-white/5 p-3.5 shadow-[0_4px_24px_rgba(0,0,0,0.2)] group hover:border-[#00D9FF]/40 hover:bg-white/10 transition-all duration-300">
+                  <div className="bg-white rounded-xl p-3 mb-3.5 flex items-center justify-center shadow-inner relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent translate-x-[-150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out"></div>
+                    <img src={resolvedAssets.logoUrl} alt="Logo" className="relative z-10 w-full h-12 object-contain filter drop-shadow-sm" />
+                  </div>
                   {resolvedAssets.isSpecificLogo && (
                     <button
                       type="button"
                       onClick={handleClearDocLogo}
-                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-[var(--bg)]/80 hover:bg-red-600 text-[var(--text)] text-xs flex items-center justify-center transition-colors cursor-pointer"
+                      className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-black/60 hover:bg-red-600 text-white text-xs flex items-center justify-center transition-colors cursor-pointer backdrop-blur-md border border-white/10 hover:border-red-500 shadow-sm"
                       title="Remove document-specific logo (falls back to global)"
                     >
                       ✕
@@ -901,7 +934,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                   <button
                     type="button"
                     onClick={() => logoRef.current?.click()}
-                    className="mt-2 w-full py-1.5 rounded-lg text-[15px] font-semibold text-[var(--text-3)] hover:text-[var(--text)] bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] border border-[var(--border-2)] transition-all text-center cursor-pointer"
+                    className="w-full py-3 rounded-xl text-xs font-bold text-[var(--text)] hover:text-black bg-white/5 hover:bg-[#00D9FF] border border-white/10 hover:border-[#00D9FF] transition-all duration-300 text-center cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.2)] hover:shadow-[0_0_15px_rgba(0,217,255,0.6)]"
                   >
                     {resolvedAssets.isSpecificLogo ? "Change Document Logo" : "Upload Custom for this Doc"}
                   </button>
@@ -910,9 +943,13 @@ export default function ContractEditor({ contract, onBack }: Props) {
                 <button
                   type="button"
                   onClick={() => logoRef.current?.click()}
-                  className="w-full py-3 rounded-xl text-xs font-semibold text-[var(--text-3)] hover:text-[var(--text)] transition-all text-center border-2 border-dashed border-[var(--border-2)] hover:border-[#00D9FF]/60 bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] cursor-pointer"
+                  className="group w-full py-5 rounded-2xl text-xs font-bold tracking-widest text-[var(--text-3)] hover:text-white transition-all text-center border-2 border-dashed border-white/10 hover:border-[#00D9FF]/60 bg-white/5 hover:bg-[#00D9FF]/10 cursor-pointer flex flex-col items-center gap-3 relative overflow-hidden shadow-inner"
                 >
-                  + UPLOAD LOGO
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#00D9FF]/0 to-[#00D9FF]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <span className="p-3.5 rounded-full bg-white/5 group-hover:bg-[#00D9FF]/20 text-[var(--text-3)] group-hover:text-[#00D9FF] transition-colors relative z-10 shadow-inner group-hover:shadow-[0_0_15px_rgba(0,217,255,0.3)]">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  </span>
+                  <span className="relative z-10">UPLOAD LOGO</span>
                 </button>
               )}
               <input
@@ -926,30 +963,33 @@ export default function ContractEditor({ contract, onBack }: Props) {
 
             {/* Authorized Signature Upload */}
             <div>
-              <div className="text-[15px] font-bold uppercase tracking-wider text-[var(--text-3)] mb-2.5 flex items-center justify-between">
+              <div className="text-[11px] font-extrabold uppercase tracking-[0.15em] text-[var(--text-2)] mb-3 flex items-center justify-between">
                 <span>Authorized Signature</span>
                 {resolvedAssets.isSpecificSign ? (
-                  <span className="text-[16px] text-emerald-400 font-semibold tracking-normal px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                    Doc Specific
+                  <span className="text-[9px] text-emerald-400 font-bold tracking-widest px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.2)]">
+                    DOC SPECIFIC
                   </span>
                 ) : resolvedAssets.signUrl ? (
-                  <span className="text-[16px] text-[#00D9FF] font-semibold tracking-normal px-1.5 py-0.5 rounded bg-[#00D9FF]/10 border border-[#00D9FF]/20">
-                    Inherited Global
+                  <span className="text-[9px] text-[#00D9FF] font-bold tracking-widest px-2 py-1 rounded-md bg-[#00D9FF]/10 border border-[#00D9FF]/20 shadow-[0_0_8px_rgba(0,217,255,0.2)]">
+                    INHERITED GLOBAL
                   </span>
                 ) : (
-                  <span className="text-[16px] text-[var(--text)] font-semibold tracking-normal">
-                    Empty
+                  <span className="text-[9px] text-[var(--text-3)] font-bold tracking-widest px-2 py-1 rounded-md bg-white/5 border border-white/10">
+                    EMPTY
                   </span>
                 )}
               </div>
               {resolvedAssets.signUrl ? (
-                <div className="relative rounded-xl overflow-hidden border border-[var(--border-2)] bg-white p-2.5 shadow-sm">
-                  <img src={resolvedAssets.signUrl} alt="Sign" className="w-full h-12 object-contain" />
+                <div className="relative rounded-2xl border border-white/10 bg-white/5 p-3.5 shadow-[0_4px_24px_rgba(0,0,0,0.2)] group hover:border-[#00D9FF]/40 hover:bg-white/10 transition-all duration-300">
+                  <div className="bg-white rounded-xl p-3 mb-3.5 flex items-center justify-center shadow-inner relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent translate-x-[-150%] group-hover:translate-x-[150%] transition-transform duration-700 ease-in-out"></div>
+                    <img src={resolvedAssets.signUrl} alt="Sign" className="relative z-10 w-full h-12 object-contain filter drop-shadow-sm" />
+                  </div>
                   {resolvedAssets.isSpecificSign && (
                     <button
                       type="button"
                       onClick={handleClearDocSign}
-                      className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-[var(--bg)]/80 hover:bg-red-600 text-[var(--text)] text-xs flex items-center justify-center transition-colors cursor-pointer"
+                      className="absolute top-2 right-2 w-7 h-7 rounded-lg bg-black/60 hover:bg-red-600 text-white text-xs flex items-center justify-center transition-colors cursor-pointer backdrop-blur-md border border-white/10 hover:border-red-500 shadow-sm"
                       title="Remove document-specific signature (falls back to global)"
                     >
                       ✕
@@ -958,7 +998,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
                   <button
                     type="button"
                     onClick={() => signRef.current?.click()}
-                    className="mt-2 w-full py-1.5 rounded-lg text-[15px] font-semibold text-[var(--text-3)] hover:text-[var(--text)] bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] border border-[var(--border-2)] transition-all text-center cursor-pointer"
+                    className="w-full py-3 rounded-xl text-xs font-bold text-[var(--text)] hover:text-black bg-white/5 hover:bg-[#00D9FF] border border-white/10 hover:border-[#00D9FF] transition-all duration-300 text-center cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.2)] hover:shadow-[0_0_15px_rgba(0,217,255,0.6)]"
                   >
                     {resolvedAssets.isSpecificSign ? "Change Document Sign" : "Upload Custom for this Doc"}
                   </button>
@@ -967,9 +1007,13 @@ export default function ContractEditor({ contract, onBack }: Props) {
                 <button
                   type="button"
                   onClick={() => signRef.current?.click()}
-                  className="w-full py-3 rounded-xl text-xs font-semibold text-[var(--text-3)] hover:text-[var(--text)] transition-all text-center border-2 border-dashed border-[var(--border-2)] hover:border-[#00D9FF]/60 bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] cursor-pointer"
+                  className="group w-full py-5 rounded-2xl text-xs font-bold tracking-widest text-[var(--text-3)] hover:text-white transition-all text-center border-2 border-dashed border-white/10 hover:border-[#00D9FF]/60 bg-white/5 hover:bg-[#00D9FF]/10 cursor-pointer flex flex-col items-center gap-3 relative overflow-hidden shadow-inner"
                 >
-                  + UPLOAD SIGNATURE
+                  <div className="absolute inset-0 bg-gradient-to-b from-[#00D9FF]/0 to-[#00D9FF]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <span className="p-3.5 rounded-full bg-white/5 group-hover:bg-[#00D9FF]/20 text-[var(--text-3)] group-hover:text-[#00D9FF] transition-colors relative z-10 shadow-inner group-hover:shadow-[0_0_15px_rgba(0,217,255,0.3)]">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  </span>
+                  <span className="relative z-10">UPLOAD SIGNATURE</span>
                 </button>
               )}
               <input
@@ -983,53 +1027,110 @@ export default function ContractEditor({ contract, onBack }: Props) {
 
             {/* Insert Fields */}
             <div className="flex-1 flex flex-col min-h-0">
-              <div className="text-[15px] font-bold uppercase tracking-wider text-[var(--text-3)] mb-2.5">
-                Insert Field
+              <div className="flex items-center gap-2 text-[13px] font-extrabold uppercase tracking-widest text-[var(--text-3)] mb-3 border-b border-[var(--border-2)] pb-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#00D9FF]"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                <span>Insert Field</span>
               </div>
-              <div className="flex flex-col gap-1.5 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+              <div className="flex flex-col gap-2 max-h-[280px] overflow-y-auto pr-2 custom-scrollbar">
                 {FIELDS.map(f => (
                   <button
                     key={f}
                     type="button"
                     onMouseDown={e => e.preventDefault()}
                     onClick={() => insertField(f)}
-                    className="text-left text-[11.5px] font-mono px-3 py-2 rounded-lg bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] text-[var(--text)] hover:text-[#00D9FF] border border-[var(--border-2)] hover:border-[#00D9FF]/40 transition-all duration-150 flex items-center justify-between group cursor-pointer"
+                    className="relative text-left text-[11.5px] font-mono px-3 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-[var(--text)] hover:text-[#00D9FF] border border-white/5 hover:border-[#00D9FF]/50 transition-all duration-300 flex items-center justify-between group cursor-pointer hover:shadow-[0_4px_15px_rgba(0,217,255,0.15)] active:scale-[0.97] overflow-hidden"
                   >
-                    <span>{f}</span>
-                    <span className="text-[16px] text-[var(--text-3)] group-hover:text-[#00D9FF] transition-colors">+</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#00D9FF]/0 via-[#00D9FF]/10 to-[#00D9FF]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-x-[-100%] group-hover:translate-x-[100%]"></div>
+                    <span className="relative z-10 tracking-tight">{f}</span>
+                    <span className="relative z-10 w-5 h-5 rounded-md bg-black/40 group-hover:bg-[#00D9FF] text-[var(--text-3)] group-hover:text-black flex items-center justify-center text-sm font-bold transition-all duration-300 shadow-inner group-hover:shadow-[0_0_8px_rgba(0,217,255,0.8)]">+</span>
                   </button>
                 ))}
               </div>
             </div>
 
+            {/* Edit Mode Toggle */}
+            <div className="pt-6 border-t border-white/10 flex flex-col gap-4">
+              <div className="text-[11px] font-extrabold uppercase tracking-[0.15em] text-[var(--text-2)]">
+                Edit Mode
+              </div>
+              <div className="flex rounded-xl bg-black/40 border border-white/10 p-1.5 shadow-inner">
+                <button
+                  type="button"
+                  onClick={() => handleModeToggle("temporary")}
+                  className={`flex-1 py-2.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all duration-300 ${
+                    editMode === "temporary"
+                      ? "bg-amber-500/20 text-amber-400 shadow-[0_2px_10px_rgba(245,158,11,0.2)] border border-amber-500/30"
+                      : "text-[var(--text-3)] hover:text-[var(--text)] hover:bg-white/5"
+                  }`}
+                >
+                  Temporary
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleModeToggle("permanent")}
+                  className={`flex-1 py-2.5 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all duration-300 ${
+                    editMode === "permanent"
+                      ? "bg-emerald-500/20 text-emerald-400 shadow-[0_2px_10px_rgba(16,185,129,0.2)] border border-emerald-500/30"
+                      : "text-[var(--text-3)] hover:text-[var(--text)] hover:bg-white/5"
+                  }`}
+                >
+                  Permanent
+                </button>
+              </div>
+              <div className="text-[10.5px] font-medium px-2">
+                {editMode === "temporary" ? (
+                  <span className="text-amber-500/90 tracking-wide">Session only — not saved to system template</span>
+                ) : (
+                  <span className="text-emerald-500/90 tracking-wide">Permanent — changes saved to system</span>
+                )}
+              </div>
+            </div>
+
             {/* Action buttons (Print / PDF & Save) */}
-            <div className="pt-3 border-t border-[var(--border-2)] flex flex-col gap-2.5">
+            <div className="pt-6 border-t border-white/10 flex flex-col gap-4">
               <button
                 type="button"
                 onClick={handlePrint}
-                className="w-full py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider bg-white hover:bg-zinc-200 text-black shadow-lg hover:shadow-white/10 transition-all text-center flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98]"
+                className="group relative w-full py-4 px-4 rounded-xl text-[13px] font-extrabold uppercase tracking-widest bg-gradient-to-r from-gray-100 to-white hover:from-white hover:to-white text-black shadow-[0_4px_20px_rgba(255,255,255,0.15)] hover:shadow-[0_8px_25px_rgba(255,255,255,0.3)] transition-all duration-300 text-center flex items-center justify-center gap-3 cursor-pointer active:scale-[0.97] overflow-hidden border border-white/50"
               >
-                <span>🖨</span>
-                <span>PRINT / PDF</span>
+                <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent translate-y-[-100%] group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+                <svg className="relative z-10" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                <span className="relative z-10">PRINT / PDF</span>
               </button>
               <button
                 type="button"
                 onClick={handleSave}
-                className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider border transition-all text-center flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] ${isSaved
-                    ? "bg-emerald-600/20 text-emerald-400 border-emerald-500/50"
-                    : "bg-[var(--card-bg)] hover:bg-[var(--table-row-hover)] text-[var(--text)] hover:text-[var(--text)] border-[var(--border-2)] hover:border-[#00D9FF]"
+                className={`group relative w-full py-4 px-4 rounded-xl text-[13px] font-extrabold uppercase tracking-widest border transition-all duration-300 text-center flex items-center justify-center gap-3 cursor-pointer active:scale-[0.97] overflow-hidden ${
+                  (isSaved && editMode === "temporary")
+                    ? "bg-amber-500/20 text-amber-400 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+                  : (isSaved || hasPermanentSaved)
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+                    : editMode === "temporary" 
+                      ? "bg-black/40 hover:bg-amber-500/10 text-white hover:text-amber-400 border-white/10 hover:border-amber-500/50 shadow-[0_4px_16px_rgba(0,0,0,0.3)] hover:shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+                      : "bg-black/40 hover:bg-[#00D9FF]/10 text-white hover:text-[#00D9FF] border-white/10 hover:border-[#00D9FF]/50 shadow-[0_4px_16px_rgba(0,0,0,0.3)] hover:shadow-[0_0_20px_rgba(0,217,255,0.2)]"
                   }`}
               >
-                <span>{isSaved ? "✅" : "💾"}</span>
-                <span>{isSaved ? "SAVED TO SYSTEM" : "SAVE TEMPLATE"}</span>
+                <div className={`absolute inset-0 bg-gradient-to-t from-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+                <div className="relative z-10 flex items-center gap-2">
+                  {isSaved || hasPermanentSaved ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                  )}
+                  <span>
+                    {isSaved || hasPermanentSaved 
+                      ? (editMode === "temporary" ? "SESSION ONLY" : "SAVED TO SYSTEM") 
+                      : (editMode === "temporary" ? "APPLY (TEMPORARY)" : "SAVE PERMANENTLY")}
+                  </span>
+                </div>
               </button>
               <button
                 type="button"
                 onClick={handleResetToDefault}
-                className="w-full py-2 px-3 rounded-xl text-[15px] font-semibold uppercase tracking-wider text-[var(--text-3)] hover:text-[#EF4444] hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98]"
+                className="group w-full py-2.5 px-3 mt-1 rounded-xl text-[11px] font-bold uppercase tracking-wider text-[var(--text-3)] hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-all duration-300 text-center flex items-center justify-center gap-2 cursor-pointer active:scale-[0.97]"
                 title="Revert this template to the factory default"
               >
-                <span>↺</span>
+                <svg className="group-hover:-rotate-180 transition-transform duration-500" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                 <span>Reset to Default</span>
               </button>
             </div>
@@ -1038,65 +1139,43 @@ export default function ContractEditor({ contract, onBack }: Props) {
 
         {/* Professional A4 Paper Editor Canvas */}
         <div className="flex-1 min-w-0 flex flex-col w-full">
-          <div className="flex items-center justify-between gap-3 mb-3.5">
-            <div className="text-xs text-[var(--text-3)] font-semibold uppercase tracking-wider flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>A4 Document Editor — Click Paper to Edit</span>
-            </div>
 
-            {/* Visual Zoom Controls */}
-            <div className="flex items-center gap-1 bg-[var(--card-bg)] px-2.5 py-1.5 rounded-xl border border-[var(--border-2)]">
-              <span className="text-[15px] font-semibold text-[var(--text-3)] mr-1">Zoom:</span>
-              <button
-                type="button"
-                onClick={handleFitZoom}
-                className="text-[11.5px] px-2.5 py-1 rounded-lg text-[var(--text-3)] hover:text-[var(--text)] hover:bg-white/10 font-medium transition-all cursor-pointer"
-                title="Fit Document to Window Width"
-              >
-                Fit
-              </button>
-              {[0.75, 0.9, 1].map(z => (
-                <button
-                  key={z}
-                  type="button"
-                  onClick={() => setZoom(z)}
-                  className={`text-[11.5px] px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer ${zoom === z
-                      ? "bg-white text-black font-bold shadow-sm"
-                      : "text-[var(--text-3)] hover:text-[var(--text)] hover:bg-white/10"
-                    }`}
-                >
-                  {Math.round(z * 100)}%
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* Paper container with chrome window bar */}
-          <div className="rounded-2xl overflow-hidden shadow-2xl flex flex-col border border-[var(--border-2)] bg-[var(--card-bg)]">
+          <div className="rounded-3xl overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.4)] flex flex-col border border-[var(--border-2)] bg-[var(--bg)] ring-1 ring-white/5 relative">
             {/* Paper chrome bar */}
-            <div className="px-4 py-3 flex items-center justify-between bg-[var(--card-bg)] border-b border-[var(--border-2)]">
+            <div className="px-5 py-3.5 flex items-center justify-between bg-[var(--card-bg)]/80 backdrop-blur-md border-b border-[var(--border-2)] z-20">
               <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#EF4444]/80" />
-                <div className="w-2.5 h-2.5 rounded-full bg-[var(--card-bg)]/80" />
-                <div className="w-2.5 h-2.5 rounded-full bg-[var(--card-bg)]/80" />
-                <span className="ml-2 text-xs font-medium text-[var(--text)]">
-                  A4 · 210mm × 297mm · {contract.name}
+                <div className="flex gap-1.5 mr-3">
+                  <div className="w-3 h-3 rounded-full bg-[#EF4444] shadow-sm hover:opacity-80 cursor-pointer transition-opacity" />
+                  <div className="w-3 h-3 rounded-full bg-[#F5C542] shadow-sm hover:opacity-80 cursor-pointer transition-opacity" />
+                  <div className="w-3 h-3 rounded-full bg-[#22C55E] shadow-sm hover:opacity-80 cursor-pointer transition-opacity" />
+                </div>
+                <div className="h-4 w-px bg-[var(--border-2)] mr-2"></div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--text-3)]"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <span className="text-[12.5px] font-medium text-[var(--text-2)] tracking-wide ml-1">
+                  A4 <span className="mx-1 text-[var(--text-3)]">·</span> 210mm × 297mm <span className="mx-1 text-[var(--text-3)]">·</span> <span className="text-[var(--text)] font-semibold">{contract.name}</span>
                 </span>
               </div>
-              <div className="text-xs font-mono text-[var(--text-3)] bg-[var(--card-bg)] px-2.5 py-0.5 rounded-md border border-[var(--border-2)]">
-                {Math.round(zoom * 100)}% scale
+              <div className="text-[10.5px] font-mono font-bold uppercase tracking-widest text-[#00D9FF] bg-[#00D9FF]/10 px-3 py-1 rounded-full border border-[#00D9FF]/20">
+                {Math.round(zoom * 100)}% SCALE
               </div>
             </div>
 
             {/* Dark Workspace Desk with centered A4 pages */}
             <div
               ref={workspaceRef}
-              className="w-full overflow-x-auto overflow-y-auto p-6 sm:p-10 flex flex-col items-center custom-scrollbar"
+              className="w-full overflow-x-auto overflow-y-auto p-6 sm:p-10 flex flex-col items-center custom-scrollbar relative shadow-[inset_0_0_100px_rgba(0,0,0,0.5)]"
               style={{
-                backgroundColor: "var(--card-bg)",
-                backgroundImage: `radial-gradient(circle at 50% 25%, rgba(0, 217, 255, 0.02) 0%, transparent 60%),
-                  radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px)`,
-                backgroundSize: "100% 100%, 28px 28px",
+                backgroundColor: "#0A0A0A",
+                backgroundImage: `
+                  radial-gradient(circle at 50% 0%, rgba(0, 217, 255, 0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 100% 100%, rgba(34, 197, 94, 0.05) 0%, transparent 50%),
+                  linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                  linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px)
+                `,
+                backgroundSize: "100% 100%, 100% 100%, 40px 40px, 40px 40px",
+                backgroundPosition: "0 0, 0 0, -1px -1px, -1px -1px",
                 minHeight: "750px",
                 maxHeight: "82vh",
               }}
