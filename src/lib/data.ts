@@ -287,7 +287,7 @@ export function extractInfoFromText(text: string): Partial<Candidate> {
   return {
     name: nameMatch?.[1] ?? "", email: emailMatch?.[0] ?? "", phone: phoneMatch?.[0] ?? "",
     city: cityMatch ?? "Not specified", education: eduMatch ?? "Not specified",
-    exp: expMatch ? `${expMatch[1]} yr${Number(expMatch[1]) > 1 ? "s" : ""}` : "Fresher",
+    exp: expMatch ? `${expMatch[1]} yr${Number(expMatch[1]) > 1 ? "s" : ""}` : "Not specified",
   };
 }
 
