@@ -1,7 +1,7 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type { Candidate, Role, Contract, Filters, Interview, Offer, CandidateDocument, Employee, EmployeeBond, EmployeeResignation } from "@/types";
-import { DEFAULT_ROLES, generateSeedCandidates, getContractTemplates } from "@/lib/data";
+import { DEFAULT_ROLES, generateSeedCandidates, getContractTemplates, calculateMatchScore } from "@/lib/data";
 import { exportCandidatesToCSV } from "@/lib/utils/csv";
 import { DialogProvider } from "@/lib/dialog";
 
@@ -467,19 +467,58 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateRole = useCallback(async (id: string, patch: Partial<Role>) => {
+    let updatedRole: Role | undefined;
     setRolesRaw(prev => {
-      const next = prev.map(r => r.id === id ? { ...r, ...patch } : r);
+      const next = prev.map(r => {
+        if (r.id === id) {
+          updatedRole = { ...r, ...patch };
+          return updatedRole;
+        }
+        return r;
+      });
       if (typeof window !== "undefined") {
         try { localStorage.setItem("hiredesk_custom_roles", JSON.stringify(next)); } catch (e) {}
       }
       return next;
     });
-    if (patch.name) {
-      setCandidatesRaw(prev => prev.map(c => c.roleId === id ? { ...c, roleName: patch.name! } : c));
+    
+    let updatedCandidatesToSave: Candidate[] = [];
+    if (patch.name || patch.keywords || patch.reqExp !== undefined || patch.reqEdu !== undefined) {
+      setCandidatesRaw(prev => {
+        const next = prev.map(c => {
+          if (c.roleId === id && updatedRole) {
+            const updatedC = { ...c };
+            let changed = false;
+            if (patch.name) {
+              updatedC.roleName = patch.name;
+              changed = true;
+            }
+            if (patch.keywords || patch.reqExp !== undefined || patch.reqEdu !== undefined) {
+              updatedC.score = calculateMatchScore(c.resumeText || "", {
+                keywords: updatedRole.keywords,
+                exp: updatedRole.reqExp,
+                education: updatedRole.reqEdu
+              }, c);
+              changed = true;
+            }
+            if (changed) {
+              updatedCandidatesToSave.push(updatedC);
+            }
+            return updatedC;
+          }
+          return c;
+        });
+        return next;
+      });
     }
+
     try {
       const db = await import("@/lib/supabase");
       await db.updateDBRole(id, patch);
+      
+      for (const c of updatedCandidatesToSave) {
+        await db.updateDBCandidate(c.id, { score: c.score, roleName: c.roleName });
+      }
     } catch (err) {
       console.error("[HireDesk Store] Failed to update role in Supabase:", err);
     }

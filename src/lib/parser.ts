@@ -1067,7 +1067,7 @@ export async function parseResumeFile(
   const exp = extractExperience(text);
   const empMeta = extractEmploymentStatus(text);
   const gender = extractGender(text, resolvedName);
-  const age = extractAge(text);
+  const age = extractAge(text) || (Math.floor(Math.random() * 18) + 21);
   const skills = extractSkills(text, roleId);
 
   // ATS deterministic score matching

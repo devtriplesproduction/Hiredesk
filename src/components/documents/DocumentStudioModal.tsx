@@ -672,38 +672,38 @@ export const DocumentStudioModal: React.FC<DocumentStudioModalProps> = ({
 
             {/* Active Mode Indication Banner */}
             <div
-              className="w-full max-w-[850px] flex items-center justify-between px-3.5 py-1.5 rounded-xl text-[15px] font-medium transition-all"
+              className="w-full max-w-[850px] flex items-center justify-between px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all"
               style={{
                 background: editMode === "temporary" ? "rgba(245, 158, 11, 0.09)" : "rgba(16, 185, 129, 0.09)",
                 border: `1px solid ${editMode === "temporary" ? "rgba(245, 158, 11, 0.28)" : "rgba(16, 185, 129, 0.28)"}`,
               }}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <span
-                  className="w-2 h-2 rounded-full animate-pulse"
+                  className="w-1.5 h-1.5 rounded-full animate-pulse"
                   style={{ background: editMode === "temporary" ? "#F59E0B" : "#10B981" }}
                 />
                 <span style={{ color: editMode === "temporary" ? "#FCD34D" : "#6EE7B7" }}>
                   {editMode === "temporary" ? (
                     <>
-                      <strong>Mode: Temporary Change</strong> — Edits apply only to current Document Studio session. Base template is untouched.
+                      <strong>Temporary Mode</strong> — Edits apply only to this session.
                     </>
                   ) : (
                     <>
-                      <strong>Mode: Permanent Change</strong> — Edits are saved persistently. Future documents generated from this template will use these changes.
+                      <strong>Permanent Mode</strong> — Edits saved for future documents.
                     </>
                   )}
                 </span>
                 {editMode === "permanent" && hasPermanentSaved && (
-                  <span className="inline-flex items-center gap-0.5 text-[16px] font-bold text-emerald-400 bg-emerald-500/15 px-1.5 py-0.5 rounded border border-emerald-500/30 ml-1">
+                  <span className="inline-flex items-center gap-0.5 text-[12px] font-bold text-emerald-400 bg-emerald-500/15 px-1 py-0.5 rounded border border-emerald-500/30 ml-1">
                     <Check className="w-2.5 h-2.5" /> Saved
                   </span>
                 )}
               </div>
 
-              <span className="text-[16px] text-[var(--text-2)] hidden sm:flex items-center gap-1">
-                <Edit3 className="w-3 h-3 text-[#A78BFA]" />
-                <span>Click anywhere on document to edit text directly</span>
+              <span className="text-[13px] text-[var(--text-2)] hidden sm:flex items-center gap-1">
+                <Edit3 className="w-2.5 h-2.5 text-[#A78BFA]" />
+                <span>Click to edit text directly</span>
               </span>
             </div>
 

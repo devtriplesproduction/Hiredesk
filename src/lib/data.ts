@@ -269,7 +269,8 @@ export function makeCandidate(roleId: string, overrides: Partial<Candidate> = {}
     city: baseCandidate.city,
     skills: baseCandidate.skills
   });
-  return { ...baseCandidate, score: mockScore };
+  const finalScore = overrides.score ?? mockScore;
+  return { ...baseCandidate, score: finalScore };
 }
 
 
