@@ -91,11 +91,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [contracts, setContracts] = useState<Contract[]>(() => {
     const defaultList = getContractTemplates();
     if (typeof window === "undefined") return defaultList;
-    return defaultList.map(c => ({
-      ...c,
-      logoUrl: c.logoUrl || localStorage.getItem(`doc_${c.id}_logo`) || "",
-      signUrl: c.signUrl || localStorage.getItem(`doc_${c.id}_sign`) || "",
-    }));
+    return defaultList.map(c => {
+      const savedBody = localStorage.getItem(`hd_contract_${c.id}_body`);
+      return {
+        ...c,
+        body: savedBody || c.body,
+        logoUrl: c.logoUrl || localStorage.getItem(`doc_${c.id}_logo`) || "",
+        signUrl: c.signUrl || localStorage.getItem(`doc_${c.id}_sign`) || "",
+      };
+    });
   });
   const [globalBrandAssets, setGlobalBrandAssets] = useState<{ logoUrl: string; signUrl: string }>(() => {
     if (typeof window === "undefined") return { logoUrl: "", signUrl: "" };
@@ -132,8 +136,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         return list.map(c => {
           const storedLogo = typeof window !== "undefined" ? localStorage.getItem(`doc_${c.id}_logo`) : "";
           const storedSign = typeof window !== "undefined" ? localStorage.getItem(`doc_${c.id}_sign`) : "";
+          const storedBody = typeof window !== "undefined" ? localStorage.getItem(`hd_contract_${c.id}_body`) : "";
           return {
             ...c,
+            body: storedBody || c.body,
             logoUrl: c.logoUrl || storedLogo || "",
             signUrl: c.signUrl || storedSign || "",
           };
@@ -562,6 +568,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const updateContract = useCallback((id: string, update: string | Partial<Contract>) => {
     const patch = typeof update === "string" ? { body: update } : update;
     setContracts(prev => prev.map(c => c.id === id ? { ...c, ...patch } : c));
+    if (patch.body !== undefined && typeof window !== "undefined") {
+      localStorage.setItem(`hd_contract_${id}_body`, patch.body);
+    }
     import("@/lib/supabase").then(db => db.updateDBContract(id, patch)).catch(console.error);
   }, []);
 

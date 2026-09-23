@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect, useLayoutEffect, useMemo } from "react";
 import { useStore } from "@/lib/store";
 import type { Contract } from "@/types";
 import { compressImage } from "@/lib/utils/image";
@@ -158,7 +158,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
   const logoRef = useRef<HTMLInputElement>(null);
   const signRef = useRef<HTMLInputElement>(null);
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const currentLoadedIdRef = useRef<string>(contract.id);
+  const currentLoadedIdRef = useRef<string>("");
 
   // Save the user's active cursor/selection Range within editorRef
   const saveSelection = useCallback(() => {
@@ -187,7 +187,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
   }, []);
 
   // Reset editor HTML when switching contracts or when self-healing corrupted templates
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!editorRef.current) return;
 
     // Self-heal exp_letter if DOM has header title, non-centered title, or old logo/sign sizes
@@ -210,6 +210,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
           const fresh = ensureA4Pages(ensureCurrentDate(freshTpl.body), "exp_letter");
           const rendered = renderContractHtml(fresh, resolvedAssets);
           editorRef.current.innerHTML = rendered;
+          editorRef.current.querySelectorAll(".contract-logo-slot, .contract-sign-slot").forEach(el => el.setAttribute("contenteditable", "false"));
           lastHtmlRef.current = rendered;
           savedRangeRef.current = null;
           updateContract("exp_letter", freshTpl.body);
@@ -223,10 +224,12 @@ export default function ContractEditor({ contract, onBack }: Props) {
       const fresh = ensureA4Pages(ensureCurrentDate(currentContract.body), currentContract.id);
       const rendered = renderContractHtml(fresh, resolvedAssets);
       editorRef.current.innerHTML = rendered;
+      editorRef.current.querySelectorAll(".contract-logo-slot, .contract-sign-slot").forEach(el => el.setAttribute("contenteditable", "false"));
       lastHtmlRef.current = rendered;
       savedRangeRef.current = null;
     }
-  }, [contract.id, currentContract.body, resolvedAssets, updateContract]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contract.id, updateContract]);
 
   // Dynamically update DOM asset slots when resolved assets change
   useEffect(() => {
@@ -327,6 +330,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
     syncTimerRef.current = setTimeout(() => {
       if (editMode === "permanent") {
         updateContract(contract.id, cleanStorageHtml);
+        setHasPermanentSaved(true);
       }
     }, 400);
   }, [contract.id, updateContract, saveSelection, editMode]);
@@ -415,6 +419,15 @@ export default function ContractEditor({ contract, onBack }: Props) {
         if (savedRangeRef.current && editorRef.current.contains(savedRangeRef.current.commonAncestorContainer)) {
           sel.removeAllRanges();
           sel.addRange(savedRangeRef.current);
+        } else {
+          const page = editorRef.current.querySelector('.page, p');
+          if (page) {
+            const range = document.createRange();
+            range.selectNodeContents(page);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
         }
       }
     }
@@ -476,6 +489,7 @@ export default function ContractEditor({ contract, onBack }: Props) {
       if (editMode === "permanent") {
         const cleanStorageHtml = stripContractAssetsForStorage(html);
         updateContract(contract.id, cleanStorageHtml);
+        setHasPermanentSaved(true);
       }
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
@@ -561,6 +575,9 @@ export default function ContractEditor({ contract, onBack }: Props) {
       const defaults = getContractTemplates();
       const defaultTpl = defaults.find(d => d.id === contract.id);
       if (defaultTpl) {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(`hd_contract_${contract.id}_body`);
+        }
         const fresh = ensureA4Pages(ensureCurrentDate(defaultTpl.body), contract.id);
         const rendered = renderContractHtml(fresh, resolvedAssets);
         if (editorRef.current) {
@@ -595,10 +612,17 @@ export default function ContractEditor({ contract, onBack }: Props) {
           width: 100%;
           counter-reset: a4page;
           position: relative;
+          cursor: text !important;
+          user-select: text !important;
+          -webkit-user-select: text !important;
+          pointer-events: auto !important;
         }
 
         .a4-editor-canvas .page {
           cursor: text !important;
+          user-select: text !important;
+          -webkit-user-select: text !important;
+          pointer-events: auto !important;
           width: 210mm !important;
           min-height: 297mm !important;
           position: relative !important;
@@ -1192,10 +1216,9 @@ export default function ContractEditor({ contract, onBack }: Props) {
                 <div
                   key={contract.id}
                   ref={editorRef}
-                  contentEditable
+                  contentEditable={true}
                   suppressContentEditableWarning
                   className="document-studio-wrapper a4-editor-canvas outline-none"
-                  dangerouslySetInnerHTML={{ __html: initialHtml }}
                   onMouseDown={handleEditorMouseDown}
                   onMouseUp={handleEditorMouseUp}
                   onClick={handleEditorClick}

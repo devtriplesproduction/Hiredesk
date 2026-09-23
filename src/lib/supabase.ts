@@ -528,8 +528,13 @@ export async function insertDBContracts(contracts: any[]): Promise<void> {
 export async function updateDBContract(id: string, patch: any): Promise<void> {
   const { logoUrl, signUrl, ...rest } = patch;
   if (Object.keys(rest).length === 0) return;
-  const { error } = await supabase.from("contracts").update(rest).eq("id", id);
-  if (error) throw error;
+  
+  const { error: upsertError } = await supabase.from("contracts").upsert({ id, ...rest });
+  if (upsertError) {
+    console.warn("Upsert failed, falling back to update:", upsertError);
+    const { error: updateError } = await supabase.from("contracts").update(rest).eq("id", id);
+    if (updateError) throw updateError;
+  }
 }
 
 export async function deleteDBContract(id: string): Promise<void> {
