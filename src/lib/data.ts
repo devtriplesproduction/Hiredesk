@@ -47,15 +47,15 @@ export function getEmploymentStatusMeta(status?: EmploymentStatus) {
 }
 
 export const DEFAULT_ROLES: Role[] = [
-  { id: "dev-ft", name: "Web/App Developer", type: "Full-time", count: 0, isActive: true, keywords: ["react", "node", "javascript", "typescript", "python", "flutter", "nextjs", "mongodb", "sql", "api", "git", "css", "html", "aws", "docker"] },
-  { id: "dev-in", name: "Dev Intern", type: "Intern", count: 0, isActive: true, keywords: ["javascript", "html", "css", "react", "python", "git", "basics", "intern"] },
-  { id: "designer", name: "Graphic Designer", type: "Full-time", count: 0, isActive: true, keywords: ["figma", "photoshop", "illustrator", "canva", "branding", "typography", "ui", "ux", "adobe", "design"] },
-  { id: "editor", name: "Video Editor", type: "Full-time", count: 0, isActive: true, keywords: ["premiere", "after effects", "davinci", "final cut", "color grading", "motion graphics", "editing", "capcut", "video"] },
-  { id: "dmarketer", name: "Digital Marketer", type: "Full-time", count: 0, isActive: true, keywords: ["seo", "sem", "google ads", "meta ads", "analytics", "email marketing", "hubspot", "campaigns", "digital"] },
-  { id: "smm", name: "Social Media Manager", type: "Full-time", count: 0, isActive: true, keywords: ["instagram", "social media", "content creation", "reels", "scheduling", "analytics", "engagement", "tiktok", "facebook"] },
-  { id: "sales", name: "Sales Executive", type: "Full-time", count: 0, isActive: true, keywords: ["sales", "crm", "b2b", "b2c", "negotiation", "lead generation", "revenue", "target", "closing", "salesforce"] },
-  { id: "perfmkt", name: "Performance Marketer", type: "Full-time", count: 0, isActive: true, keywords: ["google ads", "meta ads", "roas", "cpc", "cpm", "ppc", "remarketing", "a/b testing", "conversion", "performance"] },
-  { id: "content", name: "Content Strategist", type: "Full-time", count: 0, isActive: true, keywords: ["content strategy", "copywriting", "seo", "storytelling", "editorial", "blogging", "audience", "brand voice"] },
+  { id: "dev-ft", name: "Web/App Developer", type: "Full-time", count: 0, isActive: true, keywords: ["react", "node", "javascript", "typescript", "python", "flutter", "nextjs", "mongodb", "sql", "api", "git", "css", "html", "aws", "docker"], reqExp: "2", reqEdu: "B.Tech" },
+  { id: "dev-in", name: "Dev Intern", type: "Intern", count: 0, isActive: true, keywords: ["javascript", "html", "css", "react", "python", "git", "basics", "intern"], reqExp: "fresher", reqEdu: "B.Tech" },
+  { id: "designer", name: "Graphic Designer", type: "Full-time", count: 0, isActive: true, keywords: ["figma", "photoshop", "illustrator", "canva", "branding", "typography", "ui", "ux", "adobe", "design"], reqExp: "1", reqEdu: "Diploma" },
+  { id: "editor", name: "Video Editor", type: "Full-time", count: 0, isActive: true, keywords: ["premiere", "after effects", "davinci", "final cut", "color grading", "motion graphics", "editing", "capcut", "video"], reqExp: "1", reqEdu: "Diploma" },
+  { id: "dmarketer", name: "Digital Marketer", type: "Full-time", count: 0, isActive: true, keywords: ["seo", "sem", "google ads", "meta ads", "analytics", "email marketing", "hubspot", "campaigns", "digital"], reqExp: "2", reqEdu: "B.Com" },
+  { id: "smm", name: "Social Media Manager", type: "Full-time", count: 0, isActive: true, keywords: ["instagram", "social media", "content creation", "reels", "scheduling", "analytics", "engagement", "tiktok", "facebook"], reqExp: "1", reqEdu: "B.A" },
+  { id: "sales", name: "Sales Executive", type: "Full-time", count: 0, isActive: true, keywords: ["sales", "crm", "b2b", "b2c", "negotiation", "lead generation", "revenue", "target", "closing", "salesforce"], reqExp: "1", reqEdu: "Any" },
+  { id: "perfmkt", name: "Performance Marketer", type: "Full-time", count: 0, isActive: true, keywords: ["google ads", "meta ads", "roas", "cpc", "cpm", "ppc", "remarketing", "a/b testing", "conversion", "performance"], reqExp: "3", reqEdu: "MBA" },
+  { id: "content", name: "Content Strategist", type: "Full-time", count: 0, isActive: true, keywords: ["content strategy", "copywriting", "seo", "storytelling", "editorial", "blogging", "audience", "brand voice"], reqExp: "2", reqEdu: "B.A" },
   { id: "model-m", name: "Model (Male)", type: "Freelance", count: 0, isActive: true, keywords: ["modelling", "portfolio", "commercial", "editorial", "runway", "brand", "male model"] },
   { id: "model-f", name: "Model (Female)", type: "Freelance", count: 0, isActive: true, keywords: ["modelling", "portfolio", "commercial", "editorial", "runway", "brand", "female model"] },
   { id: "camera", name: "Cameraman", type: "Full-time", count: 0, isActive: true, keywords: ["cinematography", "camera", "lighting", "dslr", "video production", "shoot", "lens", "stabilizer", "drone"] },
@@ -198,15 +198,14 @@ export function calculateMatchScore(text: string, reqs: MatchRequirements, info:
   // Dynamic weights based on provided requirements
   let expWeight = hasExpReq ? 0.25 : 0;
   let eduWeight = hasEduReq ? 0.20 : 0;
-  const compWeight = 0.15;
   const hasSkillsReq = totalValidKeywords > 0;
   
   let skillWeight = 0;
   if (hasSkillsReq) {
-    skillWeight = 1.0 - (expWeight + eduWeight + compWeight);
+    skillWeight = 1.0 - (expWeight + eduWeight);
   } else {
     // If no skills required, distribute remainder evenly among active reqs (if any)
-    const remainder = 1.0 - compWeight - expWeight - eduWeight;
+    const remainder = 1.0 - expWeight - eduWeight;
     if (hasExpReq && hasEduReq) { expWeight += remainder / 2; eduWeight += remainder / 2; }
     else if (hasExpReq) expWeight += remainder;
     else if (hasEduReq) eduWeight += remainder;
@@ -222,8 +221,7 @@ export function calculateMatchScore(text: string, reqs: MatchRequirements, info:
   const total = Math.min(100, Math.round(
     skillsRaw * skillWeight +
     expRaw * expWeight +
-    eduRaw * eduWeight +
-    compRaw * compWeight
+    eduRaw * eduWeight
   ));
 
   return {

@@ -134,6 +134,8 @@ export interface Role {
   keywords: string[];
   count: number;
   isActive: boolean;
+  reqExp?: string;
+  reqEdu?: string;
 }
 
 export interface Contract {
