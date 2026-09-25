@@ -43,16 +43,23 @@ export function getTemplatesForRole(roleId: string): TemplateDef[] {
 }
 
 export function getDefaultTemplateForStatus(status: string): string {
-  switch (status) {
-    case "new": return "first_response";
-    case "awaiting_details": return "follow_up";
-    case "screening": return "details_resume_request";
-    case "shortlisted": return "shortlist";
-    case "task_sent": return "task_reminder";
-    case "task_received": return "interview_invitation";
-    case "interview": return "final_discussion";
-    case "selected": return "offer_sent";
-    case "offer_accepted": return "joining_confirmation";
-    default: return "first_response";
-  }
+  const map: Record<string, string> = {
+    new: "first_response",
+    awaiting_details: "follow_up",
+    follow_up: "follow_up",
+    screening: "details_resume_request",
+    awaiting_resume_portfolio: "details_resume_request",
+    shortlisted: "shortlist",
+    task_sent: "task",
+    task_received: "task_received",
+    interview: "interview_invitation",
+    final_discussion: "final_discussion",
+    selected: "selected",
+    hold: "hold",
+    rejected: "not_selected",
+    offer_sent: "offer_sent",
+    offer_accepted: "joining_confirmation",
+    joining_confirmed: "joining_confirmation"
+  };
+  return map[status] || "first_response";
 }

@@ -30,12 +30,7 @@ export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
     setLocalSearch(filters.search);
   }, [filters.search]);
 
-  // Sanitize status if legacy or external source set status to "hired"
-  useEffect(() => {
-    if (filters.status === "hired") {
-      setFilters({ status: "all" });
-    }
-  }, [filters.status, setFilters]);
+  // Removed legacy "hired" status check as "hired" is now valid
 
   const handleSearchChange = useCallback(
     (val: string) => {
@@ -92,6 +87,7 @@ export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
     { value: "onboarding_review", label: "Onboarding Review" },
     { value: "onboarding_verified", label: "Onboarding Verified" },
     { value: "onboarding_rejected", label: "Onboarding Rejected" },
+    { value: "hired", label: "Hired" },
   ], []);
 
 

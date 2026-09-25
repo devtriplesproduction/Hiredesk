@@ -140,14 +140,14 @@ export const COMMON_MESSAGES: Record<string, string> = {
 Your profile/task has been reviewed and we'd like to invite you for an interview with Triple S Production.
 Date: [Date]
 Time: [Time]
-Mode: [Mode]
+Mode: [In-person / Online]
 Location/Meeting Link: [Details]
 Please confirm your availability.`,
   "interview_confirmation": `Hi [Name],
 Your interview has been confirmed for:
 Date: [Date]
 Time: [Time]
-Mode: [Mode]
+Mode: [In-person / Online]
 Please be available 5–10 minutes before the scheduled time. See you then.`,
   "interview_reminder": `Hi [Name],
 Just a reminder that your interview with Triple S Production is scheduled for today at [Time]. Please be available on time.`,
@@ -199,6 +199,7 @@ export const SOP_STATUS_HELPER: Record<string, string> = {
 };
 
 export const STATUS_UPDATE_MAP: Record<string, string> = {
+  "task_received": "task_received",
   "first_response": "awaiting_details",
   "details_resume_request": "awaiting_resume_portfolio",
   "task": "task_sent",
@@ -209,3 +210,12 @@ export const STATUS_UPDATE_MAP: Record<string, string> = {
   "offer_sent": "offer_sent",
   "joining_confirmation": "joining_confirmed"
 };
+
+export function canSetStatus(from: string, to: string): { ok: boolean; reason?: string } {
+  if (to === "interview") {
+    if (!["task_received", "interview", "final_discussion"].includes(from)) {
+      return { ok: false, reason: "SOP: do not move to Interview before Task Review." };
+    }
+  }
+  return { ok: true };
+}

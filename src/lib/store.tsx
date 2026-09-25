@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type { Candidate, Role, Contract, Filters, Interview, Offer, CandidateDocument, Employee, EmployeeBond, EmployeeResignation } from "@/types";
 import { DEFAULT_ROLES, generateSeedCandidates, getContractTemplates, calculateMatchScore } from "@/lib/data";
+import { canSetStatus } from "@/lib/hiring-sop";
 import { exportCandidatesToCSV } from "@/lib/utils/csv";
 import { DialogProvider } from "@/lib/dialog";
 
@@ -402,11 +403,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (!candidate) return prev;
 
       if (patch.status && patch.status !== candidate.status) {
-        if (patch.status === "interview") {
-           if (!["shortlisted", "task_received", "task_sent", "screening", "awaiting_resume_portfolio"].includes(candidate.status)) {
-              console.warn("SOP Violation: Cannot jump directly to interview.");
-              return prev; 
-           }
+        const check = canSetStatus(candidate.status, patch.status);
+        if (!check.ok) {
+          alert(check.reason);
+          return prev;
         }
       }
 

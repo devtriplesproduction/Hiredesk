@@ -4,6 +4,7 @@ import { getDocumentSignedUrl } from "@/lib/supabase";
 import { Btn, ScoreBadge, StatusBadge, SkillTag, dialog } from "@/components/ui";
 import type { Candidate, EmploymentStatus, Employee } from "@/types";
 import { getEmploymentStatusMeta, scoreCandidateFromText } from "@/lib/data";
+import { SOP_STATUS_HELPER } from "@/lib/hiring-sop";
 import { clsx } from "clsx";
 import { useRouter } from "next/navigation";
 import { getPublicBaseUrl } from "@/lib/url";
@@ -18,7 +19,7 @@ import { Check, X, User, BarChart2, FileText, CheckCircle2, Clock, Calendar, Bri
 
 interface Props { candidate: Candidate; onClose: () => void; }
 
-const STATUSES: Candidate["status"][] = ["new", "awaiting_details", "follow_up", "screening", "awaiting_resume_portfolio", "shortlisted", "task_sent", "task_received", "interview", "final_discussion", "selected", "hold", "rejected", "joining_confirmed", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected"];
+const STATUSES: Candidate["status"][] = ["new", "awaiting_details", "follow_up", "screening", "awaiting_resume_portfolio", "shortlisted", "task_sent", "task_received", "interview", "final_discussion", "selected", "hold", "rejected", "joining_confirmed", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected", "hired"];
 
 export default function CandidateDetail({ candidate: c, onClose }: Props) {
   const { updateCandidate, deleteCandidate, interviews, addInterview, updateInterview, offers, addOffer, updateOffer, documents, updateDocument, employees, addEmployee, updateEmployee, employeeBonds, updateEmployeeBond, employeeResignations, addEmployeeResignation, roles } = useStore();
@@ -630,6 +631,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
               
               <div className="flex items-center gap-2 mt-2">
                 <StatusBadge status={c.status} />
+                <span className="text-xs font-semibold text-[var(--text-3)] ml-2">Next: {SOP_STATUS_HELPER[c.status] || ""}</span>
                 <ScoreBadge score={c.score.total} />
               </div>
             </div>
