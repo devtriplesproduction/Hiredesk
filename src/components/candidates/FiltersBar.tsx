@@ -149,7 +149,7 @@ export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
       {/* 3. All Status */}
       <FilterSelect
         options={statusOptions}
-        value={filters.status === "hired" ? "all" : filters.status}
+        value={filters.status}
         onChange={val => setFilters({ status: val })}
         placeholder="All Status"
         containerClassName="flex-1 min-w-[100px]"
