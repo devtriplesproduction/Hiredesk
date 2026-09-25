@@ -44,10 +44,10 @@ That's it. No database, no env vars needed for local testing.
 
 | Parameter | Weight |
 |---|---|
-| Skills Match (keywords vs resume) | 40% |
-| Experience Level | 25% |
+| Skills Match (keywords vs resume) | 60% |
+| Experience Level | 15% |
 | Education | 20% |
-| Profile Completeness | 15% |
+| Profile Completeness | 5% |
 
 Score range: **0–100**
 - 🟢 70–100: Strong candidate

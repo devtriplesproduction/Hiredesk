@@ -223,7 +223,7 @@ export function calculateMatchScore(text: string, reqs: MatchRequirements, info:
   // If role does not contain enough info to calculate a meaningful requirement match
   if (!hasSkillsReq && !hasExpReq && !hasEduReq) {
     return {
-      skills: 100, exp: 100, edu: 100, completeness: compRaw, total: Math.round(compRaw * 0.15), matchedSkills: [], missingSkills: []
+      skills: 100, exp: 100, edu: 100, completeness: compRaw, total: Math.round(compRaw * 0.05), matchedSkills: [], missingSkills: []
     };
   }
 
@@ -232,10 +232,10 @@ export function calculateMatchScore(text: string, reqs: MatchRequirements, info:
   const finalEduRaw = hasEduReq ? eduRaw : 100;
 
   const total = Math.min(100, Math.round(
-    finalSkillsRaw * 0.40 +
-    finalExpRaw * 0.25 +
+    finalSkillsRaw * 0.60 +
+    finalExpRaw * 0.15 +
     finalEduRaw * 0.20 +
-    compRaw * 0.15
+    compRaw * 0.05
   ));
 
   return {

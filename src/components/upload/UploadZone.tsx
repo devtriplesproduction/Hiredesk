@@ -82,10 +82,10 @@ const HOW_IT_WORKS_STEPS = [
 ];
 
 const ATS_WEIGHTS = [
-  { label: "Skills", weight: "40%", pct: 40, barClass: "bg-[#00D9FF]", dotClass: "bg-[#00D9FF]" },
-  { label: "Experience", weight: "25%", pct: 25, barClass: "bg-emerald-400", dotClass: "bg-emerald-400" },
+  { label: "Skills", weight: "60%", pct: 60, barClass: "bg-[#00D9FF]", dotClass: "bg-[#00D9FF]" },
+  { label: "Experience", weight: "15%", pct: 15, barClass: "bg-emerald-400", dotClass: "bg-emerald-400" },
   { label: "Education", weight: "20%", pct: 20, barClass: "bg-amber-400", dotClass: "bg-amber-400" },
-  { label: "Profile Completeness", weight: "15%", pct: 15, barClass: "bg-purple-400", dotClass: "bg-purple-400" },
+  { label: "Profile Completeness", weight: "5%", pct: 5, barClass: "bg-purple-400", dotClass: "bg-purple-400" },
 ];
 
 export default function UploadZone() {

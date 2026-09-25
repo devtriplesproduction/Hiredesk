@@ -1581,10 +1581,10 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                 </div>
                 <div className="flex-1">
                   {([
-                    ["Skills Match", c.score.skills, "40%"],
-                    ["Experience", c.score.exp, "25%"],
+                    ["Skills Match", c.score.skills, "60%"],
+                    ["Experience", c.score.exp, "15%"],
                     ["Education", c.score.edu, "20%"],
-                    ["Completeness", c.score.completeness, "15%"],
+                    ["Completeness", c.score.completeness, "5%"],
                   ] as [string, number, string][]).map(([label, val, wt]) => (
                     <div key={label} className="flex items-center gap-3 mb-3 last:mb-0">
                       <div className="text-xs text-[var(--text-3)] w-28 font-medium">{label}</div>
