@@ -51,7 +51,7 @@ export const DEFAULT_ROLES: Role[] = [
   { id: "dev-in", name: "Dev Intern", type: "Intern", count: 0, isActive: true, keywords: ["javascript", "html", "css", "react", "python", "git", "basics", "intern"], reqExp: "fresher", reqEdu: "B.Tech" },
   { id: "wp-dev", name: "WordPress Developer", type: "Full-time", count: 0, isActive: true, keywords: ["wordpress", "woocommerce", "elementor", "php", "html", "css", "ui/ux", "custom website", "plugin development", "website customization"], reqExp: "3", reqEdu: "Any" },
   { id: "designer", name: "Graphic Designer", type: "Full-time", count: 0, isActive: true, keywords: ["branding", "photoshop", "illustrator", "ai tools", "packaging design", "campaign creatives", "print media", "production-ready files", "typography", "layout"], reqExp: "2", reqEdu: "Any" },
-  { id: "editor", name: "Video Editor", type: "Full-time", count: 0, isActive: true, keywords: ["premiere", "after effects", "davinci", "final cut", "color grading", "motion graphics", "editing", "capcut", "video"], reqExp: "1", reqEdu: "Diploma" },
+  { id: "editor", name: "Video Editor", type: "Full-time", count: 0, isActive: true, keywords: ["premiere", "after effects", "davinci", "final cut", "color grading", "motion graphics", "capcut"], reqExp: "1", reqEdu: "Diploma" },
   { id: "editor-in", name: "Video Editor Intern", type: "Intern", count: 0, isActive: true, keywords: ["video editing", "reels", "shorts", "youtube editing", "pacing", "storytelling"], reqExp: "fresher", reqEdu: "Any" },
   { id: "dmarketer", name: "Digital Marketer", type: "Full-time", count: 0, isActive: true, keywords: ["seo", "sem", "google ads", "meta ads", "analytics", "email marketing", "hubspot", "campaigns", "digital"], reqExp: "2", reqEdu: "B.Com" },
   { id: "dmark-in", name: "Digital Marketing Intern", type: "Intern", count: 0, isActive: true, keywords: ["digital marketing", "seo", "social media", "english", "backlink building", "ai tools", "blog writing", "caption writing"], reqExp: "fresher", reqEdu: "Any" },
@@ -63,6 +63,29 @@ export const DEFAULT_ROLES: Role[] = [
   { id: "model-f", name: "Model (Female)", type: "Freelance", count: 0, isActive: true, keywords: ["modelling", "portfolio", "commercial", "editorial", "runway", "brand", "female model"] },
   { id: "camera", name: "Cameraman", type: "Full-time", count: 0, isActive: true, keywords: ["cinematography", "camera", "lighting", "dslr", "video production", "shoot", "lens", "stabilizer", "drone"] },
 ];
+
+export const SKILL_ALIASES: Record<string, string[]> = {
+  "premiere": ["premiere pro", "adobe premiere", "adobe premiere pro", "pr"],
+  "premiere pro": ["premiere pro", "adobe premiere", "adobe premiere pro", "pr"],
+  "after effects": ["after effects", "adobe after effects", "ae"],
+  "davinci": ["davinci resolve", "da vinci", "davinci"],
+  "davinci resolve": ["davinci resolve", "da vinci", "davinci"],
+  "final cut": ["final cut", "final cut pro", "fcp", "fcpx"],
+  "capcut": ["capcut", "cap cut"],
+  "color grading": ["color grading", "colour grading"],
+  "motion graphics": ["motion graphics", "motion graphic"],
+  "photoshop": ["photoshop", "adobe photoshop", "ps"],
+  "illustrator": ["illustrator", "adobe illustrator", "ai"],
+  "figma": ["figma"],
+  "canva": ["canva"],
+  "wordpress": ["wordpress", "wp"],
+  "woocommerce": ["woocommerce", "woo commerce"],
+  "elementor": ["elementor"],
+  "php": ["php"],
+  "react": ["react", "reactjs", "react.js"],
+  "node": ["node", "nodejs", "node.js"],
+  "javascript": ["javascript", "js"],
+};
 
 export const SKILLS_POOL: Record<string, string[]> = {
   "dev-ft": ["React", "Node.js", "TypeScript", "MongoDB", "Python", "AWS", "Git", "REST APIs", "SQL", "Flutter"],
@@ -108,39 +131,33 @@ export function calculateMatchScore(text: string, reqs: MatchRequirements, info:
   const missingSkills: string[] = [];
   
   const checkSkillMatch = (kw: string, textLower: string) => {
-    if (['basics', 'intern', 'knowledge', 'experience', 'fresher'].includes(kw.toLowerCase().trim())) {
+    let normKw = kw.toLowerCase().trim();
+    if (['basics', 'intern', 'knowledge', 'experience', 'fresher'].includes(normKw)) {
       return null;
     }
     
-    // Normalize textLower for common variations
-    let normText = textLower;
-    normText = normText.replace(/react\.js/g, 'react');
-    normText = normText.replace(/next\.js/g, 'nextjs');
-    normText = normText.replace(/node\.js/g, 'nodejs');
-    normText = normText.replace(/vue\.js/g, 'vuejs');
-    normText = normText.replace(/html5/g, 'html');
-    normText = normText.replace(/css3/g, 'css');
-    
-    let normKw = kw.toLowerCase().trim();
-    normKw = normKw.replace(/html5/g, 'html');
-    normKw = normKw.replace(/css3/g, 'css');
-    normKw = normKw.replace(/react\.js/g, 'react');
-    normKw = normKw.replace(/next\.js/g, 'nextjs');
-    normKw = normKw.replace(/node\.js/g, 'nodejs');
-    normKw = normKw.replace(/vue\.js/g, 'vuejs');
-    
-    if (normKw === 'aws' && normText.includes('amazon web services')) return true;
+    if (normKw === 'aws' && textLower.includes('amazon web services')) return true;
 
-    if (kw.includes('/')) {
-      const parts = kw.split('/').map(p => p.toLowerCase().trim());
+    if (normKw.includes('/')) {
+      const parts = normKw.split('/').map(p => p.trim());
       if (parts.every(p => {
-        const escaped = p.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-        return new RegExp(`\\b${escaped}\\b`, 'i').test(normText);
+        const aliases = SKILL_ALIASES[p] || [p];
+        return aliases.some(alias => {
+          if (alias === 'ai') return /\bai\b(?!\s+tools)/i.test(textLower);
+          if (alias === 'js') return /\bjs\b/i.test(textLower);
+          const escaped = alias.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          return new RegExp(`\\b${escaped}\\b`, 'i').test(textLower);
+        });
       })) return true;
     }
     
-    const escaped = normKw.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    return new RegExp(`\\b${escaped}\\b`, 'i').test(normText);
+    const aliases = SKILL_ALIASES[normKw] || [normKw];
+    return aliases.some(alias => {
+      if (alias === 'ai') return /\bai\b(?!\s+tools)/i.test(textLower);
+      if (alias === 'js') return /\bjs\b/i.test(textLower);
+      const escaped = alias.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      return new RegExp(`\\b${escaped}\\b`, 'i').test(textLower);
+    });
   };
 
   let totalValidKeywords = 0;

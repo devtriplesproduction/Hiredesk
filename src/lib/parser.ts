@@ -1,6 +1,6 @@
 "use client";
 import type { Candidate, Role } from "@/types";
-import { makeCandidate, detectBestRole, scoreCandidateFromText, SKILLS_POOL } from "@/lib/data";
+import { makeCandidate, detectBestRole, scoreCandidateFromText, SKILLS_POOL, SKILL_ALIASES } from "@/lib/data";
 import { extractTextAndMetaFromPDF, PDFTextLine } from "@/lib/utils/pdf";
 
 // A robust dictionary of first name roots to split un-spaced merged names (case-insensitive)
@@ -655,6 +655,13 @@ function extractEducation(text: string): string {
     /\b(12th(?:\s+Grade|\s+Pass)?|HSC|10th(?:\s+Grade|\s+Pass)?|SSC)\b/i,
   ];
 
+  if (/\b(?:b\.?e\.?|b\s*tech|btech|b\.tech)\b/i.test(text)) return "B.Tech";
+  
+  if (/\b(graduation|graduated|graduate)\b[^\n\r]{0,40}\b(engineering|computer science|technology|cs|it)\b/i.test(text) ||
+      /\b(engineering|computer science|technology|cs|it)\b[^\n\r]{0,40}\b(graduation|graduated|graduate)\b/i.test(text)) {
+    return "Degree";
+  }
+
   for (const p of patterns) {
     const match = text.match(p);
     if (match && match[1]) {
@@ -737,20 +744,41 @@ function extractExperience(text: string): string {
   }
 
   // 6. Year range detection for full-time work
-  const yearRanges = Array.from(lower.matchAll(/\b(20[0-2]\d)\s*(?:–|-|to)\s*(20[0-2]\d|present)\b/g));
-  if (yearRanges.length > 0) {
-    let maxDiff = 0;
+  let textForDates = text;
+  textForDates = textForDates.replace(/\b(education|academic|bachelor|master|degree|diploma|b\.?tech|b\.?e|university|college|school)\b[\s\S]{0,200}?(?:20[0-2]\d|present)/gi, "");
+
+  const dateRegex = /\b(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+|\d{1,2}[\/\-]\s*)?(20[0-2]\d)\s*(?:–|-|to)\s*(?:(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+|\d{1,2}[\/\-]\s*)?(20[0-2]\d)|present|till date|current)\b/gi;
+
+  const yearRangesMatch = Array.from(textForDates.matchAll(dateRegex));
+  if (yearRangesMatch.length > 0) {
+    let minYear = 9999;
+    let maxYear = 0;
     const currentYear = new Date().getFullYear();
-    for (const yr of yearRanges) {
-      const startYear = parseInt(yr[1], 10);
-      const endYear = yr[2] === "present" ? currentYear : parseInt(yr[2], 10);
-      const diff = endYear - startYear;
-      if (diff > maxDiff && diff <= 40) maxDiff = diff;
+    for (const match of yearRangesMatch) {
+      const startYear = parseInt(match[1], 10);
+      const endStr = match[2];
+      let endYear = currentYear;
+      if (endStr) {
+        endYear = parseInt(endStr, 10);
+      }
+      if (startYear < 2000 || startYear > currentYear) continue;
+      if (endYear < startYear || endYear > currentYear + 1) continue;
+      
+      if (startYear < minYear) minYear = startYear;
+      if (endYear > maxYear) maxYear = endYear;
     }
-    if (maxDiff > 0) {
-      if (maxDiff >= 5) return "5+ yrs";
-      if (maxDiff === 1) return "1 yr";
-      return `${maxDiff} yrs`;
+    
+    if (minYear !== 9999 && maxYear >= minYear) {
+      const diff = maxYear - minYear;
+      if (diff >= 0 && diff <= 40) {
+        if (/\bintern(?:ship)?\b/i.test(lower) && !/\b(full[\s\-]time|software\s+engineer|developer|manager)\b/i.test(lower) && diff < 1) {
+            return "Intern (Fresher)";
+        }
+        if (diff >= 5) return "5+ yrs";
+        if (diff === 1) return "1 yr";
+        if (diff === 0) return "6 months";
+        return `${diff} yrs`;
+      }
     }
   }
 
@@ -842,8 +870,14 @@ function extractSkills(text: string, roleId: string): string[] {
   const lower = text.toLowerCase();
   const rolePool = SKILLS_POOL[roleId] ?? [];
   const foundRoleSkills = rolePool.filter(skill => {
-    const escaped = skill.toLowerCase().replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    return new RegExp(`\\b${escaped}\\b`, 'i').test(lower) || lower.includes(skill.toLowerCase());
+    const normKw = skill.toLowerCase().trim();
+    const aliases = SKILL_ALIASES[normKw] || [normKw];
+    return aliases.some(alias => {
+      if (alias === 'ai') return /\bai\b(?!\s+tools)/i.test(lower);
+      if (alias === 'js') return /\bjs\b/i.test(lower);
+      const escaped = alias.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      return new RegExp(`\\b${escaped}\\b`, 'i').test(lower);
+    });
   });
 
   const globalPool = [
@@ -856,8 +890,14 @@ function extractSkills(text: string, roleId: string): string[] {
   
   const foundGlobalSkills = globalPool.filter(skill => {
     if (foundRoleSkills.includes(skill)) return false;
-    const escaped = skill.toLowerCase().replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    return new RegExp(`\\b${escaped}\\b`, 'i').test(lower) || lower.includes(skill.toLowerCase());
+    const normKw = skill.toLowerCase().trim();
+    const aliases = SKILL_ALIASES[normKw] || [normKw];
+    return aliases.some(alias => {
+      if (alias === 'ai') return /\bai\b(?!\s+tools)/i.test(lower);
+      if (alias === 'js') return /\bjs\b/i.test(lower);
+      const escaped = alias.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      return new RegExp(`\\b${escaped}\\b`, 'i').test(lower);
+    });
   });
 
   const sectionSkills: string[] = [];
