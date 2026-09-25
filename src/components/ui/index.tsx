@@ -70,13 +70,19 @@ export function ScoreBadge({ score, className }: { score:number; className?: str
 
 const STATUS_LABELS: Record<string, string> = {
   new: "New",
-  review: "In Review",
+  awaiting_details: "Awaiting Details",
+  follow_up: "Follow-Up",
+  screening: "Screening",
+  awaiting_resume_portfolio: "Awaiting Resume",
   shortlisted: "Shortlisted",
-  interview_1: "Interview R1",
-  interview_2: "Interview R2",
-  approved: "Approved",
+  task_sent: "Task Sent",
+  task_received: "Task Received",
+  interview: "Interview",
+  final_discussion: "Final Discussion",
+  selected: "Selected",
+  hold: "Hold",
   rejected: "Rejected",
-  offer: "Offer Prep",
+  joining_confirmed: "Joining Confirmed",
   offer_sent: "Offer Sent",
   offer_accepted: "Offer Accepted",
   offer_rejected: "Offer Rejected",
@@ -85,6 +91,11 @@ const STATUS_LABELS: Record<string, string> = {
   onboarding_verified: "Verified",
   onboarding_rejected: "Onboarding Rej.",
   hired: "Hired",
+  review: "In Review",
+  interview_1: "Interview R1",
+  interview_2: "Interview R2",
+  approved: "Approved",
+  offer: "Offer Prep",
 };
 
 import { getEmploymentStatusMeta } from "@/lib/data";

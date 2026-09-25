@@ -235,11 +235,22 @@ input[type="range"]::-webkit-slider-thumb {
 .score-lo { background: rgba(239,68,68,.1); color: #EF4444; border: 1px solid rgba(239,68,68,.25); }
 
 .status-new { background: rgba(0,217,255,.1); color: #00D9FF; border: 1px solid rgba(0,217,255,.25); }
+.status-awaiting_details { background: rgba(245,197,66,.1); color: #F5C542; border: 1px solid rgba(245,197,66,.2); }
+.status-follow_up { background: rgba(245,197,66,.1); color: #F5C542; border: 1px solid rgba(245,197,66,.2); }
+.status-screening { background: rgba(245,197,66,.1); color: #F5C542; border: 1px solid rgba(245,197,66,.2); }
+.status-awaiting_resume_portfolio { background: rgba(245,197,66,.1); color: #F5C542; border: 1px solid rgba(245,197,66,.2); }
 .status-review { background: rgba(245,197,66,.1); color: #F5C542; border: 1px solid rgba(245,197,66,.2); }
 .status-shortlisted { background: rgba(0,217,255,.1); color: #00D9FF; border: 1px solid rgba(0,217,255,.2); }
+.status-task_sent { background: rgba(0,217,255,.1); color: #00D9FF; border: 1px solid rgba(0,217,255,.2); }
+.status-task_received { background: rgba(0,217,255,.1); color: #00D9FF; border: 1px solid rgba(0,217,255,.2); }
+.status-interview { background: rgba(167,139,250,.1); color: #A78BFA; border: 1px solid rgba(167,139,250,.2); }
 .status-interview_1 { background: rgba(167,139,250,.1); color: #A78BFA; border: 1px solid rgba(167,139,250,.2); }
 .status-interview_2 { background: rgba(139,92,246,.1); color: #8B5CF6; border: 1px solid rgba(139,92,246,.2); }
+.status-final_discussion { background: rgba(167,139,250,.1); color: #A78BFA; border: 1px solid rgba(167,139,250,.2); }
+.status-selected { background: rgba(34,197,94,.1); color: #22C55E; border: 1px solid rgba(34,197,94,.2); }
 .status-approved { background: rgba(34,197,94,.1); color: #22C55E; border: 1px solid rgba(34,197,94,.2); }
+.status-hold { background: rgba(245,197,66,.1); color: #F5C542; border: 1px solid rgba(245,197,66,.2); }
+.status-joining_confirmed { background: rgba(34,197,94,.1); color: #22C55E; border: 1px solid rgba(34,197,94,.2); }
 .status-offer { background: rgba(251,146,60,.1); color: #FB923C; border: 1px solid rgba(251,146,60,.2); }
 .status-offer_sent { background: rgba(96,165,250,.1); color: #60A5FA; border: 1px solid rgba(96,165,250,.2); }
 .status-offer_accepted { background: rgba(34,197,94,.1); color: #22C55E; border: 1px solid rgba(34,197,94,.2); }
