@@ -49,9 +49,12 @@ export function getEmploymentStatusMeta(status?: EmploymentStatus) {
 export const DEFAULT_ROLES: Role[] = [
   { id: "dev-ft", name: "Web/App Developer", type: "Full-time", count: 0, isActive: true, keywords: ["react", "node", "javascript", "typescript", "python", "flutter", "nextjs", "mongodb", "sql", "api", "git", "css", "html", "aws", "docker"], reqExp: "2", reqEdu: "B.Tech" },
   { id: "dev-in", name: "Dev Intern", type: "Intern", count: 0, isActive: true, keywords: ["javascript", "html", "css", "react", "python", "git", "basics", "intern"], reqExp: "fresher", reqEdu: "B.Tech" },
-  { id: "designer", name: "Graphic Designer", type: "Full-time", count: 0, isActive: true, keywords: ["figma", "photoshop", "illustrator", "canva", "branding", "typography", "ui", "ux", "adobe", "design"], reqExp: "1", reqEdu: "Diploma" },
+  { id: "wp-dev", name: "WordPress Developer", type: "Full-time", count: 0, isActive: true, keywords: ["wordpress", "woocommerce", "elementor", "php", "html", "css", "ui/ux", "custom website", "plugin development", "website customization"], reqExp: "3", reqEdu: "Any" },
+  { id: "designer", name: "Graphic Designer", type: "Full-time", count: 0, isActive: true, keywords: ["branding", "photoshop", "illustrator", "ai tools", "packaging design", "campaign creatives", "print media", "production-ready files", "typography", "layout"], reqExp: "2", reqEdu: "Any" },
   { id: "editor", name: "Video Editor", type: "Full-time", count: 0, isActive: true, keywords: ["premiere", "after effects", "davinci", "final cut", "color grading", "motion graphics", "editing", "capcut", "video"], reqExp: "1", reqEdu: "Diploma" },
+  { id: "editor-in", name: "Video Editor Intern", type: "Intern", count: 0, isActive: true, keywords: ["video editing", "reels", "shorts", "youtube editing", "pacing", "storytelling"], reqExp: "fresher", reqEdu: "Any" },
   { id: "dmarketer", name: "Digital Marketer", type: "Full-time", count: 0, isActive: true, keywords: ["seo", "sem", "google ads", "meta ads", "analytics", "email marketing", "hubspot", "campaigns", "digital"], reqExp: "2", reqEdu: "B.Com" },
+  { id: "dmark-in", name: "Digital Marketing Intern", type: "Intern", count: 0, isActive: true, keywords: ["digital marketing", "seo", "social media", "english", "backlink building", "ai tools", "blog writing", "caption writing"], reqExp: "fresher", reqEdu: "Any" },
   { id: "smm", name: "Social Media Manager", type: "Full-time", count: 0, isActive: true, keywords: ["instagram", "social media", "content creation", "reels", "scheduling", "analytics", "engagement", "tiktok", "facebook"], reqExp: "1", reqEdu: "B.A" },
   { id: "sales", name: "Sales Executive", type: "Full-time", count: 0, isActive: true, keywords: ["sales", "crm", "b2b", "b2c", "negotiation", "lead generation", "revenue", "target", "closing", "salesforce"], reqExp: "1", reqEdu: "Any" },
   { id: "perfmkt", name: "Performance Marketer", type: "Full-time", count: 0, isActive: true, keywords: ["google ads", "meta ads", "roas", "cpc", "cpm", "ppc", "remarketing", "a/b testing", "conversion", "performance"], reqExp: "3", reqEdu: "MBA" },
@@ -64,9 +67,12 @@ export const DEFAULT_ROLES: Role[] = [
 export const SKILLS_POOL: Record<string, string[]> = {
   "dev-ft": ["React", "Node.js", "TypeScript", "MongoDB", "Python", "AWS", "Git", "REST APIs", "SQL", "Flutter"],
   "dev-in": ["JavaScript", "HTML/CSS", "React", "Python", "Git"],
-  "designer": ["Figma", "Adobe XD", "Illustrator", "Photoshop", "Canva", "Branding", "Typography"],
+  "wp-dev": ["WordPress", "WooCommerce", "Elementor", "PHP", "HTML", "CSS", "UI/UX", "Custom website", "plugin development", "Website customization"],
+  "designer": ["Branding & visual identity", "Photoshop & Illustrator", "AI tools", "Packaging design", "Campaign creatives", "Print media", "Production-ready files", "Typography & Layout"],
   "editor": ["Premiere Pro", "After Effects", "DaVinci Resolve", "Motion Graphics", "Color Grading"],
+  "editor-in": ["Video editing", "Reels", "Shorts", "YouTube editing", "Pacing", "Storytelling"],
   "dmarketer": ["SEO", "SEM", "Google Ads", "Meta Ads", "HubSpot", "Email Marketing", "Analytics"],
+  "dmark-in": ["Digital marketing", "SEO", "Social media", "English", "Backlink building", "AI tools", "Blog writing", "Caption writing"],
   "smm": ["Instagram", "TikTok", "Content Creation", "Reels", "Social Analytics", "Scheduling"],
   "sales": ["CRM", "B2B Sales", "Lead Generation", "Negotiation", "Salesforce", "Cold Calling"],
   "perfmkt": ["Google Ads", "Meta Ads", "ROAS", "PPC", "A/B Testing", "Conversion Optimization"],
@@ -82,7 +88,7 @@ export const EXP_LEVELS = ["Fresher", "1 yr", "2 yrs", "3 yrs", "5+ yrs"];
 export const EDU = ["B.Tech", "BCA", "MBA", "BDes", "B.Sc", "BA", "B.Com", "MCA", "M.Tech", "Diploma"];
 const FIRSTNAMES = ["Aarav", "Priya", "Rohit", "Sneha", "Arjun", "Neha", "Vikram", "Ananya", "Raj", "Pooja", "Dev", "Ishaan", "Kavya", "Siddharth", "Riya", "Kiran", "Meera", "Aditya", "Shruti", "Manish", "Zara", "Omar", "Tanya", "Nikhil", "Ayesha", "Dhruv", "Ratan", "Simran", "Vivek", "Deepika"];
 const LASTNAMES = ["Sharma", "Patel", "Singh", "Kumar", "Gupta", "Verma", "Mehta", "Shah", "Joshi", "Nair", "Iyer", "Reddy", "Bose", "Khanna", "Malhotra", "Kapoor", "Desai", "Pillai", "Rao", "Agarwal"];
-const STATUSES: Candidate["status"][] = ["new", "new", "new", "review", "review", "approved", "rejected"];
+const STATUSES: Candidate["status"][] = ["new", "new", "new", "awaiting_details", "screening", "shortlisted", "rejected"];
 
 function uid() { return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36); }
 function pick<T>(arr: T[]): T { return arr[Math.floor(Math.random() * arr.length)]; }

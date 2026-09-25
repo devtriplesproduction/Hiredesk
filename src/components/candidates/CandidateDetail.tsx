@@ -18,7 +18,7 @@ import { Check, X, User, BarChart2, FileText, CheckCircle2, Clock, Calendar, Bri
 
 interface Props { candidate: Candidate; onClose: () => void; }
 
-const STATUSES: Candidate["status"][] = ["new", "review", "shortlisted", "interview_1", "interview_2", "approved", "offer", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected", "hired", "rejected"];
+const STATUSES: Candidate["status"][] = ["new", "awaiting_details", "follow_up", "screening", "awaiting_resume_portfolio", "shortlisted", "task_sent", "task_received", "interview", "final_discussion", "selected", "hold", "rejected", "joining_confirmed", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected"];
 
 export default function CandidateDetail({ candidate: c, onClose }: Props) {
   const { updateCandidate, deleteCandidate, interviews, addInterview, updateInterview, offers, addOffer, updateOffer, documents, updateDocument, employees, addEmployee, updateEmployee, employeeBonds, updateEmployeeBond, employeeResignations, addEmployeeResignation, roles } = useStore();
@@ -72,7 +72,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
   const isR1Passed = !isR1Rejected && (
     isR1Completed ||
     Boolean(r2) ||
-    ["interview_2", "approved", "offer", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected", "hired"].includes(c.status)
+    ["final_discussion", "selected", "joining_confirmed", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected"].includes(c.status)
   );
 
   const isR2Rejected = r2?.status === "completed" && r2?.decision === "reject";
@@ -162,7 +162,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
     }
 
     // 2. Shortlisted & Screening status changes
-    if (["shortlisted", "interview_1", "interview_2", "approved", "offer", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected", "hired"].includes(c.status)) {
+    if (["shortlisted", "task_sent", "task_received", "interview", "final_discussion", "selected", "hold", "joining_confirmed", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected"].includes(c.status)) {
       const shortlistTime = r1?.createdAt || c.createdAt;
       events.push({
         id: `candidate-shortlisted-${c.id}`,
@@ -1223,9 +1223,9 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       <StatusBadge status={c.status} />
                       <span className="text-xs text-text-2">
                         {c.status === "hired" ? "Candidate successfully hired" :
-                         ["offer", "offer_sent", "offer_accepted", "offer_rejected"].includes(c.status) ? "Active offer stage" :
-                         c.status === "approved" ? "Approved for offer extension" :
-                         ["interview_1", "interview_2"].includes(c.status) ? "Interview evaluations in progress" :
+                         ["offer_sent", "offer_accepted", "offer_rejected"].includes(c.status) ? "Active offer stage" :
+                         c.status === "selected" ? "Approved for offer extension" :
+                         ["interview", "final_discussion"].includes(c.status) ? "Interview evaluations in progress" :
                          c.status === "shortlisted" ? "Shortlisted for technical rounds" : "Under review"}
                       </span>
                     </div>
@@ -1734,7 +1734,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       "w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs flex-shrink-0 transition-all",
                       isR2Completed || isR1Passed
                         ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shadow-[0_0_12px_rgba(34,197,94,0.15)]"
-                        : ["interview_1", "interview_2", "shortlisted"].includes(c.status)
+                        : ["interview", "final_discussion", "shortlisted"].includes(c.status)
                         ? "bg-purple-500/15 text-purple-300 border border-purple-500/40 shadow-[0_0_12px_rgba(167,139,250,0.2)]"
                         : "bg-[var(--glass-2)] text-text-3 border border-[var(--border-2)]"
                     )}>
@@ -1760,7 +1760,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                       "w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs flex-shrink-0 transition-all",
                       candidateOffer?.status === "accepted"
                         ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 shadow-[0_0_12px_rgba(34,197,94,0.15)]"
-                        : ["approved", "offer", "offer_sent"].includes(c.status)
+                        : ["selected", "offer_sent"].includes(c.status)
                         ? "bg-amber-500/15 text-amber-300 border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.2)]"
                         : "bg-[var(--glass-2)] text-text-3 border border-[var(--border-2)]"
                     )}>
@@ -1802,7 +1802,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                 </div>
               </div>
 
-              {["new", "review", "shortlisted", "interview_1", "interview_2", "approved", "rejected", "offer", "offer_sent", "offer_accepted", "offer_rejected", "hired"].includes(c.status) && (
+              {["new", "awaiting_details", "follow_up", "screening", "awaiting_resume_portfolio", "shortlisted", "task_sent", "task_received", "interview", "final_discussion", "selected", "hold", "rejected", "joining_confirmed", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected", "hired"].includes(c.status) && (
                 <div className="rounded-2xl border border-[var(--border-2)] bg-[var(--card-bg)] p-5 sm:p-6 shadow-[0_4px_24px_rgba(0,0,0,0.35)] flex flex-col gap-4">
                   {/* Section Header */}
                   <div className="flex items-center justify-between border-b border-[var(--border-2)] pb-3.5 flex-wrap gap-2">
@@ -1826,7 +1826,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                   
                   <div className="flex flex-col gap-3">
                     {/* Shortlist Action Banner */}
-                    {(c.status === "new" || c.status === "review") && (
+                    {(c.status === "new" || c.status === "screening") && (
                       <div
                         className="p-4 rounded-xl flex items-center justify-between flex-wrap gap-3 bg-[var(--glass-2)] border border-[var(--border-2)]"
                       >
@@ -1909,7 +1909,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                           </span>
                         )}
                         {!r1 && !isR1Passed && !isR1Rejected && (
-                          (c.status === "new" || c.status === "review") ? (
+                          (c.status === "new" || c.status === "screening") ? (
                             <span className="text-[10.5px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-400">
                               Pending Shortlist
                             </span>
@@ -1924,7 +1924,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                       {/* Body Content */}
                       {!r1 && !isR1Passed && !isR1Rejected && (
-                        (c.status === "new" || c.status === "review") ? (
+                        (c.status === "new" || c.status === "screening") ? (
                           <div className="flex flex-col gap-2.5 py-2">
                             <p className="text-xs text-[var(--text)]">
                               Candidate must be shortlisted before scheduling Round 1.
@@ -1981,7 +1981,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                     decision: null,
                                     createdAt: new Date().toISOString()
                                   });
-                                  updateCandidate(c.id, { status: "interview_1" });
+                                  updateCandidate(c.id, { status: "interview" });
                                   setScheduleR1("");
                                   setScheduleR1Error("");
                                 }}>
@@ -2019,7 +2019,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                   type="button"
                                   onClick={() => {
                                     updateInterview(r1.id, { status: "completed", decision: "select", notes: r1Notes });
-                                    updateCandidate(c.id, { status: "interview_2" });
+                                    updateCandidate(c.id, { status: "final_discussion" });
                                   }}
                                   className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl text-xs font-semibold tracking-normal transition-all cursor-pointer select-none active:scale-[0.98] flex-1 min-w-[150px] text-text bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_15px_rgba(147,51,234,0.25)] border border-purple-400/30"
                                 >
@@ -2270,7 +2270,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                   decision: null,
                                   createdAt: new Date().toISOString()
                                 });
-                                updateCandidate(c.id, { status: "interview_2" });
+                                updateCandidate(c.id, { status: "final_discussion" });
                                 setScheduleR2("");
                                 setScheduleR2Error("");
                               }}>
@@ -2307,7 +2307,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                   type="button"
                                   onClick={() => {
                                     updateInterview(r2.id, { status: "completed", decision: "select", notes: r2Notes });
-                                    updateCandidate(c.id, { status: "offer" });
+                                    updateCandidate(c.id, { status: "offer_sent" });
                                     addOffer({
                                       id: crypto.randomUUID(), candidateId: c.id, contractTemplateId: null,
                                       status: "draft", sentAt: null, respondedAt: null, createdAt: new Date().toISOString()
@@ -2402,7 +2402,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
           {/* Offer & Onboarding Row */}
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
             {/* Offer Management */}
-            {["approved", "offer", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected", "hired"].includes(c.status) ? (
+            {["selected", "joining_confirmed", "offer_sent", "offer_accepted", "offer_rejected", "onboarding_requested", "onboarding_review", "onboarding_verified", "onboarding_rejected"].includes(c.status) ? (
               <div
                 className="flex flex-col justify-between gap-4 rounded-2xl p-5 shadow-sm transition-all duration-200"
                 style={{
@@ -2464,7 +2464,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
 
                   <div className="p-4 rounded-xl flex flex-col gap-3.5 bg-[var(--card-bg)] border border-[var(--border-2)]">
                     {!candidateOffer ? (
-                      c.status === "approved" ? (
+                      c.status === "selected" ? (
                         <div className="flex flex-col gap-3 py-1">
                           <div className="text-xs text-text-2 leading-relaxed">
                             Candidate has cleared all interview stages! Prepare an offer letter and share the acceptance link.
@@ -2477,7 +2477,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                                 id: crypto.randomUUID(), candidateId: c.id, contractTemplateId: null,
                                 status: "draft", sentAt: null, respondedAt: null, createdAt: new Date().toISOString()
                               });
-                              updateCandidate(c.id, { status: "offer" });
+                              updateCandidate(c.id, { status: "offer_sent" });
                             }}
                           >
                             <Briefcase className="w-3.5 h-3.5" />
@@ -2502,7 +2502,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                           )}
                         </div>
 
-                        {candidateOffer.status === "draft" && c.status === "offer" && (
+                        {candidateOffer.status === "draft" && c.status === "offer_sent" && (
                           <div className="flex flex-col sm:flex-row gap-2 mt-1">
                             <button
                               type="button"
@@ -3013,7 +3013,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
           employeeBond={employeeBond || undefined}
           employeeResignation={employeeResignation || undefined}
           onClose={() => setIsDocStudioOpen(false)}
-          defaultStage={["approved", "offer", "offer_sent"].includes(c.status) ? "offer" : ["onboarding_requested", "onboarding_review", "hired"].includes(c.status) ? "onboarding" : "exit"}
+          defaultStage={["selected", "offer_sent"].includes(c.status) ? "offer" : ["onboarding_requested", "onboarding_review", "hired"].includes(c.status) ? "onboarding" : "exit"}
           defaultDocType={docStudioType}
         />
       )}

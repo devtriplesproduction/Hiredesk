@@ -3,101 +3,15 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useStore } from "@/lib/store";
 import { getPublicBaseUrl } from "@/lib/url";
 import type { Candidate } from "@/types";
-import { Btn } from "@/components/ui";
+import { Btn, dialog } from "@/components/ui";
 import { DocumentPreview } from "@/components/documents/DocumentPreview";
+import { getTemplatesForRole, getDefaultTemplateForStatus } from "@/lib/modal-utils";
+import { STATUS_UPDATE_MAP } from "@/lib/hiring-sop";
 
 interface Props {
   candidate: Candidate;
   onClose: () => void;
 }
-
-interface Template {
-  id: string;
-  name: string;
-  emoji: string;
-  subject: string;
-  rawText: string;
-}
-
-const TEMPLATES: Template[] = [
-  {
-    id: "initial",
-    name: "Initial Outreach",
-    emoji: "👋",
-    subject: "Opportunities at Triple S Production for [Role Name]",
-    rawText: "Hi [Candidate Name],\n\nWe are currently hiring for a [Role Name] role at Triple S Production and came across your profile/resume. If you're interested in exploring this opportunity, let us know and we can schedule an interview.\n\nBest,\nTriple S Production Team"
-  },
-  {
-    id: "shortlist",
-    name: "Shortlisted",
-    emoji: "✨",
-    subject: "Application Update: [Role Name]",
-    rawText: "Hi [Candidate Name],\n\nHope you're having a great day! We have reviewed your application for the [Role Name] position at Triple S Production and you have been shortlisted for the next steps.\n\nBest,\nTriple S Production Team"
-  },
-  {
-    id: "interview",
-    name: "Schedule Interview",
-    emoji: "📅",
-    subject: "Interview Invitation: [Role Name] at Triple S Production",
-    rawText: "Hi [Candidate Name],\n\nWe would like to invite you for an interview for the [Role Name] position. Please let us know your availability for a call in the coming days!\n\nBest,\nTriple S Production Team"
-  },
-  {
-    id: "reject",
-    name: "Rejection",
-    emoji: "🚫",
-    subject: "Update on your application for [Role Name]",
-    rawText: "Hi [Candidate Name],\n\nThank you for your time during the interview process. Unfortunately, we will not be moving forward with your application for the [Role Name] position at this time. We wish you the best in your future endeavors.\n\nBest,\nTriple S Production Team"
-  },
-  {
-    id: "next-round",
-    name: "Selected for Next Round",
-    emoji: "🎯",
-    subject: "Next Steps: [Role Name] at Triple S Production",
-    rawText: "Hi [Candidate Name],\n\nCongratulations! We are pleased to inform you that you have been selected for the next round of interviews for the [Role Name] position. We will be in touch shortly to schedule it.\n\nBest,\nTriple S Production Team"
-  },
-  {
-    id: "offer",
-    name: "Offer Letter",
-    emoji: "🎉",
-    subject: "Job Offer: [Role Name] at Triple S Production",
-    rawText: "Hi [Candidate Name],\n\nWe are thrilled to offer you the [Role Name] position at Triple S Production! Please review and respond to your offer here: [Offer Link]\n\nBest,\nTriple S Production Team"
-  },
-  {
-    id: "onboarding",
-    name: "Onboarding & Documents",
-    emoji: "📂",
-    subject: "Welcome to Triple S Production! Next Steps",
-    rawText: "Hi [Candidate Name],\n\nWelcome to the team! To get started, please upload your required onboarding documents here: [Onboarding Link]\n\nPlease find the Background Verification Checklist attached for your reference.\n\nBest,\nTriple S Production Team"
-  },
-  {
-    id: "doc-reject",
-    name: "Document Resubmission",
-    emoji: "⚠️",
-    subject: "Action Required: Document Resubmission",
-    rawText: "Hi [Candidate Name],\n\nThere was an issue with one or more of your uploaded documents. Please visit [Onboarding Link] to review the feedback and re-upload the required files.\n\nBest,\nTriple S Production Team"
-  },
-  {
-    id: "doc-verified",
-    name: "Documents Verified",
-    emoji: "✅",
-    subject: "Update: Documents Verified for [Role Name]",
-    rawText: "Hi [Candidate Name],\n\nGreat news! Your onboarding documents for the [Role Name] position have been successfully verified. We will be in touch with your next steps shortly.\n\nBest,\nTriple S Production Team"
-  },
-  {
-    id: "hired",
-    name: "Hired / Employee Onboarded",
-    emoji: "🤝",
-    subject: "Welcome Aboard! Next Steps at Triple S Production",
-    rawText: "Hi [Candidate Name],\n\nCongratulations! Your onboarding is complete and you are now officially an employee at Triple S Production as a [Role Name]. Welcome aboard!\n\nBest,\nTriple S Production Team"
-  },
-  {
-    id: "custom",
-    name: "Custom Message",
-    emoji: "✍️",
-    subject: "Application Update: [Role Name]",
-    rawText: ""
-  }
-];
 
 interface OutreachLog {
   timestamp: string;
@@ -116,21 +30,12 @@ export default function EmailModal({ candidate, onClose }: Props) {
   const { updateCandidate, offers } = useStore();
   const offer = offers.find(o => o.candidateId === candidate.id);
 
+  const TEMPLATES = useMemo(() => getTemplatesForRole(candidate.roleId), [candidate.roleId]);
+
   const [emailInput, setEmailInput] = useState(candidate.email || "");
   const [roleInput, setRoleInput] = useState(offer?.documentData?.designation || candidate.roleName || "Digital Marketing");
   
-  const defaultTemplate = useMemo(() => {
-    if (candidate.status === "shortlisted") return "shortlist";
-    if (candidate.status === "interview_1" || candidate.status === "interview_2") return "interview";
-    if (candidate.status === "rejected") return "reject";
-    if (candidate.status === "approved") return "next-round";
-    if (candidate.status === "offer" || candidate.status === "offer_sent") return "offer";
-    if (candidate.status === "offer_accepted" || candidate.status === "onboarding_requested") return "onboarding";
-    if (candidate.status === "onboarding_rejected") return "doc-reject";
-    if (candidate.status === "onboarding_verified") return "doc-verified";
-    if (candidate.status === "hired") return "hired";
-    return "initial";
-  }, [candidate.status]);
+  const defaultTemplate = useMemo(() => getDefaultTemplateForStatus(candidate.status), [candidate.status]);
   
   const [selectedTemplate, setSelectedTemplate] = useState(defaultTemplate);
   
@@ -138,6 +43,7 @@ export default function EmailModal({ candidate, onClose }: Props) {
   const [messageBody, setMessageBody] = useState("");
   const [isManualEdit, setIsManualEdit] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [autoUpdateStatus, setAutoUpdateStatus] = useState(true);
 
   const [history, setHistory] = useState<OutreachLog[]>([]);
 
@@ -153,38 +59,43 @@ export default function EmailModal({ candidate, onClose }: Props) {
 
   useEffect(() => {
     if (!isManualEdit) {
-      const template = TEMPLATES.find(t => t.id === selectedTemplate);
+      const template = TEMPLATES.find(t => t.id === selectedTemplate) || TEMPLATES[0];
       if (template) {
-        setMessageBody(
-          template.rawText
-            .replace(/\[Candidate Name\]/g, candidate.name || "Candidate")
-            .replace(/\[Role Name\]/g, roleInput || "Digital Marketing")
-            .replace(/\[Offer Link\]/g, `${getPublicBaseUrl()}/offer/${candidate.id}`)
-            .replace(/\[Onboarding Link\]/g, `${getPublicBaseUrl()}/onboarding/${candidate.id}`)
-        );
-        setMessageSubject(
-          template.subject
-            .replace(/\[Role Name\]/g, roleInput || "Digital Marketing")
-        );
+        let text = template.rawText;
+        text = text
+          .replace(/\[Name\]/g, candidate.name || "Candidate")
+          .replace(/\[Role\]/g, roleInput || "Digital Marketing");
+        setMessageBody(text);
+        
+        let subject = `Application Update: ${roleInput}`;
+        if (template.id === 'first_response' || template.id === 'follow_up' || template.id === 'details_resume_request') {
+           subject = `Action Required: Application for ${roleInput}`;
+        } else if (template.id === 'shortlist') {
+           subject = `Update: Shortlisted for ${roleInput}`;
+        } else if (template.id === 'task' || template.id === 'task_reminder') {
+           subject = `Practical Assignment: ${roleInput}`;
+        } else if (template.id === 'interview_invitation' || template.id === 'interview_confirmation' || template.id === 'interview_reminder') {
+           subject = `Interview Details: ${roleInput}`;
+        } else if (template.id === 'selected' || template.id === 'offer_sent') {
+           subject = `Job Offer: ${roleInput}`;
+        }
+        setMessageSubject(subject);
       }
     }
-  }, [selectedTemplate, candidate.name, roleInput, isManualEdit, candidate.id]);
+  }, [selectedTemplate, candidate.name, roleInput, isManualEdit, candidate.id, TEMPLATES]);
 
   const resetToTemplate = () => {
     setIsManualEdit(false);
-    const template = TEMPLATES.find(t => t.id === selectedTemplate);
+    const template = TEMPLATES.find(t => t.id === selectedTemplate) || TEMPLATES[0];
     if (template) {
-      setMessageBody(
-        template.rawText
-          .replace(/\[Candidate Name\]/g, candidate.name || "Candidate")
-          .replace(/\[Role Name\]/g, roleInput || "Digital Marketing")
-          .replace(/\[Offer Link\]/g, `${getPublicBaseUrl()}/offer/${candidate.id}`)
-          .replace(/\[Onboarding Link\]/g, `${getPublicBaseUrl()}/onboarding/${candidate.id}`)
-      );
-      setMessageSubject(
-        template.subject
-          .replace(/\[Role Name\]/g, roleInput || "Digital Marketing")
-      );
+      let text = template.rawText;
+      text = text
+        .replace(/\[Name\]/g, candidate.name || "Candidate")
+        .replace(/\[Role\]/g, roleInput || "Digital Marketing");
+      setMessageBody(text);
+      
+      let subject = `Application Update: ${roleInput}`;
+      setMessageSubject(subject);
     }
   };
 
@@ -208,29 +119,17 @@ export default function EmailModal({ candidate, onClose }: Props) {
 
     try {
       let attachments: any[] = [];
-      if (selectedTemplate === "onboarding") {
-        const html2canvasModule = await import("html2canvas");
-        const html2canvas = html2canvasModule.default || html2canvasModule;
-        const { jsPDF } = await import("jspdf");
-
-        const el = document.getElementById("hidden-checklist-preview");
-        if (el) {
-          const canvas = await html2canvas(el, { scale: 2, useCORS: true });
-          const imgData = canvas.toDataURL("image/png");
-          
-          const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-          
-          pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-          
-          // Split data URI to get just the base64 string
-          const base64Data = pdf.output('datauristring').split(",")[1];
-          attachments.push({
-            filename: "Background_Verification_Checklist.pdf",
-            content: base64Data,
-            encoding: "base64"
-          });
+      
+      if (autoUpdateStatus) {
+        const nextStatus = STATUS_UPDATE_MAP[selectedTemplate];
+        if (nextStatus) {
+          const invalidTransitions = ["new", "awaiting_details", "follow_up", "screening", "awaiting_resume_portfolio", "shortlisted", "task_sent"];
+          if (nextStatus === "interview" && invalidTransitions.includes(candidate.status)) {
+             dialog.warning("SOP Rule: Cannot auto-jump to interview from current status.");
+             setIsSending(false);
+             return;
+          }
+          updateCandidate(candidate.id, { status: nextStatus as any });
         }
       }
 
@@ -322,7 +221,7 @@ export default function EmailModal({ candidate, onClose }: Props) {
                   type="text"
                   value={emailInput}
                   onChange={e => setEmailInput(e.target.value)}
-                  className={`w-full bg-glass-2 border rounded-xl px-4 py-2.5 text-xs font-semibold outline-none transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] ${
+                  className={`w-full bg-glass-2 border rounded-xl px-4 py-2.5 text-xs font-semibold outline-none transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] \${
                     isEmailValid ? "border-border focus:border-blue-500/50 focus:shadow-[0_0_15px_rgba(59,130,246,0.15)] text-text" : "border-rose-500/40 focus:border-rose-500/60 text-rose-300 bg-rose-500/5"
                   }`}
                   placeholder="Enter Email Address"
@@ -355,7 +254,7 @@ export default function EmailModal({ candidate, onClose }: Props) {
                   className="w-full bg-glass-2 border border-border rounded-xl px-4 py-2.5 text-xs font-semibold text-text outline-none transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)] focus:border-blue-500/50 focus:shadow-[0_0_15px_rgba(59,130,246,0.15)]"
                   placeholder="e.g. Digital Marketing"
                 />
-                <span className="text-[9px] text-text-3 font-semibold px-1 mt-1 flex items-center gap-1"><span className="text-blue-500/70">✨</span> Replaces [Role Name] token</span>
+                <span className="text-[9px] text-text-3 font-semibold px-1 mt-1 flex items-center gap-1"><span className="text-blue-500/70">✨</span> Replaces [Role] token</span>
             </div>
           </div>
         </div>
@@ -379,7 +278,6 @@ export default function EmailModal({ candidate, onClose }: Props) {
                   }`}
                 >
                   {active && <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-transparent pointer-events-none"></div>}
-                  <span className={`text-base drop-shadow-md transition-transform duration-300 ${active ? "scale-110" : "group-hover:scale-110"}`}>{tmpl.emoji}</span>
                   <span className="text-xs font-bold leading-tight relative z-10">{tmpl.name}</span>
                 </Btn>
               );
@@ -419,7 +317,7 @@ export default function EmailModal({ candidate, onClose }: Props) {
           
           <div className="relative rounded-2xl border border-border bg-glass-3 overflow-hidden flex flex-col shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] focus-within:border-blue-500/40 focus-within:shadow-[0_0_20px_rgba(59,130,246,0.1)] transition-all duration-300">
             <textarea
-              rows={6}
+              rows={12}
               value={messageBody}
               onChange={e => {
                 setMessageBody(e.target.value);
@@ -449,6 +347,18 @@ export default function EmailModal({ candidate, onClose }: Props) {
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-500/5 border border-blue-500/20 text-xs text-text-2 font-medium">
           <EmailIcon className="w-4 h-4 text-blue-400 flex-shrink-0" />
           <span>Email will be sent silently from <strong className="text-text font-bold">developer.triplesproduction@gmail.com</strong> directly to the candidate.</span>
+        </div>
+        
+        <div className="flex items-center gap-2 mt-2">
+          <input 
+            type="checkbox" 
+            id="autoUpdateStatusEmail" 
+            checked={autoUpdateStatus} 
+            onChange={e => setAutoUpdateStatus(e.target.checked)} 
+          />
+          <label htmlFor="autoUpdateStatusEmail" className="text-sm font-medium text-text-2 cursor-pointer">
+            Update status after send (if applicable)
+          </label>
         </div>
 
         <div className="space-y-3">
@@ -508,27 +418,6 @@ export default function EmailModal({ candidate, onClose }: Props) {
           <span>{isSending ? "Sending..." : "Send via Email"}</span>
         </Btn>
       </div>
-
-      {selectedTemplate === "onboarding" && (
-        <div style={{ position: "absolute", left: "-9999px", top: 0, opacity: 0, pointerEvents: "none" }}>
-          <div id="hidden-checklist-preview" className="w-[800px] bg-accent text-bg2 p-8">
-            <DocumentPreview
-              documentType="background-verification"
-              data={{
-                candidateName: candidate.name,
-                designation: offer?.documentData?.designation || candidate.roleName || "",
-                department: offer?.documentData?.department || "",
-                officeLocation: offer?.documentData?.officeLocation || "",
-                companyName: offer?.documentData?.companyName || "Triple S Production",
-                proprietorName: offer?.documentData?.proprietorName || "Ashabuddin",
-                letterDate: offer?.documentData?.letterDate || new Date().toISOString().split("T")[0],
-                ...offer?.documentData
-              }}
-            />
-          </div>
-        </div>
-      )}
-
     </div>
   );
 }

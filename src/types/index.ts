@@ -1,4 +1,4 @@
-export type Status = "new" | "review" | "shortlisted" | "interview_1" | "interview_2" | "approved" | "rejected" | "offer" | "offer_sent" | "offer_accepted" | "offer_rejected" | "onboarding_requested" | "onboarding_review" | "onboarding_verified" | "onboarding_rejected" | "hired";
+export type Status = "new" | "awaiting_details" | "follow_up" | "screening" | "awaiting_resume_portfolio" | "shortlisted" | "task_sent" | "task_received" | "interview" | "final_discussion" | "selected" | "hold" | "rejected" | "joining_confirmed" | "offer_sent" | "offer_accepted" | "offer_rejected" | "onboarding_requested" | "onboarding_review" | "onboarding_verified" | "onboarding_rejected" | "hired";
 
 export interface Employee {
   id: string;

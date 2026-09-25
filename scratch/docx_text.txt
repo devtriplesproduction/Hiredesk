@@ -1,0 +1,625 @@
+﻿Hiring & Recruitment SOP
+(Internal Document)
+Standard Hiring Workflow
+CORE WORKFLOW RULE
+Every candidate follows the same hiring workflow. Only the screening questions, evaluation criteria, and practical task change according to the role.
+ðŸš¨
+ MANDATORY TEAM RULE: NO APPLICATION SHOULD DIRECTLY MOVE TO AN INTERVIEW.
+Every candidate must strictly pass through each phase: Application â†’ Basic Details â†’ Eligibility â†’ Resume/Portfolio â†’ Shortlist â†’ Task â†’ Task Review â†’ Interview â†’ Final Discussion â†’ Offer â†’ Joining
+STATUS
+WHAT TEAM MEMBER DOES NEXT
+NEW
+Send First Message
+AWAITING DETAILS
+Wait for candidate response
+FOLLOW-UP
+Send follow-up message after 24â€“48 hours
+SCREENING
+Check role-specific eligibility
+AWAITING RESUME/PORTFOLIO
+Request missing documents/work samples
+SHORTLISTED
+Send shortlist message
+TASK SENT
+Send task and track deadline
+TASK RECEIVED
+Review task
+INTERVIEW
+Send interview invitation & schedule interview
+FINAL DISCUSSION
+Discuss role, compensation, joining date and expectations
+SELECTED
+Send offer
+HOLD
+Send hold message and keep candidate for future consideration
+REJECTED
+Send closure message
+JOINING CONFIRMED
+Start onboarding
+ðŸš«
+ 
+"DO NOT DO" RULES
+Do not interview candidates before basic screening.
+Do not repeatedly ask candidates for information they have already provided.
+Do not promise selection before the complete process.
+Do not change the hiring flow randomly.
+Do not send different information about salary, location, work mode, or eligibility from the approved job description.
+Keep candidate communication professional and concise.
+Graphic Designer â€” Hiring SOP
+ROLE OVERVIEW â€” GRAPHIC DESIGNER
+ROLE:
+ Graphic Designer
+LOCATION:
+ Satara, Maharashtra
+WORK MODE:
+ Full-Time, On-Site
+EXPERIENCE:
+ 2+ Years
+COMPENSATION:
+ CTC â‚¹2.5 LPA â€“ â‚¹3 LPA
+KEY ELIGIBILITY:
+ Branding & visual identity | Photoshop & Illustrator | AI tools | Packaging design | Campaign creatives | Print media | Production-ready files | Typography & Layout | Portfolio mandatory
+Subsections & Templates
+1. First Response Message
+Purpose:
+ Initial greeting & screening question collection.
+When to send:
+ Upon receiving the application.
+Message Template:
+Hi [Name],
+Thank you for applying for the Graphic Designer position at Triple S Production. Please share:
+1. Full Name:
+2. Current Location:
+3. Education:
+4. Total Design Experience:
+5. Current Employment Status:
+6. Experience with Photoshop:
+7. Experience with Illustrator:
+8. Experience with AI Design Tools:
+9. Branding / Packaging Experience:
+10. Current / Expected CTC:
+11. Notice Period:
+12. Availability for On-Site Work in Satara:
+13. Portfolio Link:
+14. Contact Number:
+Portfolio is mandatory for this position.
+2. Follow-Up Message
+Purpose:
+ Prompt non-responsive candidates.
+When to send:
+ 24â€“48 hours after First Response if no reply.
+Message Template:
+Hi [Name],
+Following up on our previous message regarding the Graphic Designer position at Triple S Production. Please share the requested details if you are still interested in pursuing this opportunity. Thank you!
+3. Details / Resume Request
+Purpose:
+ Request missing portfolio or resume.
+When to send:
+ When details are submitted without portfolio link/resume.
+Message Template:
+Hi [Name],
+Thank you for sharing your details. Could you please share your updated Resume and Portfolio link so we can evaluate your application further?
+4. Shortlist Message
+Purpose:
+ Inform candidate of initial selection.
+When to send:
+ After passing details & portfolio screening.
+Message Template:
+Hi [Name],
+Great news! Your profile has been shortlisted for the Graphic Designer position at Triple S Production. The next step in our process is a practical editing assignment. We will share the task details shortly.
+5. Task Message
+Purpose:
+ Practical design test assignment.
+Message Template:
+Hi [Name],
+Please find your practical Graphic Design assignment details below:
+TASK: Create a short graphic design assignment.
+Evaluation Criteria: Visual hierarchy, Typography, Layout, Branding, Creativity, Attention to detail, Execution quality.
+Deadline: [Deadline]
+6. Task Reminder
+Purpose:
+ Remind candidate of submission deadline.
+When to send:
+ 12â€“24 hours before deadline.
+Message Template:
+Hi [Name],
+Quick reminder that the deadline for your Graphic Design practical task is approaching ([Deadline]). Please make sure to submit your work on time. Let us know if you have any questions!
+7. Task Received Message
+Purpose:
+ Confirm submission receipt.
+When to send:
+ Upon task receipt.
+Message Template:
+Hi [Name],
+Thank you for submitting your task for the Graphic Design position! Our team is currently reviewing your submission and we will get back to you soon with next steps.
+8 to 16. Stage Messages (Cross-References)
+8. INTERVIEW INVITATION:
+ Refer to 
+Section 6: Common Message 1
+9. INTERVIEW REMINDER:
+ Refer to 
+Section 6: Common Message 3
+10. FINAL DISCUSSION:
+ Refer to 
+Section 6: Common Message 4
+11. SELECTION MESSAGE:
+ Refer to 
+Section 6: Common Message 5
+12. REJECTION MESSAGE:
+ Refer to 
+Section 6: Common Message 6
+13. HOLD MESSAGE:
+ Refer to 
+Section 6: Common Message 7
+14. OFFER MESSAGE:
+ Refer to 
+Section 6: Common Message 8
+15. JOINING CONFIRMATION:
+ Refer to 
+Section 6: Common Message 9
+16. DAY-BEFORE JOINING MESSAGE:
+ Refer to 
+Section 6: Common Message 10
+END OF ROLE SOP
+WordPress Developer â€” Hiring SOP
+ROLE OVERVIEW â€” WORDPRESS DEVELOPER
+ROLE:
+ WordPress Developer
+LOCATION:
+ Satara, Maharashtra
+WORK MODE:
+ On-site Only
+EXPERIENCE:
+ 3+ Years (Freshers are NOT eligible)
+COMPENSATION:
+ CTC â‚¹2.5 LPA â€“ â‚¹3 LPA
+KEY ELIGIBILITY:
+ WordPress, WooCommerce, 
+Elementor
+ | PHP, HTML, CSS | UI/UX understanding | Custom website & plugin development | Website customization | Strong portfolio | Immediate joiners preferred
+Subsections & Templates
+1. First Response Message
+Purpose:
+ Initial screening & qualification check.
+When to send:
+ Upon receiving application.
+Message Template:
+Hi [Name],
+Thank you for applying for the WordPress Developer position at Triple S Production. Please share:
+1. Full Name:
+2. Current Location:
+3. Total WordPress Experience:
+4. Current Employment Status:
+5. Experience with WordPress:
+6. WooCommerce Experience:
+7. 
+Elementor
+ Experience:
+8. PHP / HTML / CSS Experience:
+9. Custom Website / Plugin Development Experience:
+10. Current CTC:
+11. Expected CTC:
+12. Notice Period:
+13. Earliest Joining Date:
+14. Portfolio / Live Website Links:
+15. Contact Number:
+Please note: This position requires 3+ years of experience and freshers are not eligible. Immediate joiners are preferred.
+2. Follow-Up Message
+Purpose:
+ Prompt non-responsive candidates.
+When to send:
+ 24â€“48 hours after First Response if no reply.
+Message Template:
+Hi [Name],
+Following up on our previous message regarding the WordPress Developer position at Triple S Production. Please share the requested details if you are still interested in pursuing this opportunity. Thank you!
+3. Details / Resume Request
+Purpose:
+ Request missing portfolio or resume.
+When to send:
+ When details are submitted without a portfolio link/resume.
+Message Template:
+Hi [Name],
+Thank you for sharing your details. Could you please share your updated Resume and Portfolio link so we can evaluate your application further?
+4. Shortlist Message
+Purpose:
+ Inform candidate of initial selection.
+When to send:
+ After passing details & portfolio screening.
+Message Template:
+Hi [Name],
+Great news! Your profile has been shortlisted for the WordPress Developer position at Triple S Production. The next step in our process is a practical editing assignment. We will share the task details shortly.
+5. Task Message
+Purpose:
+ Practical WordPress development task.
+Message Template:
+Hi [Name],
+Here is your practical technical assessment for the WordPress Developer position:
+TASK: Complete a practical WordPress development assignment based on a provided brief.
+Evaluation Criteria: WordPress knowledge, 
+Elementor
+ implementation, HTML/CSS, Responsive design, UI accuracy, Attention to detail, Ability to follow requirements.
+Deadline: [Deadline]
+6. Task Reminder
+Purpose:
+ Remind candidate of submission deadline.
+When to send:
+ 12â€“24 hours before deadline.
+Message Template:
+Hi [Name],
+Quick reminder that the deadline for your WordPress Developer practical task is approaching ([Deadline]). Please make sure to submit your work on time. Let us know if you have any questions!
+7. Task Received Message
+Purpose:
+ Confirm submission receipt.
+When to send:
+ Upon task receipt.
+Message Template:
+Hi [Name],
+Thank you for submitting your task for the WordPress Developer position! Our team is currently reviewing your submission, and we will get back to you soon with next steps.
+8 to 16. Stage Messages (Cross-References)
+8. INTERVIEW INVITATION:
+ Refer to 
+Section 6: Common Message 1
+9. INTERVIEW REMINDER:
+ Refer to 
+Section 6: Common Message 3
+10. FINAL DISCUSSION:
+ Refer to 
+Section 6: Common Message 4
+11. SELECTION MESSAGE:
+ Refer to 
+Section 6: Common Message 5
+12. REJECTION MESSAGE:
+ Refer to 
+Section 6: Common Message 6
+13. HOLD MESSAGE:
+ Refer to 
+Section 6: Common Message 7
+14. OFFER MESSAGE:
+ Refer to 
+Section 6: Common Message 8
+15. JOINING CONFIRMATION:
+ Refer to 
+Section 6: Common Message 9
+16. DAY-BEFORE JOINING MESSAGE:
+ Refer to 
+Section 6: Common Message 10
+END OF ROLE SOP
+Video Editor Intern â€” Hiring SOP
+ROLE OVERVIEW â€” VIDEO EDITOR INTERN
+ROLE:
+ Video Editor Intern
+LOCATION:
+ Satara, Maharashtra
+WORK MODE:
+ On-site only
+EXPERIENCE:
+ Basic video editing knowledge
+COMPENSATION:
+ Stipend â‚¹5,000/month
+KEY ELIGIBILITY:
+ Basic video editing knowledge | Reels / Shorts / YouTube editing | Pacing & storytelling | Creative understanding | On-site work in Satara
+Subsections & Templates
+1. First Response Message
+Purpose:
+ Initiate contact & request candidate screening details.
+When to send:
+ Immediately upon receiving application.
+Message Template:
+Hi [Name],
+Thank you for showing interest in the Video Editor Intern position at Triple S Production. Before we proceed, please share the following details:
+1. Full Name:
+2. Current Location:
+3. Education:
+4. Video Editing Experience:
+5. Editing Software You Use:
+6. Availability for On-Site Work in Satara:
+7. Expected Stipend:
+8. Portfolio / Previous Work Link:
+9. Contact Number:
+Once we receive these details, we'll review your profile and get back to you.
+Hiring Team,
+Triple S Production
+2. Follow-Up Message
+Purpose:
+ Prompt non-responsive candidates.
+When to send:
+ 24â€“48 hours after First Response if no reply.
+Message Template:
+Hi [Name],
+Following up on our previous message regarding the Video Editor Intern position at Triple S Production. Please share the requested details if you are still interested in pursuing this opportunity. Thank you!
+3. Details / Resume Request
+Purpose:
+ Request missing portfolio or resume.
+When to send:
+ When details are submitted without portfolio link/resume.
+Message Template:
+Hi [Name],
+Thank you for sharing your details. Could you please share your updated Resume and Video Editing Portfolio link so we can evaluate your application further?
+4. Shortlist Message
+Purpose:
+ Inform candidate of initial selection.
+When to send:
+ After passing details & portfolio screening.
+Message Template:
+Hi [Name],
+Great news! Your profile has been shortlisted for the Video Editor Intern position at Triple S Production. The next step in our process is a practical editing assignment. We will share the task details shortly.
+5. Task Message
+Purpose:
+ Assign practical test.
+When to send:
+ Immediately after Shortlist Message.
+Message Template:
+Hi [Name],
+Here is your practical video editing assignment for the Video Editor Intern position at Triple S Production:
+TASK: Create a short practical video editing assignment based on the provided assets/brief.
+Evaluation Criteria: Editing, Pacing, Transitions, Sound, Storytelling, and Overall visual quality.
+Deadline: [Deadline]
+Please submit your completed entry via Google Drive / Unlisted link before the deadline.
+6. Task Reminder
+Purpose:
+ Remind candidate of submission deadline.
+When to send:
+ 12â€“24 hours before deadline.
+Message Template:
+Hi [Name],
+Quick reminder that the deadline for your Video Editor Intern practical task is approaching ([Deadline]). Please make sure to submit your work on time. Let us know if you have any questions!
+7. Task Received Message
+Purpose:
+ Confirm submission receipt.
+When to send:
+ Upon task receipt.
+Message Template:
+Hi [Name],
+Thank you for submitting your task for the Video Editor Intern position! Our team is currently reviewing your submission and we will get back to you soon with next steps.
+8 to 16. Stage Messages (Cross-References)
+8. INTERVIEW INVITATION:
+ Refer to 
+Section 6: Common Message 1
+9. INTERVIEW REMINDER:
+ Refer to 
+Section 6: Common Message 3
+10. FINAL DISCUSSION:
+ Refer to 
+Section 6: Common Message 4
+11. SELECTION MESSAGE:
+ Refer to 
+Section 6: Common Message 5
+12. REJECTION MESSAGE:
+ Refer to 
+Section 6: Common Message 6
+13. HOLD MESSAGE:
+ Refer to 
+Section 6: Common Message 7
+14. OFFER MESSAGE:
+ Refer to 
+Section 6: Common Message 8
+15. JOINING CONFIRMATION:
+ Refer to 
+Section 6: Common Message 9
+16. DAY-BEFORE JOINING MESSAGE:
+ Refer to 
+Section 6: Common Message 10
+END OF ROLE SOP
+Digital Marketing Intern â€” Hiring SOP
+ROLE OVERVIEW â€” DIGITAL MARKETING INTERN
+ROLE:
+ Digital Marketing Intern
+LOCATION:
+ Satara, Maharashtra
+WORK MODE:
+ On-site
+EXPERIENCE:
+ Digital marketing course/training
+COMPENSATION:
+ Stipend â‚¹2,000/month
+KEY ELIGIBILITY:
+ Digital marketing course/training | SEO & Social media knowledge | Good command of English | Basic marketing concepts | Backlink building/SEO | AI tools (ChatGPT) | Blog writing | Social media caption writing | Willingness to learn
+Subsections & Templates
+1. First Response Message
+Purpose:
+ Initial contact & details request.
+When to send:
+ Upon application receipt.
+Message Template:
+Hi [Name],
+Thank you for showing interest in the Digital Marketing Intern position at Triple S Production. Please share:
+1. Full Name:
+2. Current Location:
+3. Education:
+4. Digital Marketing Course / Training Completed:
+5. Knowledge of SEO:
+6. Social Media Experience:
+7. Previous Projects / Internship:
+8. Availability for On-Site Work in Satara:
+9. Expected Stipend:
+10. Contact Number:
+Please also share your resume if available.
+2. Follow-Up Message
+Purpose:
+ Prompt non-responsive candidates.
+When to send:
+ 24â€“48 hours after First Response if no reply.
+Message Template:
+Hi [Name],
+Following up on our previous message regarding the Digital Marketing Intern position at Triple S Production. Please share the requested details if you are still interested in pursuing this opportunity. Thank you!
+3. Details / Resume Request
+Purpose:
+ Request missing portfolio or resume.
+When to send:
+ When details are submitted without portfolio link/resume.
+Message Template:
+Hi [Name],
+Thank you for sharing your details. Could you please share your updated Resume and Portfolio link so we can evaluate your application further?
+4. Shortlist Message
+Purpose:
+ Inform candidate of initial selection.
+When to send:
+ After passing details & portfolio screening.
+Message Template:
+Hi [Name],
+Great news! Your profile has been shortlisted for the Digital Marketing Intern position at Triple S Production. The next step in our process is a practical editing assignment. We will share the task details shortly.
+5. Task Message
+Purpose:
+ Assign digital marketing task.
+Message Template:
+Hi [Name],
+Here is your practical assessment for the Digital Marketing Intern position:
+1. Suggest 5 content ideas for Triple S Production.
+2. Write 1 social media caption.
+3. Perform basic keyword research for a relevant topic.
+4. Share 3 basic SEO recommendations for a sample page.
+Deadline: [Deadline]
+Please submit your work via a document link.
+6. Task Reminder
+Purpose:
+ Remind candidate of submission deadline.
+When to send:
+ 12â€“24 hours before deadline.
+Message Template:
+Hi [Name],
+Quick reminder that the deadline for your Digital Marketing Intern practical task is approaching ([Deadline]). Please make sure to submit your work on time. Let us know if you have any questions!
+7. Task Received Message
+Purpose:
+ Confirm submission receipt.
+When to send:
+ Upon task receipt.
+Message Template:
+Hi [Name],
+Thank you for submitting your task for the Digital Marketing Intern position! Our team is currently reviewing your submission and we will get back to you soon with next steps.
+8 to 16. Stage Messages (Cross-References)
+8. INTERVIEW INVITATION:
+ Refer to 
+Section 6: Common Message 1
+9. INTERVIEW REMINDER:
+ Refer to 
+Section 6: Common Message 3
+10. FINAL DISCUSSION:
+ Refer to 
+Section 6: Common Message 4
+11. SELECTION MESSAGE:
+ Refer to 
+Section 6: Common Message 5
+12. REJECTION MESSAGE:
+ Refer to 
+Section 6: Common Message 6
+13. HOLD MESSAGE:
+ Refer to 
+Section 6: Common Message 7
+14. OFFER MESSAGE:
+ Refer to 
+Section 6: Common Message 8
+15. JOINING CONFIRMATION:
+ Refer to 
+Section 6: Common Message 9
+16. DAY-BEFORE JOINING MESSAGE:
+ Refer to 
+Section 6: Common Message 10
+END OF ROLE SOP
+Common Messages
+1. Interview Invitation
+Purpose:
+ Invite candidate for interview.
+When to send:
+ After task review is cleared.
+Message Template:
+Hi [Name],
+Your profile/task has been reviewed and we'd like to invite you for an interview with Triple S Production.
+Date: [Date]
+Time: [Time]
+Mode: [In-person / Online]
+Location/Meeting Link: [Details]
+Please confirm your availability.
+2. Interview Confirmation
+Purpose:
+ Confirm slot timing.
+When to send:
+ After candidate confirms interview availability.
+Message Template:
+Hi [Name],
+Your interview has been confirmed for:
+Date: [Date]
+Time: [Time]
+Mode: [Mode]
+Please be available 5â€“10 minutes before the scheduled time. See you then.
+3. Interview Reminder
+Purpose:
+ Day-of interview reminder.
+When to send:
+ On the morning of scheduled interview.
+Message Template:
+Hi [Name],
+Just a reminder that your interview with Triple S Production is scheduled for today at [Time]. Please be available on time.
+4. Final Discussion
+Purpose:
+ Invite for final alignment & offer discussion.
+When to send:
+ After successful interview.
+Message Template:
+Hi [Name],
+Thank you for taking the time to speak with us. We'd like to have a final discussion regarding the [Role], including responsibilities, compensation, joining date and other expectations.
+Date: [Date]
+Time: [Time]
+Please confirm your availability.
+5. Selected
+Purpose:
+ Selection announcement.
+When to send:
+ Post final discussion.
+Message Template:
+Hi [Name],
+Great news! 
+ðŸŽ‰
+ We are pleased to inform you that you have been selected for the [Role] position at Triple S Production. We'll share the offer details, compensation, joining date and required documents with you shortly.
+Congratulations, and welcome to the next step with Triple S Production!
+6. Not Selected
+Purpose:
+ Professional rejection / application closure.
+When to send:
+ When candidate is rejected at any stage.
+Message Template:
+Hi [Name],
+Thank you for taking the time to apply and participate in our selection process for the [Role] position. After reviewing your profile and overall selection process, we've decided not to proceed with your application at this time. We appreciate your time and effort and wish you all the best for your career ahead.
+Triple S Production
+7. Hold
+Purpose:
+ Put candidate on hold.
+When to send:
+ When candidate is good but slot filled or process pending.
+Message Template:
+Hi [Name],
+Thank you for participating in our hiring process for the [Role] position. We're keeping your profile on hold for now while we complete our current hiring process. If a suitable opportunity becomes available, we'll get in touch with you. Thank you for your time and interest in Triple S Production.
+8. Offer Sent
+Purpose:
+ Deliver official offer details.
+When to send:
+ After final discussion approval.
+Message Template:
+Hi [Name],
+As discussed, we're sharing your offer details for the [Role] position at Triple S Production. Please review the offer and confirm your acceptance by [Date]. If you have any questions regarding the offer or joining process, please let us know.
+9. Joining Confirmation
+Purpose:
+ Confirm joining date and details.
+When to send:
+ Upon offer acceptance.
+Message Template:
+Hi [Name],
+Your joining with Triple S Production is confirmed.
+Role: [Role]
+Joining Date: [Date]
+Reporting Time: [Time]
+Location: [Office Address]
+Please bring/submit the required documents mentioned in your offer/onboarding instructions. We look forward to having you on the team.
+10. Day-Before Joining
+Purpose:
+ Final check before day 1.
+When to send:
+ Day before joining date.
+Message Template:
+Hi [Name],
+A quick reminder that 
+your
+ joining with Triple S Production is scheduled for tomorrow.
+Role: [Role]
+Reporting Time: [Time]
+Location: [Office Address]
+Please confirm once again that you'll be available to join as scheduled. See you tomorrow!

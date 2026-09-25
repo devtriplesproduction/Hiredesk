@@ -157,7 +157,7 @@ export default function CandidatesTable() {
   }, [isDeletingSelected, selCount, selectedIds, deleteCandidates]);
 
   const handleApproveSelected = useCallback(() => {
-    Array.from(selectedIds).forEach(id => updateCandidate(id, { status: "approved" }));
+    Array.from(selectedIds).forEach(id => updateCandidate(id, { status: "selected" }));
     clearSelection();
   }, [selectedIds, updateCandidate, clearSelection]);
 

@@ -398,6 +398,18 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const updateCandidate = useCallback((id: string, patch: Partial<Candidate>) => {
     setCandidatesRaw(prev => {
+      const candidate = prev.find(c => c.id === id);
+      if (!candidate) return prev;
+
+      if (patch.status && patch.status !== candidate.status) {
+        if (patch.status === "interview") {
+           if (!["shortlisted", "task_received", "task_sent", "screening", "awaiting_resume_portfolio"].includes(candidate.status)) {
+              console.warn("SOP Violation: Cannot jump directly to interview.");
+              return prev; 
+           }
+        }
+      }
+
       const next = prev.map(c => c.id === id ? { ...c, ...patch } : c);
       if (patch.roleId !== undefined) {
         setRolesRaw(rPrev => computeRoleCounts(next, rPrev));
@@ -828,11 +840,11 @@ function matchesCandidateStatus(candStatus?: string, filterStatus?: string): boo
   const fNorm = normalizeStatusStr(filterStatus);
   if (cNorm === fNorm) return true;
 
-  if (filterStatus === "review" || filterStatus === "in_review") {
-    return ["review", "inreview", "in_review"].includes(cNorm);
+  if (filterStatus === "screening") {
+    return ["screening", "review", "in_review"].includes(cNorm);
   }
-  if (filterStatus === "offer" || filterStatus === "offer_prep") {
-    return ["offer", "offerprep", "offer_prep"].includes(cNorm);
+  if (filterStatus === "offer_sent") {
+    return ["offer_sent", "offer"].includes(cNorm);
   }
   if (filterStatus === "offer_sent") {
     return ["offersent", "offer_sent"].includes(cNorm);
@@ -843,11 +855,11 @@ function matchesCandidateStatus(candStatus?: string, filterStatus?: string): boo
   if (filterStatus === "offer_rejected") {
     return ["offerrejected", "offer_rejected"].includes(cNorm);
   }
-  if (filterStatus === "interview_1") {
-    return ["interview1", "interviewr1", "interview_1", "interview_r1"].includes(cNorm);
+  if (filterStatus === "interview") {
+    return ["interview", "interview_1"].includes(cNorm);
   }
-  if (filterStatus === "interview_2") {
-    return ["interview2", "interviewr2", "interview_2", "interview_r2"].includes(cNorm);
+  if (filterStatus === "final_discussion") {
+    return ["final_discussion", "interview_2"].includes(cNorm);
   }
   if (filterStatus === "onboarding_requested") {
     return ["onboardingrequested", "onboardingrequired", "onboarding_requested", "onboarding_required"].includes(cNorm);
@@ -861,8 +873,8 @@ function matchesCandidateStatus(candStatus?: string, filterStatus?: string): boo
   if (filterStatus === "onboarding_rejected") {
     return ["onboardingrejected", "onboarding_rejected"].includes(cNorm);
   }
-  if (filterStatus === "approved") {
-    return ["approved"].includes(cNorm);
+  if (filterStatus === "selected") {
+    return ["selected", "approved"].includes(cNorm);
   }
   if (filterStatus === "rejected") {
     return ["rejected"].includes(cNorm);

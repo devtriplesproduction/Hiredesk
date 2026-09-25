@@ -58,11 +58,11 @@ export default function DashboardPage() {
 
   const { hired, inReview, newCount, rejected, avgScore, shortlisted, offerAccepted } = useMemo(() => {
     const hiredCount = employees.length > 0 ? employees.length : candidates.filter(c => c.status === "hired").length;
-    const offAcc = candidates.filter(c => c.status === "offer_accepted" || c.status === "approved").length;
-    const rev = candidates.filter(c => c.status === "review" || c.status === "onboarding_review" || (c.status as string) === "in_review").length;
+    const offAcc = candidates.filter(c => c.status === "offer_accepted" || c.status === "selected").length;
+    const rev = candidates.filter(c => c.status === "awaiting_details" || c.status === "follow_up" || c.status === "screening" || c.status === "awaiting_resume_portfolio" || c.status === "onboarding_review").length;
     const n = candidates.filter(c => c.status === "new").length;
     const rej = candidates.filter(c => c.status === "rejected" || c.status === "offer_rejected" || c.status === "onboarding_rejected").length;
-    const short = candidates.filter(c => ["shortlisted", "interview_1", "interview_2", "offer", "offer_sent"].includes(c.status)).length;
+    const short = candidates.filter(c => ["shortlisted", "task_sent", "task_received", "interview", "final_discussion", "offer_sent"].includes(c.status)).length;
     const avg = total > 0 ? Math.round(candidates.reduce((a, c) => a + (c.score?.total || 0), 0) / total) : 0;
     return { hired: hiredCount, inReview: rev, newCount: n, rejected: rej, avgScore: avg, shortlisted: short, offerAccepted: offAcc };
   }, [candidates, employees, total]);
@@ -466,8 +466,8 @@ export default function DashboardPage() {
                   count: newCount,
                 },
                 { 
-                  key: "review", 
-                  label: "In Review", 
+                  key: "screening",
+                  label: "Screening", 
                   color: "amber", 
                   bg: "hover:border-amber-500/30", 
                   dot: "bg-amber-400",
@@ -482,8 +482,8 @@ export default function DashboardPage() {
                   count: shortlisted,
                 },
                 { 
-                  key: "offer_accepted", 
-                  label: "Offered", 
+                  key: "offer_accepted",
+                  label: "Accepted", 
                   color: "emerald", 
                   bg: "hover:border-emerald-500/30", 
                   dot: "bg-emerald-400",

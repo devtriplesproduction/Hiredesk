@@ -72,11 +72,19 @@ export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
   const statusOptions: FilterOption[] = useMemo(() => [
     { value: "all", label: "All Status" },
     { value: "new", label: "New" },
-    { value: "review", label: "In Review" },
+    { value: "awaiting_details", label: "Awaiting Details" },
+    { value: "follow_up", label: "Follow-Up" },
+    { value: "screening", label: "Screening" },
+    { value: "awaiting_resume_portfolio", label: "Awaiting Resume/Portfolio" },
     { value: "shortlisted", label: "Shortlisted" },
-    { value: "interview_1", label: "Interview R1" },
-    { value: "interview_2", label: "Interview R2" },
-    { value: "offer", label: "Offer Prep" },
+    { value: "task_sent", label: "Task Sent" },
+    { value: "task_received", label: "Task Received" },
+    { value: "interview", label: "Interview" },
+    { value: "final_discussion", label: "Final Discussion" },
+    { value: "selected", label: "Selected" },
+    { value: "hold", label: "Hold" },
+    { value: "rejected", label: "Rejected" },
+    { value: "joining_confirmed", label: "Joining Confirmed" },
     { value: "offer_sent", label: "Offer Sent" },
     { value: "offer_accepted", label: "Offer Accepted" },
     { value: "offer_rejected", label: "Offer Rejected" },
@@ -84,8 +92,6 @@ export default function FiltersBar({ onBulkDelete }: FiltersBarProps) {
     { value: "onboarding_review", label: "Onboarding Review" },
     { value: "onboarding_verified", label: "Onboarding Verified" },
     { value: "onboarding_rejected", label: "Onboarding Rejected" },
-    { value: "approved", label: "Approved" },
-    { value: "rejected", label: "Rejected" },
   ], []);
 
 

@@ -31,7 +31,7 @@ const HIRING_STAGES: StageGroup[] = [
     category: "Applications",
     items: [
       { key: "new", label: "New", color: "#38BDF8", matchValues: ["new"] },
-      { key: "review", label: "In Review", color: "#F5C542", matchValues: ["review", "in_review", "inreview"] },
+      { key: "screening", label: "Screening", color: "#F5C542", matchValues: ["review", "in_review", "inreview"] },
     ],
   },
   {
@@ -43,14 +43,14 @@ const HIRING_STAGES: StageGroup[] = [
   {
     category: "Interviews",
     items: [
-      { key: "interview_1", label: "Interview R1", color: "#A78BFA", matchValues: ["interview_1", "interview_r1", "interview1", "interviewr1"] },
-      { key: "interview_2", label: "Interview R2", color: "#8B5CF6", matchValues: ["interview_2", "interview_r2", "interview2", "interviewr2"] },
+      { key: "interview", label: "Interview", color: "#A78BFA", matchValues: ["interview_1", "interview_r1", "interview1", "interviewr1"] },
+      { key: "final_discussion", label: "Final Discussion", color: "#8B5CF6", matchValues: ["interview_2", "interview_r2", "interview2", "interviewr2"] },
     ],
   },
   {
     category: "Offers",
     items: [
-      { key: "offer", label: "Offer Prep", color: "#FB923C", matchValues: ["offer", "offer_prep", "offerprep"] },
+      { key: "offer_sent", label: "Offer Sent", color: "#FB923C", matchValues: ["offer", "offer_prep", "offerprep"] },
       { key: "offer_sent", label: "Offer Sent", color: "#60A5FA", matchValues: ["offer_sent", "offersent"] },
       { key: "offer_accepted", label: "Offer Accepted", color: "#22C55E", matchValues: ["offer_accepted", "offeraccepted"] },
       { key: "offer_rejected", label: "Offer Rejected", color: "#EF4444", matchValues: ["offer_rejected", "offerrejected"] },
