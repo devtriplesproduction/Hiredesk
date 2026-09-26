@@ -211,11 +211,26 @@ export const STATUS_UPDATE_MAP: Record<string, string> = {
   "joining_confirmation": "joining_confirmed"
 };
 
-export function canSetStatus(from: string, to: string): { ok: boolean; reason?: string } {
+export function canSetStatus(from: string, to: string, hasInterview: boolean = false): { ok: boolean; reason?: string } {
   if (to === "interview") {
     if (!["task_received", "interview", "final_discussion"].includes(from)) {
       return { ok: false, reason: "SOP: do not move to Interview before Task Review." };
     }
   }
+
+  if (to === "offer_sent" || to === "selected") {
+    if (!hasInterview) {
+      return { ok: false, reason: "SOP: schedule and complete interview before sending an offer." };
+    }
+    // Block from early stages
+    if (["new", "awaiting_details", "follow_up", "screening", "awaiting_resume_portfolio", "shortlisted", "task_sent", "task_received"].includes(from)) {
+      return { ok: false, reason: "SOP: schedule and complete interview before sending an offer." };
+    }
+    // Only allow from these stages
+    if (!["interview", "final_discussion", "selected", "offer_sent"].includes(from)) {
+      return { ok: false, reason: "SOP: invalid state transition to offer." };
+    }
+  }
+
   return { ok: true };
 }

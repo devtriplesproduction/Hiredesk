@@ -47,6 +47,21 @@ export async function PATCH(req: NextRequest) {
       .select();
 
     if (error) {
+      if (error.code === 'PGRST204' || error.code === '42703' || error.message?.includes('column')) {
+        console.warn("[Roles API] Update error, retrying without new columns:", error);
+        const { sopPack, sopTemplates, ...safePatch } = patch;
+        const fallback = await supabaseAdmin
+          .from("roles")
+          .update(safePatch)
+          .eq("id", id)
+          .select();
+        
+        if (fallback.error) {
+          console.error("[Roles API] Fallback update error:", fallback.error);
+          return NextResponse.json({ error: fallback.error.message }, { status: 500 });
+        }
+        return NextResponse.json({ success: true, role: fallback.data?.[0] });
+      }
       console.error("[Roles API] Update error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
@@ -69,6 +84,23 @@ export async function POST(req: NextRequest) {
       .select();
 
     if (error) {
+      if (error.code === 'PGRST204' || error.code === '42703' || error.message?.includes('column')) {
+        console.warn("[Roles API] Upsert error, retrying without new columns:", error);
+        const safeRoles = roles.map((r: any) => {
+          const { sopPack, sopTemplates, ...safeRole } = r;
+          return safeRole;
+        });
+        const fallback = await supabaseAdmin
+          .from("roles")
+          .upsert(safeRoles)
+          .select();
+        
+        if (fallback.error) {
+          console.error("[Roles API] Fallback upsert error:", fallback.error);
+          return NextResponse.json({ error: fallback.error.message }, { status: 500 });
+        }
+        return NextResponse.json({ success: true, roles: fallback.data });
+      }
       console.error("[Roles API] Upsert error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }

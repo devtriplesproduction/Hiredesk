@@ -16,10 +16,15 @@ import {
   Users,
   Layers,
   Sparkles,
-  SlidersHorizontal
+  SlidersHorizontal,
+  MessageSquare,
+  Lightbulb,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { dialog } from "@/lib/dialog";
 import type { Role } from "@/types";
+import { SOP_ROLES, COMMON_MESSAGES } from "@/lib/hiring-sop";
 
 const EMPLOYMENT_TYPE_OPTIONS: FilterOption[] = [
   {
@@ -60,6 +65,109 @@ const EDU_OPTIONS: FilterOption[] = [
   { value: "master", label: "Any Master's Degree", icon: <GraduationCap size={14} className="text-purple-400" /> },
 ];
 
+function SOPConfigurator({
+  sopPack, setSopPack,
+  sopTemplates, setSopTemplates,
+  showAdvancedSop, setShowAdvancedSop
+}: {
+  sopPack: string;
+  setSopPack: (val: string) => void;
+  sopTemplates: Record<string, string>;
+  setSopTemplates: (val: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void;
+  showAdvancedSop: boolean;
+  setShowAdvancedSop: (val: boolean) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-5 bg-[var(--card-bg)]/30 p-5 rounded-2xl border border-[var(--border-2)] mt-2 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-[#00D9FF]/10 flex items-center justify-center text-[#00D9FF] shadow-[0_0_10px_rgba(0,217,255,0.1)] border border-[#00D9FF]/20">
+            <MessageSquare size={16} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-[var(--text)] uppercase tracking-wider">SOP Templates</h3>
+            <p className="text-[10px] text-[var(--text-3)] font-mono">Configure the messaging workflow for this role</p>
+          </div>
+        </div>
+        <select
+          value={sopPack}
+          onChange={(e) => {
+            const pack = e.target.value;
+            setSopPack(pack);
+            if (pack !== "custom" && pack !== "") {
+              setSopTemplates({ ...SOP_ROLES[pack as keyof typeof SOP_ROLES] });
+            } else {
+              setSopTemplates({});
+            }
+          }}
+          className="bg-[var(--input-bg)] border border-[var(--input-border)] hover:border-[#00D9FF]/50 transition-colors rounded-xl text-xs px-3 py-2 outline-none text-[var(--text)] font-medium shadow-sm cursor-pointer"
+        >
+          <option value="custom">Start from Blank (Custom)</option>
+          <option value="designer">Load Graphic Designer Pack</option>
+          <option value="wp-dev">Load WordPress Dev Pack</option>
+          <option value="editor-in">Load Video Editor Pack</option>
+          <option value="dmark-in">Load Digital Marketing Pack</option>
+        </select>
+      </div>
+      
+      <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-400 p-2.5 rounded-lg text-xs leading-relaxed">
+        <Lightbulb size={14} className="mt-0.5 shrink-0" />
+        <span><strong>Tip:</strong> You can use <code className="bg-amber-500/20 px-1 py-0.5 rounded text-amber-300">[Name]</code> and <code className="bg-amber-500/20 px-1 py-0.5 rounded text-amber-300">[Role]</code> as dynamic placeholders in your messages. They will be automatically replaced with the candidate's actual details.</span>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        {["first_response", "follow_up", "details_resume_request", "shortlist", "task", "task_reminder", "task_received", "resume_round_1", "resume_round_2", "offer_letter", "document_submission", "official_employee"].map(id => (
+          <div key={id} className="flex flex-col gap-1.5 group">
+            <label className="text-xs font-bold text-[var(--text-3)] group-focus-within:text-[#00D9FF] transition-colors capitalize tracking-wide pl-1">
+              {id.replace(/_/g, ' ')}
+            </label>
+            <textarea
+              required
+              rows={3}
+              placeholder={`Enter the template for ${id.replace(/_/g, ' ')}...`}
+              className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] hover:border-[var(--border-2)] focus:border-[#00D9FF] rounded-xl p-3 text-xs text-[var(--text)] outline-none transition-all shadow-sm focus:shadow-[0_0_15px_rgba(0,217,255,0.1)] resize-y min-h-[70px]"
+              value={sopTemplates[id] || ""}
+              onChange={e => setSopTemplates(prev => ({ ...prev, [id]: e.target.value }))}
+            />
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setShowAdvancedSop(!showAdvancedSop)}
+        className="flex items-center justify-center gap-2 text-xs font-bold text-[#00D9FF] bg-[#00D9FF]/10 hover:bg-[#00D9FF]/20 border border-[#00D9FF]/20 py-2.5 rounded-xl transition-colors mt-2"
+      >
+        {showAdvancedSop ? (
+          <><ChevronUp size={16} /> Hide Advanced Stages (Common Messages)</>
+        ) : (
+          <><ChevronDown size={16} /> Show Advanced Stages (Common Messages)</>
+        )}
+      </button>
+
+      {showAdvancedSop && (
+        <div className="flex flex-col gap-4 mt-2 p-4 rounded-xl border border-[var(--border-2)] bg-[var(--input-bg)]/30 animate-fade-in">
+          <div className="text-xs text-[var(--text-3)] mb-2 font-medium">These stages generally use global default messages, but you can override them for this specific role below:</div>
+          {Object.keys(COMMON_MESSAGES).map(id => (
+            <div key={id} className="flex flex-col gap-1.5 group">
+              <label className="text-xs font-bold text-[var(--text-3)] group-focus-within:text-[#00D9FF] transition-colors capitalize tracking-wide pl-1">
+                {id.replace(/_/g, ' ')}
+              </label>
+              <textarea
+                rows={3}
+                className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] hover:border-[var(--border-2)] focus:border-[#00D9FF] rounded-xl p-3 text-xs text-[var(--text)] outline-none transition-all shadow-sm focus:shadow-[0_0_15px_rgba(0,217,255,0.1)] resize-y min-h-[70px]"
+                value={sopTemplates[id] || ""}
+                onChange={e => setSopTemplates(prev => ({ ...prev, [id]: e.target.value }))}
+                placeholder={(COMMON_MESSAGES as any)[id]}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function RolesGrid() {
   const { roles, addRole, updateRole, deleteRole, deleteRoles, setFilters, candidates } = useStore();
   const router = useRouter();
@@ -75,6 +183,9 @@ export default function RolesGrid() {
   const [skills, setSkills] = useState("");
   const [reqExp, setReqExp] = useState<string>("all");
   const [reqEdu, setReqEdu] = useState<string>("all");
+  const [sopPack, setSopPack] = useState<string>("custom");
+  const [sopTemplates, setSopTemplates] = useState<Record<string, string>>({});
+  const [showAdvancedSop, setShowAdvancedSop] = useState(false);
 
   const [selectedRoleIds, setSelectedRoleIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
@@ -86,17 +197,22 @@ export default function RolesGrid() {
   const [editSkills, setEditSkills] = useState("");
   const [editReqExp, setEditReqExp] = useState<string>("all");
   const [editReqEdu, setEditReqEdu] = useState<string>("all");
+  const [editSopPack, setEditSopPack] = useState<string>("custom");
+  const [editSopTemplates, setEditSopTemplates] = useState<Record<string, string>>({});
+  const [editShowAdvancedSop, setEditShowAdvancedSop] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   function handleAdd() {
     if (!name.trim()) return;
     const keywords = skills.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+    const cleanedTemplates = Object.fromEntries(Object.entries(sopTemplates).filter(([_, v]) => v.trim() !== ""));
     addRole({
       id: name.toLowerCase().replace(/\s+/g, "-") + "-" + Date.now(),
       name: name.trim(), type, keywords, count: 0, isActive: true,
-      reqExp, reqEdu
+      reqExp, reqEdu, sopPack, sopTemplates: cleanedTemplates
     });
     setName(""); setSkills(""); setType("Full-time"); setReqExp("all"); setReqEdu("all"); setShowAdd(false);
+    setSopPack("custom"); setSopTemplates({}); setShowAdvancedSop(false);
     dialog.success({
       title: "Role Created",
       message: `Role "${name.trim()}" has been successfully added.`,
@@ -111,11 +227,15 @@ export default function RolesGrid() {
     setEditSkills(r.keywords.join(", "));
     setEditReqExp(r.reqExp || "all");
     setEditReqEdu(r.reqEdu || "all");
+    setEditSopPack(r.sopPack || "custom");
+    setEditSopTemplates((r.sopTemplates as Record<string, string>) || {});
+    setEditShowAdvancedSop(false);
   }
 
   async function handleSaveEdit() {
     if (!editingRole || !editName.trim()) return;
     const keywords = editSkills.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+    const cleanedTemplates = Object.fromEntries(Object.entries(editSopTemplates).filter(([_, v]) => v.trim() !== ""));
     setIsSavingEdit(true);
     try {
       await updateRole(editingRole.id, {
@@ -124,6 +244,8 @@ export default function RolesGrid() {
         keywords,
         reqExp: editReqExp,
         reqEdu: editReqEdu,
+        sopPack: editSopPack,
+        sopTemplates: cleanedTemplates,
       });
       setEditingRole(null);
       dialog.success({
@@ -632,6 +754,15 @@ export default function RolesGrid() {
           </div>
         </div>
 
+        <SOPConfigurator
+          sopPack={sopPack}
+          setSopPack={setSopPack}
+          sopTemplates={sopTemplates}
+          setSopTemplates={setSopTemplates}
+          showAdvancedSop={showAdvancedSop}
+          setShowAdvancedSop={setShowAdvancedSop}
+        />
+
         <div className="h-px bg-[var(--card-bg)] my-5" />
         <div className="flex justify-end gap-2.5">
           <Btn variant="ghost" onClick={() => setShowAdd(false)}>Cancel</Btn>
@@ -735,6 +866,15 @@ export default function RolesGrid() {
             )}
           </div>
         </div>
+
+        <SOPConfigurator
+          sopPack={editSopPack}
+          setSopPack={setEditSopPack}
+          sopTemplates={editSopTemplates}
+          setSopTemplates={setEditSopTemplates}
+          showAdvancedSop={editShowAdvancedSop}
+          setShowAdvancedSop={setEditShowAdvancedSop}
+        />
 
         <div className="h-px bg-[var(--card-bg)] my-5" />
         <div className="flex justify-end gap-2.5">

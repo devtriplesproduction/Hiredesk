@@ -28,10 +28,10 @@ const WhatsAppIcon = ({ className = "w-5 h-5" }) => (
 );
 
 export default function WhatsAppModal({ candidate, onClose }: Props) {
-  const { updateCandidate, offers } = useStore();
+  const { updateCandidate, offers, roles } = useStore();
   const offer = offers.find(o => o.candidateId === candidate.id);
 
-  const TEMPLATES = useMemo(() => getTemplatesForRole(candidate.roleId, candidate.status), [candidate.roleId, candidate.status]);
+  const TEMPLATES = useMemo(() => getTemplatesForRole(candidate.roleId, candidate.status, roles), [candidate.roleId, candidate.status, roles]);
 
   const [phoneInput, setPhoneInput] = useState(candidate.phone || "");
   const [roleInput, setRoleInput] = useState(offer?.documentData?.designation || candidate.roleName || "Digital Marketing");

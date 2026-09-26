@@ -175,15 +175,35 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (rolesLoaded) {
+        let mergedRoles = dbRoles;
         if (dbRoles.length === 0) {
           const defaultRoles = computeRoleCounts(dbCandidates, DEFAULT_ROLES);
-          setRolesRaw(defaultRoles);
+          mergedRoles = defaultRoles;
           insertDBRoles(defaultRoles).catch(err => 
             console.error("[HireDesk Store] Failed to seed default roles to Supabase:", err)
           );
         } else {
-          setRolesRaw(computeRoleCounts(dbCandidates, dbRoles));
+          mergedRoles = computeRoleCounts(dbCandidates, dbRoles);
         }
+        
+        if (typeof window !== "undefined") {
+          try {
+            const local = localStorage.getItem("hiredesk_custom_roles");
+            if (local) {
+              const localRoles: Role[] = JSON.parse(local);
+              const map = new Map(mergedRoles.map(r => [r.id, r]));
+              localRoles.forEach(lr => {
+                if (!map.has(lr.id)) {
+                  map.set(lr.id, lr);
+                } else {
+                  map.set(lr.id, { ...map.get(lr.id)!, ...lr });
+                }
+              });
+              mergedRoles = Array.from(map.values());
+            }
+          } catch (e) {}
+        }
+        setRolesRaw(mergedRoles);
       } else {
         setRolesRaw(computeRoleCounts(dbCandidates, DEFAULT_ROLES));
       }
@@ -259,6 +279,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       try {
         const dbInterviews = await getDBInterviews();
         setInterviews(dbInterviews);
+        (window as any).__HIREDESK_INTERVIEWS = dbInterviews;
       } catch (err) {
         console.error("[HireDesk Store] Failed to load interviews:", err);
       }
@@ -403,7 +424,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (!candidate) return prev;
 
       if (patch.status && patch.status !== candidate.status) {
-        const check = canSetStatus(candidate.status, patch.status);
+        const hasInterview = (window as any).__HIREDESK_INTERVIEWS?.some(
+          (i: Interview) => i.candidateId === id && ["scheduled", "completed"].includes(i.status)
+        ) ?? false;
+        
+        const check = canSetStatus(candidate.status, patch.status, hasInterview);
         if (!check.ok) {
           alert(check.reason);
           return prev;
@@ -669,12 +694,20 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   }, [candidates]);
 
   const addInterview = useCallback((i: Interview) => {
-    setInterviews(prev => [...prev, i]);
+    setInterviews(prev => {
+      const next = [...prev, i];
+      (window as any).__HIREDESK_INTERVIEWS = next;
+      return next;
+    });
     import("@/lib/supabase").then(db => db.insertDBInterview(i)).catch(console.error);
   }, []);
 
   const updateInterview = useCallback((id: string, patch: Partial<Interview>) => {
-    setInterviews(prev => prev.map(i => i.id === id ? { ...i, ...patch } : i));
+    setInterviews(prev => {
+      const next = prev.map(i => i.id === id ? { ...i, ...patch } : i);
+      (window as any).__HIREDESK_INTERVIEWS = next;
+      return next;
+    });
     import("@/lib/supabase").then(db => db.updateDBInterview(id, patch)).catch(console.error);
   }, []);
 

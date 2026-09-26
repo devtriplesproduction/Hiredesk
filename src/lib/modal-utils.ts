@@ -1,5 +1,5 @@
 import { SOP_ROLES, COMMON_MESSAGES, STATUS_UPDATE_MAP } from "@/lib/hiring-sop";
-import type { Candidate } from "@/types";
+import type { Candidate, Role } from "@/types";
 
 export interface TemplateDef {
   id: string;
@@ -7,41 +7,50 @@ export interface TemplateDef {
   rawText: string;
 }
 
-export function getTemplatesForRole(roleId: string, status?: string): TemplateDef[] {
-  const roleTemplates = SOP_ROLES[roleId] || {};
+export function getTemplatesForRole(roleId: string, status?: string, roles: Role[] = []): TemplateDef[] {
+  const role = roles.find(r => r.id === roleId);
+  const sopPack = role?.sopPack || "custom";
+  const roleTemplates = role?.sopTemplates || {};
+  
+  const baseSOP = SOP_ROLES[sopPack] || SOP_ROLES[roleId] || {};
   const common = COMMON_MESSAGES;
   
   const templates: TemplateDef[] = [];
   
-  // Add role-specific templates if they exist
-  Object.keys(roleTemplates).forEach(key => {
-    templates.push({
-      id: key,
-      name: key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-      rawText: roleTemplates[key]
-    });
+  const requiredKeys = ["first_response", "follow_up", "details_resume_request", "shortlist", "task", "task_reminder", "task_received"];
+  
+  requiredKeys.forEach(key => {
+    const text = roleTemplates[key] || baseSOP[key];
+    if (text) {
+      templates.push({
+        id: key,
+        name: key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+        rawText: text
+      });
+    }
   });
   
   const earlyStages = ["new", "awaiting_details", "follow_up", "screening", "awaiting_resume_portfolio", "shortlisted", "task_sent"];
   const isEarlyStage = status ? earlyStages.includes(status) : false;
 
-  // Add common templates
   Object.keys(common).forEach(key => {
-    if (isEarlyStage) return;
+    if (isEarlyStage && !["hold", "not_selected"].includes(key)) return;
     
     templates.push({
       id: key,
       name: key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-      rawText: common[key]
+      rawText: roleTemplates[key] || common[key]
     });
   });
   
-  if (Object.keys(roleTemplates).length === 0) {
-    templates.unshift({
-      id: "no_sop",
-      name: "No SOP found",
-      rawText: "No SOP first-response/task for this role."
-    });
+  if (templates.length === 0) {
+    if (!["designer", "wp-dev", "editor-in", "dmark-in"].includes(roleId)) {
+      templates.unshift({
+        id: "first_response",
+        name: "First Response",
+        rawText: "Hi [Name],\nThank you for applying for the [Role] position at Triple S Production. Please share your location, experience, notice period, and expected CTC."
+      });
+    }
   }
   
   return templates;

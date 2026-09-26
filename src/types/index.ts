@@ -136,6 +136,8 @@ export interface Role {
   isActive: boolean;
   reqExp?: string;
   reqEdu?: string;
+  sopPack?: string;
+  sopTemplates?: Partial<Record<string, string>>;
 }
 
 export interface Contract {

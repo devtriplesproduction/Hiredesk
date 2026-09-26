@@ -50,6 +50,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
   const candidateInterviews = interviews.filter(i => i.candidateId === c.id);
   const r1 = candidateInterviews.find(i => i.round === 1);
   const r2 = candidateInterviews.find(i => i.round === 2);
+  const hasValidInterview = candidateInterviews.some(i => ["scheduled", "completed"].includes(i.status));
   
   const [scheduleR1, setScheduleR1] = useState("");
   const [scheduleR1Error, setScheduleR1Error] = useState("");
@@ -2473,7 +2474,12 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                           </div>
                           <button
                             type="button"
-                            className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-semibold text-text bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_15px_rgba(147,51,234,0.25)] border border-purple-400/30 active:scale-[0.98] transition-all cursor-pointer self-start"
+                            disabled={!hasValidInterview}
+                            title={!hasValidInterview ? "SOP: schedule and complete interview before sending an offer." : ""}
+                            className={clsx(
+                              "inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-xs font-semibold text-text transition-all self-start",
+                              !hasValidInterview ? "bg-[var(--glass-2)] opacity-50 cursor-not-allowed" : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-[0_0_15px_rgba(147,51,234,0.25)] border border-purple-400/30 active:scale-[0.98] cursor-pointer"
+                            )}
                             onClick={() => {
                               addOffer({
                                 id: crypto.randomUUID(), candidateId: c.id, contractTemplateId: null,
