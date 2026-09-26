@@ -20,14 +20,21 @@ export function getTemplatesForRole(roleId: string, status?: string, roles: Role
   const requiredKeys = ["first_response", "follow_up", "details_resume_request", "shortlist", "task", "task_reminder", "task_received"];
   
   requiredKeys.forEach(key => {
-    const text = roleTemplates[key] || baseSOP[key];
-    if (text) {
-      templates.push({
-        id: key,
-        name: key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-        rawText: text
-      });
+    let text = roleTemplates[key] || baseSOP[key];
+    if (!text) {
+      if (key === "shortlist") {
+        text = "Hi [Name], you have been shortlisted for [Role] at Triple S Production. Next step is a short task. Please confirm.";
+      } else if (key === "task") {
+        text = "Hi [Name], task for [Role]: please share 1–2 relevant work samples. Deadline: 48 hours.";
+      } else {
+        text = "Hi [Name],\nThank you for applying for the [Role] position at Triple S Production. Please share your location, experience, notice period, and expected CTC.";
+      }
     }
+    templates.push({
+      id: key,
+      name: key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+      rawText: text
+    });
   });
   
   const earlyStages = ["new", "awaiting_details", "follow_up", "screening", "awaiting_resume_portfolio", "shortlisted", "task_sent"];
@@ -42,16 +49,6 @@ export function getTemplatesForRole(roleId: string, status?: string, roles: Role
       rawText: roleTemplates[key] || common[key]
     });
   });
-  
-  if (templates.length === 0) {
-    if (!["designer", "wp-dev", "editor-in", "dmark-in"].includes(roleId)) {
-      templates.unshift({
-        id: "first_response",
-        name: "First Response",
-        rawText: "Hi [Name],\nThank you for applying for the [Role] position at Triple S Production. Please share your location, experience, notice period, and expected CTC."
-      });
-    }
-  }
   
   return templates;
 }

@@ -47,6 +47,13 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
   const [history, setHistory] = useState<OutreachLog[]>([]);
 
   useEffect(() => {
+    const defaultForStatus = getDefaultTemplateForStatus(candidate.status);
+    if (TEMPLATES.some(t => t.id === defaultForStatus)) {
+      setSelectedTemplate(defaultForStatus);
+    }
+  }, [candidate.status, TEMPLATES]);
+
+  useEffect(() => {
     const key = `hiredesk_outreach_history_${candidate.id}`;
     const stored = localStorage.getItem(key);
     if (stored) {
@@ -58,7 +65,17 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
 
   useEffect(() => {
     if (!isManualEdit) {
-      const template = TEMPLATES.find(t => t.id === selectedTemplate) || TEMPLATES[0];
+      let template = TEMPLATES.find(t => t.id === selectedTemplate) 
+        || TEMPLATES.find(t => t.id === getDefaultTemplateForStatus(candidate.status))
+        || TEMPLATES.find(t => t.id === "first_response")
+        || TEMPLATES[0];
+
+      if ((template?.id === "not_selected" || template?.id === "hold") && 
+          selectedTemplate !== template?.id && 
+          candidate.status !== "rejected" && 
+          candidate.status !== "hold") {
+        template = TEMPLATES.find(t => t.id === "first_response") || TEMPLATES[0];
+      }
       if (template) {
         let text = template.rawText;
         text = text
@@ -71,7 +88,17 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
 
   const resetToTemplate = () => {
     setIsManualEdit(false);
-    const template = TEMPLATES.find(t => t.id === selectedTemplate) || TEMPLATES[0];
+    let template = TEMPLATES.find(t => t.id === selectedTemplate) 
+      || TEMPLATES.find(t => t.id === getDefaultTemplateForStatus(candidate.status))
+      || TEMPLATES.find(t => t.id === "first_response")
+      || TEMPLATES[0];
+
+    if ((template?.id === "not_selected" || template?.id === "hold") && 
+        selectedTemplate !== template?.id && 
+        candidate.status !== "rejected" && 
+        candidate.status !== "hold") {
+      template = TEMPLATES.find(t => t.id === "first_response") || TEMPLATES[0];
+    }
     if (template) {
       let text = template.rawText;
       text = text
