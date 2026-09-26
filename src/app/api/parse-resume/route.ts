@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const pdfParse = require("pdf-parse");
+import pdfParse from "pdf-parse";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {

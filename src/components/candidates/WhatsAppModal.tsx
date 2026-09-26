@@ -218,31 +218,7 @@ export default function WhatsAppModal({ candidate, onClose }: Props) {
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="text-[16px] text-text-2 font-bold uppercase tracking-wider block">Message Template</label>
-          <div className="grid grid-cols-2 gap-2.5">
-            {TEMPLATES.map(tmpl => {
-              const active = selectedTemplate === tmpl.id;
-              return (
-                <Btn
-                  key={tmpl.id}
-                  onClick={() => {
-                    setSelectedTemplate(tmpl.id);
-                    setIsManualEdit(false);
-                  }}
-                  className={`p-3.5 rounded-xl border text-left transition-all duration-300 flex flex-col gap-2 relative overflow-hidden group ${
-                    active
-                      ? "border-emerald-500/50 bg-emerald-500/10 text-text shadow-[0_0_20px_rgba(16,185,129,0.1)] scale-[1.02]"
-                      : "border-border bg-[var(--glass-2)] hover:bg-[var(--glass-2)] hover:border-border-2 text-text-2"
-                  }`}
-                >
-                  {active && <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-transparent pointer-events-none"></div>}
-                  <span className="text-xs font-bold leading-tight relative z-10">{tmpl.name}</span>
-                </Btn>
-              );
-            })}
-          </div>
-        </div>
+
 
         <div className="space-y-2 flex flex-col">
           <div className="flex justify-between items-center">
