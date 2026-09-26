@@ -30,7 +30,7 @@ export default function EmailModal({ candidate, onClose }: Props) {
   const { updateCandidate, offers } = useStore();
   const offer = offers.find(o => o.candidateId === candidate.id);
 
-  const TEMPLATES = useMemo(() => getTemplatesForRole(candidate.roleId), [candidate.roleId]);
+  const TEMPLATES = useMemo(() => getTemplatesForRole(candidate.roleId, candidate.status), [candidate.roleId, candidate.status]);
 
   const [emailInput, setEmailInput] = useState(candidate.email || "");
   const [roleInput, setRoleInput] = useState(offer?.documentData?.designation || candidate.roleName || "Digital Marketing");

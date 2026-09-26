@@ -2807,7 +2807,7 @@ export default function CandidateDetail({ candidate: c, onClose }: Props) {
                   onClick={() => {
                     handleConvertToEmployee();
                   }}
-                  disabled={convertingToEmployee || candidateDocs.length === 0 || !candidateDocs.every(d => d.status === "verified")}
+                  disabled={convertingToEmployee}
                   className="w-full h-11 px-4 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2.5 text-text bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 active:scale-[0.99] border border-emerald-400/30 hover:border-emerald-300/50 shadow-[0_0_20px_rgba(16,185,129,0.22)] hover:shadow-[0_0_25px_rgba(16,185,129,0.35)] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 disabled:opacity-40 disabled:pointer-events-none disabled:shadow-none transition-all duration-150 cursor-pointer mt-2"
                 >
                   {convertingToEmployee ? (

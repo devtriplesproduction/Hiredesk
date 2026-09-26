@@ -743,44 +743,7 @@ function extractExperience(text: string): string {
     return "Fresher";
   }
 
-  // 6. Year range detection for full-time work
-  let textForDates = text;
-  textForDates = textForDates.replace(/\b(education|academic|bachelor|master|degree|diploma|b\.?tech|b\.?e|university|college|school)\b[\s\S]{0,200}?(?:20[0-2]\d|present)/gi, "");
-
-  const dateRegex = /\b(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+|\d{1,2}[\/\-]\s*)?(20[0-2]\d)\s*(?:–|-|to)\s*(?:(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+|\d{1,2}[\/\-]\s*)?(20[0-2]\d)|present|till date|current)\b/gi;
-
-  const yearRangesMatch = Array.from(textForDates.matchAll(dateRegex));
-  if (yearRangesMatch.length > 0) {
-    let minYear = 9999;
-    let maxYear = 0;
-    const currentYear = new Date().getFullYear();
-    for (const match of yearRangesMatch) {
-      const startYear = parseInt(match[1], 10);
-      const endStr = match[2];
-      let endYear = currentYear;
-      if (endStr) {
-        endYear = parseInt(endStr, 10);
-      }
-      if (startYear < 2000 || startYear > currentYear) continue;
-      if (endYear < startYear || endYear > currentYear + 1) continue;
-      
-      if (startYear < minYear) minYear = startYear;
-      if (endYear > maxYear) maxYear = endYear;
-    }
-    
-    if (minYear !== 9999 && maxYear >= minYear) {
-      const diff = maxYear - minYear;
-      if (diff >= 0 && diff <= 40) {
-        if (/\bintern(?:ship)?\b/i.test(lower) && !/\b(full[\s\-]time|software\s+engineer|developer|manager)\b/i.test(lower) && diff < 1) {
-            return "Intern (Fresher)";
-        }
-        if (diff >= 5) return "5+ yrs";
-        if (diff === 1) return "1 yr";
-        if (diff === 0) return "6 months";
-        return `${diff} yrs`;
-      }
-    }
-  }
+  // 6. Removed year range detection to avoid calculating experience from education dates.
 
   // If intern mentioned anywhere
   if (/\bintern(?:ship)?\b/i.test(lower)) {

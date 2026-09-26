@@ -7,7 +7,7 @@ export interface TemplateDef {
   rawText: string;
 }
 
-export function getTemplatesForRole(roleId: string): TemplateDef[] {
+export function getTemplatesForRole(roleId: string, status?: string): TemplateDef[] {
   const roleTemplates = SOP_ROLES[roleId] || {};
   const common = COMMON_MESSAGES;
   
@@ -22,8 +22,13 @@ export function getTemplatesForRole(roleId: string): TemplateDef[] {
     });
   });
   
+  const earlyStages = ["new", "awaiting_details", "follow_up", "screening", "awaiting_resume_portfolio", "shortlisted", "task_sent"];
+  const isEarlyStage = status ? earlyStages.includes(status) : false;
+
   // Add common templates
   Object.keys(common).forEach(key => {
+    if (isEarlyStage) return;
+    
     templates.push({
       id: key,
       name: key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
@@ -32,7 +37,7 @@ export function getTemplatesForRole(roleId: string): TemplateDef[] {
   });
   
   if (Object.keys(roleTemplates).length === 0) {
-    templates.push({
+    templates.unshift({
       id: "no_sop",
       name: "No SOP found",
       rawText: "No SOP first-response/task for this role."
