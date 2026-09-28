@@ -13,13 +13,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         setOk(true);
         return;
       }
-      const authFlag = localStorage.getItem("tsp_auth");
       const { data } = await import("@/lib/supabase").then(m => m.supabase.auth.getSession());
-
-      if (!authFlag || !data.session) {
+      if (!data.session) {
         localStorage.removeItem("tsp_auth");
         router.replace("/login");
       } else {
+        localStorage.setItem("tsp_auth", "1");
         setOk(true);
       }
     }
